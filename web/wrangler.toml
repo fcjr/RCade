@@ -9,3 +9,8 @@ command = "bun run build"
 [assets]
 directory = ".svelte-kit/cloudflare/assets"
 binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rcade"
+database_id = "c74c6e00-e3b7-4f18-aad1-76fa8b901d6c"
