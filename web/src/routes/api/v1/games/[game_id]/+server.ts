@@ -1,12 +1,15 @@
+import { getDb } from "$lib/db";
+import { games } from "$lib/db/schema";
 import type { RequestHandler } from "@sveltejs/kit";
 
 export const GET: RequestHandler = async ({ platform }) => {
     try {
         // Query all items from your table
-        const r = await platform?.env.DB.prepare('SELECT * FROM items').all();
+        const r = await getDb().select().from(games).all();
+        console.log(r); // Log the results to the console for debugging
 
         return new Response(
-            JSON.stringify(r?.results),
+            JSON.stringify(r),
             {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
