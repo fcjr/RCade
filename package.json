@@ -1,7 +1,7 @@
 {
   "name": "rcade-monorepo",
   "private": true,
-  "workspaces": ["web", "client", "cli"],
+  "workspaces": ["web", "client", "cli", "create"],
   "scripts": {
     "dev:web": "bun run --cwd web dev",
     "dev:client": "bun run --cwd client dev",
