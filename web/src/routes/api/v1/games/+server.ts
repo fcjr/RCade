@@ -1,6 +1,5 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { Game } from "$lib/game";
-import * as auth from "@auth/sveltekit"
 
 export const GET: RequestHandler = async (event) => {
     const session = await event.locals.auth();
@@ -9,7 +8,7 @@ export const GET: RequestHandler = async (event) => {
 
     try {
         return new Response(
-            JSON.stringify((await Game.all()).map(game => game.intoResponse(auth)).filter(v => v !== undefined)),
+            JSON.stringify((await Game.all_latest()).map(game => game.intoResponse(auth)).filter(v => v !== undefined)),
             { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
     } catch (error) {

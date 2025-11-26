@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `game_versions_version_unique` ON `game_versions` (`version`);

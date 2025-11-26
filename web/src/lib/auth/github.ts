@@ -27,31 +27,26 @@ const GithubOIDCClaims = z.object({
     nbf: z.number(),
 });
 
-type GithubOIDCClaims = z.infer<typeof GithubOIDCClaims>;
+export type GithubOIDCClaims = z.infer<typeof GithubOIDCClaims>;
 
 export class GithubOIDCValidator {
     private rcClient: RecurseAPI;
-    private jwks: ReturnType<typeof jose.createRemoteJWKSet>; 
+    private jwks: ReturnType<typeof jose.createRemoteJWKSet>;
 
     public constructor() {
-        this.rcClient = new RecurseAPI(env.RC_PAT);
+        this.rcClient = new RecurseAPI(env.RC_PAT!);
         this.jwks = jose.createRemoteJWKSet(new URL(GITHUB_OIDC_JWKS_URI));
     }
 
-    public async validate(jwt: string): Promise<GithubOIDCClaims & {recurser: RecurseResponse}> {
+    public async validate(jwt: string): Promise<GithubOIDCClaims & { recurser: RecurseResponse }> {
         const { payload } = await jose.jwtVerify(jwt, this.jwks, {
             issuer: GITHUB_OIDC_ISSUER,
             // TODO more validation?
         });
 
         const claims = GithubOIDCClaims.parse(payload);
-
         const recurser = await this.rcClient.getUserByGithubId(claims.repository_owner);
-        if (!recurser) {
-            throw new Error("Recurser not found");
-        }
 
-        
         return {
             ...claims,
             recurser,
