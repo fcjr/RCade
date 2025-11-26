@@ -28,6 +28,8 @@
 		"wrangler": "^4.50.0"
 	},
 	"dependencies": {
-		"@auth/sveltekit": "^1.11.1"
+		"@auth/core": "^0.34.3",
+		"@auth/sveltekit": "^1.11.1",
+		"@cloudflare/workers-types": "^4.20251126.0"
 	}
 }

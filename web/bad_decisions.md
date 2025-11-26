@@ -1,0 +1,2 @@
+- no pagination on listing all games :(
+- github orgs will break everything :(
