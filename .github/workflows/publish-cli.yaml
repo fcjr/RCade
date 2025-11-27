@@ -78,6 +78,7 @@ jobs:
     name: Publish ${{ matrix.package }}
     needs: bump
     runs-on: ubuntu-latest
+    environment: npm
     permissions:
       contents: read
       id-token: write
