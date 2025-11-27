@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -15,5 +15,5 @@
     "noEmitOnError": true
   },
   "include": ["src/main/**/*", "src/shared/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/main/preload.ts"]
 }
