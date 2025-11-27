@@ -8,7 +8,7 @@ const RECURSE_BASE_URL = "https://rcade.recurse.com/api/v1";
 
 const DeploymentIntent = z.object({
   upload_url: z.string(),
-  expires: z.string(),
+  expires: z.number(),
 });
 
 type DeploymentIntent = z.infer<typeof DeploymentIntent>;

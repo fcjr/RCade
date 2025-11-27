@@ -27,8 +27,8 @@ export async function run(): Promise<void> {
     const rawManifest = fs.readFileSync(manifestPath, "utf-8");
     const manifest = Manifest.parse(JSON.parse(rawManifest));
 
+    core.startGroup("💡 Manifest");
     core.info(`Found manifest for app ${manifest.name}`);
-    core.startGroup("📦 Manifest");
     core.info(JSON.stringify(manifest, null, 2));
     core.endGroup();
 
@@ -69,6 +69,14 @@ export async function run(): Promise<void> {
     core.info(`✅ Created deployment intent: ${intent.upload_url}`);
     core.endGroup();
 
+    core.startGroup("🚀 Uploading Artifact");
+    await uploadFileStream(outputPath, intent.upload_url);
+    core.info(`✅ Uploaded artifact`);
+    core.endGroup();
+
+
+    core.startGroup(`✨ Deployment complete! ✨`);
+    core.info("Your game is now available on the RCade!");
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message);
@@ -76,3 +84,7 @@ export async function run(): Promise<void> {
 }
 
 run();
+
+function uploadFileStream(outputPath: string, upload_url: string) {
+  throw new Error("Function not implemented.");
+}

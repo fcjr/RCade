@@ -28646,7 +28646,7 @@ var import_auth = __toESM(require_auth2(), 1);
 var RECURSE_BASE_URL = "https://rcade.recurse.com/api/v1";
 var DeploymentIntent = object({
   upload_url: string2(),
-  expires: string2()
+  expires: number2()
 });
 
 class RCadeDeployClient {
@@ -28687,8 +28687,8 @@ async function run() {
     core3.info(`Checking for manifest file at ${manifestPath}...`);
     const rawManifest = fs11.readFileSync(manifestPath, "utf-8");
     const manifest = Manifest.parse(JSON.parse(rawManifest));
+    core3.startGroup("\uD83D\uDCA1 Manifest");
     core3.info(`Found manifest for app ${manifest.name}`);
-    core3.startGroup("\uD83D\uDCE6 Manifest");
     core3.info(JSON.stringify(manifest, null, 2));
     core3.endGroup();
     const artifactPath = core3.getInput("artifactPath", { required: true });
@@ -28714,12 +28714,21 @@ async function run() {
     const intent = await client.createDeploymentIntent(manifest);
     core3.info(`✅ Created deployment intent: ${intent.upload_url}`);
     core3.endGroup();
+    core3.startGroup("\uD83D\uDE80 Uploading Artifact");
+    await uploadFileStream(outputPath, intent.upload_url);
+    core3.info(`✅ Uploaded artifact`);
+    core3.endGroup();
+    core3.startGroup(`✨ Deployment complete! ✨`);
+    core3.info("Your game is now available on the RCade!");
   } catch (error) {
     if (error instanceof Error)
       core3.setFailed(error.message);
   }
 }
 run();
+function uploadFileStream(outputPath, upload_url) {
+  throw new Error("Function not implemented.");
+}
 export {
   run
 };
