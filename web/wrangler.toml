@@ -23,3 +23,9 @@ migrations_dir = "drizzle/migrations"
 [[r2_buckets]]
 binding = "STORE"
 bucket_name = "rcade"
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
