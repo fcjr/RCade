@@ -16,12 +16,15 @@ export const ZodSemverUnbranded = z.string().regex(
 )
 
 export const Manifest = z.object({
-    name: z.string().nonempty().regex(/a-zA-Z0-9_-/),
-    display_name: z.string().optional(),
-    description: z.string(),
-    visibility: z.enum(["public", "private", "personal"]),
-    version: ZodSemverUnbranded.optional(),
-    authors: z.union([ManifestAuthor, z.array(ManifestAuthor).min(1)])
-})
+  name: z
+    .string()
+    .nonempty()
+    .regex(/[a-zA-Z0-9_-]*/),
+  display_name: z.string().optional(),
+  description: z.string(),
+  visibility: z.enum(["public", "private", "personal"]),
+  version: ZodSemverUnbranded.optional(),
+  authors: z.union([ManifestAuthor, z.array(ManifestAuthor).min(1)]),
+});
 
 export type Manifest = z.infer<typeof Manifest>;
