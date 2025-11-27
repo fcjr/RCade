@@ -12,7 +12,7 @@ export async function main() {
     const { name } = <{ name: string }>await enquirer.prompt({
         type: 'input',
         name: 'name',
-        message: 'Enter project identifier:',
+        message: 'Enter game identifier (e.g. my-game):',
         required: true,
         validate: (value) => {
             if (!value) {
@@ -29,20 +29,20 @@ export async function main() {
         type: 'input',
         name: 'display_name',
         initial: name,
-        message: 'Enter project name:',
+        message: 'Enter display name (My Game):',
     });
 
     const { description } = <{ description: string }>await enquirer.prompt({
         type: 'text',
         name: 'description',
         initial: name,
-        message: 'Enter project description:',
+        message: 'Enter game description:',
     });
 
     const { visibility } = <{ visibility: string }>await enquirer.prompt({
         type: "select",
         name: "visibility",
-        message: "Project visibility:",
+        message: "Game visibility:",
         choices: [
             { name: "public", message: "Public", hint: "(Everyone can play!)" },
             { name: "private", message: "Private", hint: "(Only Recursers and people at the Hub can play.)" },
