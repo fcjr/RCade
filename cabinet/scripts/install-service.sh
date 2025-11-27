@@ -10,7 +10,7 @@ USER="${SUDO_USER:-$(whoami)}"
 
 echo "Building rcade cabinet..."
 cd "$PROJECT_DIR"
-sudo -u "$USER" bun run build:linux
+sudo -u "$USER" -i bash -c "cd '$PROJECT_DIR' && bun run build:linux"
 
 # Find the AppImage
 APP_PATH=$(ls "$PROJECT_DIR"/release/rcade*.AppImage 2>/dev/null | head -1)
