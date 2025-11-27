@@ -1,2 +1,4 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<h1>Welcome to RCade</h1>
+Soon you will be able to play games here.
+For now, this is just an api for managing games.
+<p>Visit <a href="https://github.com/fcjr/rcade">github.com/fcjr/rcade</a> to read the documentation</p>
