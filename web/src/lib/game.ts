@@ -105,11 +105,15 @@ export class Game {
         }
     }
 
-    public async intoResponse(auth: { for: "recurser", rc_id: string } | { for: "public" }, config: { withR2Key: boolean } = { withR2Key: false }): Promise<object | undefined> {
+    public async intoResponse(auth: { for: "recurser", rc_id: string } | { for: "public" } | { for: "cabinet" }, config: { withR2Key: boolean } = { withR2Key: false }): Promise<object | undefined> {
         const versions = await Promise.all(this.data.versions.map(async version => {
             if (version.visibility !== "public") {
-                if (auth.for === "public" || auth.rc_id !== this.data.owner_rc_id)
+                if (auth.for === "public" || (auth.for == "recurser" && auth.rc_id !== this.data.owner_rc_id))
                     return undefined;
+            }
+
+            if (version.visibility === "personal" && auth.for === "cabinet") {
+                return undefined;
             }
 
             const r2Key: Record<string, any> = {};

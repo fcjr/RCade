@@ -1,12 +1,13 @@
+import { env } from "$env/dynamic/private";
 import { getDb } from "$lib/db";
 import { games } from "$lib/db/schema";
 import { Game } from "$lib/game";
 import type { RequestHandler } from "@sveltejs/kit";
 
-export const GET: RequestHandler = async ({ locals, params }) => {
+export const GET: RequestHandler = async ({ locals, params, request }) => {
     const session = await locals.auth();
 
-    const auth = session?.user ? { for: <const>"recurser", rc_id: session.user.rc_id } : { for: <const>"public" };
+    const auth = session?.user ? { for: <const>"recurser", rc_id: session.user.rc_id } : request.headers.get("Authorization") == `Bearer ${env.CABINET_API_KEY}` ? { for: <const>"cabinet" } : { for: <const>"public" };
 
     try {
         const game = await Game.byId(params.game_id ?? "");
