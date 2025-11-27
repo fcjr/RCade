@@ -108,4 +108,4 @@ jobs:
 
       - name: Publish
         working-directory: ${{ matrix.directory }}
-        run: bun publish --access public --provenance
+        run: bunx npm publish --access public --provenance
