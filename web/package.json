@@ -15,10 +15,10 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:local": "wrangler d1 migrations apply rcade --local",
 		"db:migrate:remote": "wrangler d1 migrations apply rcade --remote",
-		"db:studio": "drizzle-kit studio",
-		"local-token": "./scripts/local-token.ts"
+		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
+		"@libsql/client": "^0.15.15",
 		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",

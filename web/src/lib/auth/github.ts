@@ -32,10 +32,17 @@ export type GithubOIDCClaims = z.infer<typeof GithubOIDCClaims>;
 export class GithubOIDCValidator {
     private rcClient: RecurseAPI;
     private jwks: ReturnType<typeof jose.createRemoteJWKSet>;
+    private extra_jwks: ReturnType<typeof jose.createLocalJWKSet> | undefined; 
 
     public constructor() {
         this.rcClient = new RecurseAPI(env.RC_PAT!);
         this.jwks = jose.createRemoteJWKSet(new URL(GITHUB_OIDC_JWKS_URI));
+
+        if (env.RSA_PUBLIC_KEY_JWK) {
+            this.extra_jwks = jose.createLocalJWKSet({
+                keys: [JSON.parse(env.RSA_PUBLIC_KEY_JWK)]
+            })
+        }
     }
 
     public async validate(jwt: string): Promise<GithubOIDCClaims & { recurser: RecurseResponse }> {
