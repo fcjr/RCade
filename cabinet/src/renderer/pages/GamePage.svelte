@@ -9,14 +9,41 @@
 
   let { game }: Props = $props();
 
-  function handleKeydown(event: KeyboardEvent) {
+  let gameUrl = $state<string | null>(null);
+  let loading = $state(true);
+  let error = $state<string | null>(null);
+
+  async function loadGame() {
+    try {
+      if (window.rcade) {
+        // Clone to plain object for IPC serialization
+        const gameData = {
+          id: game.id,
+          name: game.name,
+          latestVersion: game.latestVersion,
+        };
+        const result = await window.rcade.loadGame(gameData);
+        gameUrl = result.url;
+      }
+    } catch (e) {
+      error = e instanceof Error ? e.message : 'Failed to load game';
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function handleKeydown(event: KeyboardEvent) {
     if (event.code === 'ShiftLeft') {
+      if (window.rcade) {
+        await window.rcade.unloadGame(game.id, game.latestVersion);
+      }
       navigateToCarousel();
     }
   }
 
   onMount(() => {
     window.addEventListener('keydown', handleKeydown);
+    loadGame();
   });
 
   onDestroy(() => {
@@ -24,13 +51,24 @@
   });
 </script>
 
-<div class="game-page">
-  <div class="game-card">
-    <h1 class="game-name">{game.name}</h1>
-    <p class="game-version">v{game.latestVersion}</p>
+{#if loading}
+  <div class="game-page">
+    <div class="game-card">
+      <h1 class="game-name">{game.name}</h1>
+      <p class="status">Loading...</p>
+    </div>
   </div>
-  <p class="hint">Press Menu to return</p>
-</div>
+{:else if error}
+  <div class="game-page">
+    <div class="game-card">
+      <h1 class="game-name">{game.name}</h1>
+      <p class="error">{error}</p>
+    </div>
+    <p class="hint">Press Menu to return</p>
+  </div>
+{:else if gameUrl}
+  <iframe class="game-frame" src={gameUrl} title={game.name}></iframe>
+{/if}
 
 <style>
   .game-page {
@@ -63,9 +101,15 @@
     margin-bottom: 8px;
   }
 
-  .game-version {
+  .status {
     font-size: clamp(12px, 5vw, 18px);
     color: #888;
+    font-weight: 400;
+  }
+
+  .error {
+    font-size: clamp(12px, 5vw, 18px);
+    color: #f55;
     font-weight: 400;
   }
 
@@ -74,5 +118,15 @@
     color: #555;
     position: absolute;
     bottom: 16px;
+  }
+
+  .game-frame {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
   }
 </style>

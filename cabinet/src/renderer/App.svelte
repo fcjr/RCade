@@ -19,10 +19,15 @@
     box-sizing: border-box;
   }
 
+  :global(html, body) {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
   :global(body) {
     background: #0a0a14;
     color: #fff;
-    min-height: 100vh;
     font-family: system-ui, -apple-system, sans-serif;
   }
 </style>

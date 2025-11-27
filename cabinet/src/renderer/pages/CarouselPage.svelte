@@ -6,7 +6,6 @@
   let games = $state<GameInfo[]>([]);
   let currentIndex = $state(0);
   let fetchInterval: ReturnType<typeof setInterval> | null = null;
-  let carouselInterval: ReturnType<typeof setInterval> | null = null;
 
   const currentGame = $derived(games.length > 0 ? games[currentIndex] : null);
 
@@ -35,17 +34,11 @@
   onMount(() => {
     fetchGames();
     fetchInterval = setInterval(fetchGames, 5000);
-    carouselInterval = setInterval(() => {
-      if (games.length > 0) {
-        currentIndex = (currentIndex + 1) % games.length;
-      }
-    }, 3000);
     window.addEventListener('keydown', handleKeydown);
   });
 
   onDestroy(() => {
     if (fetchInterval) clearInterval(fetchInterval);
-    if (carouselInterval) clearInterval(carouselInterval);
     window.removeEventListener('keydown', handleKeydown);
   });
 </script>

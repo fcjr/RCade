@@ -14,6 +14,12 @@ export interface GameInfo {
   latestVersion: string;
 }
 
+export interface LoadGameResult {
+  url: string;
+}
+
 export interface RcadeAPI {
   getGames: () => Promise<GameInfo[]>;
+  loadGame: (game: GameInfo) => Promise<LoadGameResult>;
+  unloadGame: (gameId: string, version: string) => Promise<void>;
 }

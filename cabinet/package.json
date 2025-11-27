@@ -15,12 +15,16 @@
     "build:linux": "bun run build:api && tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.7",
     "@rcade/api": "workspace:*",
+    "hono": "^4.6.14",
+    "tar": "^7.4.3",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@types/node": "^22.0.0",
+    "@types/tar": "^6.1.13",
     "concurrently": "^9.0.0",
     "electron": "^33.0.0",
     "electron-builder": "^25.0.0",

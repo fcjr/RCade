@@ -28,7 +28,7 @@ export class Client {
         return list.map((g) => Game.fromApiResponse(g))
     }
 
-    public async getGame(gameId: string) {
+    public async getGame(gameId: string): Promise<Game> {
         const response = await fetch(`${this.baseUrl}/games/${gameId}`);
         return Game.fromApiResponse(await response.json());
     }
