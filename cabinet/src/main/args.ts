@@ -2,11 +2,12 @@ import { parseArgs } from 'node:util';
 import { CliOptions } from '../shared/types';
 import { GameManifest } from '@rcade/api';
 import { readFileSync } from 'node:fs';
+import { app } from 'electron';
 
 export function parseCliArgs(): CliOptions {
     const args = process.env.RCADE_CABINET_ARGS
         ? process.env.RCADE_CABINET_ARGS.split(' ')
-        : undefined;
+        : app.isPackaged ? process.argv.slice(1) : process.argv.slice(3);
 
     const { values, positionals } = parseArgs({
         args,
