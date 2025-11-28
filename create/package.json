@@ -17,6 +17,7 @@
     "build": "bun build bin.ts --outdir dist --target node"
   },
   "dependencies": {
+    "commander": "^14.0.2",
     "rcade": "workspace:*"
   },
   "devDependencies": {

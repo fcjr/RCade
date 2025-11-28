@@ -1,3 +1,4 @@
+import { Command } from "commander";
 import { input, select, confirm } from "@inquirer/prompts";
 import { fdir } from "fdir";
 import mustache from "mustache";
@@ -42,7 +43,9 @@ function getTemplatesDir(): string {
     }
 }
 
-export async function main() {
+export const createCommand = new Command("create")
+    .description("Create a new rcade project")
+    .action(async () => {
     const name = await input({
         message: 'Enter game identifier (e.g. my-game):',
         required: true,
@@ -155,7 +158,7 @@ export async function main() {
         case "vanilla-ts": await setup_js(projectDir); break;
         case "vanilla-rs": await setup_rs(projectDir); break;
     }
-}
+});
 
 async function setup_js(path: string) {
     const exc = execa({ cwd: path, stdio: "inherit" });

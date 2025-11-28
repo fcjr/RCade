@@ -1,1 +1,1 @@
-export { main } from "./src";
+export { createCommand } from "./src";
