@@ -9,21 +9,21 @@ echo "Uninstalling $SERVICE_NAME service..."
 
 # Stop and disable service if it exists
 if systemctl is-active --quiet ${SERVICE_NAME} 2>/dev/null; then
-    systemctl stop ${SERVICE_NAME}
+    sudo systemctl stop ${SERVICE_NAME}
     echo "Stopped service"
 fi
 
 if systemctl is-enabled --quiet ${SERVICE_NAME} 2>/dev/null; then
-    systemctl disable ${SERVICE_NAME}
+    sudo systemctl disable ${SERVICE_NAME}
     echo "Disabled service"
 fi
 
 # Remove service file
 if [ -f /etc/systemd/system/${SERVICE_NAME}.service ]; then
-    rm /etc/systemd/system/${SERVICE_NAME}.service
+    sudo rm /etc/systemd/system/${SERVICE_NAME}.service
     echo "Removed service file"
 fi
 
-systemctl daemon-reload
+sudo systemctl daemon-reload
 
 echo "Service uninstalled successfully!"
