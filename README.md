@@ -9,12 +9,12 @@ RCade is a custom-built arcade cabinet at [The Recurse Center](https://recurse.c
 ## Create Your First Game in 60 Seconds
 
 ```bash
-npm create rcade
+npm create rcade@latest
 ```
 
 That's it. Answer a few questions, and you'll have a fully configured game project with automatic deployment to the arcade cabinet.
 
-```
+```sh
 ? Enter game identifier (e.g. my-game): space-blaster
 ? Enter display name: Space Blaster
 ? Enter game description: An epic space shooter
@@ -259,7 +259,7 @@ This monorepo contains:
 ## Get Started Now
 
 ```bash
-npm create rcade
+npm create rcade@latest
 ```
 
 Build something fun. See it running on a real arcade machine. Share it with the RC community.
