@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - main
+      - master
 
 jobs:
   build-and-deploy:
@@ -25,7 +26,7 @@ jobs:
       {{step}}
       - name: Deploy to RCade
         uses: fcjr/rcade/action-deploy@main
-`
+`;
 
 export async function write_workflow(to_dir: string, data: any[]) {
     await mkdir(path.join(to_dir, ".github/workflows"), { recursive: true });
