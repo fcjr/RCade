@@ -35,6 +35,7 @@
   "build": {
     "appId": "com.frankchiarulli.rcade.client",
     "productName": "rcade",
+    "artifactName": "rcade-cabinet-${os}-${arch}.${ext}",
     "files": [
       "dist/**/*"
     ],
@@ -42,13 +43,20 @@
       "output": "release"
     },
     "mac": {
-      "category": "public.app-category.games"
+      "category": "public.app-category.games",
+      "target": [
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ]
     },
     "win": {
-      "target": "nsis"
+      "target": [
+        { "target": "zip", "arch": ["x64"] }
+      ]
     },
     "linux": {
-      "target": "AppImage"
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] }
+      ]
     }
   }
 }

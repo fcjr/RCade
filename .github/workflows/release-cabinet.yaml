@@ -1,0 +1,198 @@
+name: Release Cabinet
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump:
+    name: Bump version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Configure Git
+        run: |
+          git config user.name "Frank Chiarulli Jr."
+          git config user.email "frank@frankchiarulli.com"
+
+      - name: Bump version
+        id: bump
+        run: |
+          # Get current version and compute new version
+          OLD_VERSION=$(bun -e "console.log(require('./cabinet/package.json').version)")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD_VERSION"
+          case "${{ inputs.version_type }}" in
+            major) NEW_VERSION="$((MAJOR + 1)).0.0" ;;
+            minor) NEW_VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
+            patch) NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+          esac
+
+          # Update package.json
+          bun -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('cabinet/package.json', 'utf8'));
+            pkg.version = '$NEW_VERSION';
+            fs.writeFileSync('cabinet/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag
+        run: |
+          git add cabinet/package.json
+          git commit -m "chore: bump cabinet version to ${{ steps.bump.outputs.new_version }}"
+          git tag "cabinet-v${{ steps.bump.outputs.new_version }}"
+          git push
+          git push origin "cabinet-v${{ steps.bump.outputs.new_version }}"
+
+  build-macos:
+    name: Build macOS (${{ matrix.arch }})
+    needs: bump
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: cabinet-v${{ needs.bump.outputs.new_version }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Cabinet
+        working-directory: cabinet
+        run: |
+          bun run build:api
+          npx tsc -p tsconfig.main.json
+          npx tsc -p tsconfig.preload.json
+          npx vite build
+          npx electron-builder --mac --${{ matrix.arch }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cabinet-darwin-${{ matrix.arch }}
+          path: cabinet/release/rcade-cabinet-*.zip
+
+  build-windows:
+    name: Build Windows
+    needs: bump
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: cabinet-v${{ needs.bump.outputs.new_version }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Cabinet
+        working-directory: cabinet
+        run: |
+          bun run build:api
+          npx tsc -p tsconfig.main.json
+          npx tsc -p tsconfig.preload.json
+          npx vite build
+          npx electron-builder --win --x64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cabinet-win32-x64
+          path: cabinet/release/rcade-cabinet-*.zip
+
+  build-linux:
+    name: Build Linux
+    needs: bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: cabinet-v${{ needs.bump.outputs.new_version }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Cabinet
+        working-directory: cabinet
+        run: |
+          bun run build:api
+          npx tsc -p tsconfig.main.json
+          npx tsc -p tsconfig.preload.json
+          npx vite build
+          npx electron-builder --linux --x64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cabinet-linux-x64
+          path: cabinet/release/rcade-cabinet-*.AppImage
+
+  release:
+    name: Create Release
+    needs: [bump, build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: cabinet-v${{ needs.bump.outputs.new_version }}
+          name: Cabinet v${{ needs.bump.outputs.new_version }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/cabinet-darwin-x64/*
+            artifacts/cabinet-darwin-arm64/*
+            artifacts/cabinet-win32-x64/*
+            artifacts/cabinet-linux-x64/*
