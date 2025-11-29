@@ -11,8 +11,7 @@
     }
   },
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node",
-    "prepare": "bun build index.ts --outdir dist --target node"
+    "build": "bun build index.ts --outdir dist --target node"
   },
   "files": [
     "dist",
