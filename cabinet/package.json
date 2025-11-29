@@ -7,12 +7,14 @@
   "scripts": {
     "dev": "bun run build:api && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
-    "dev:electron": "tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && electron --trace-warnings .",
+    "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
     "build:api": "bun run --cwd ../api build",
-    "build": "bun run build:api && tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && vite build && electron-builder",
-    "build:mac": "bun run build:api && tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && vite build && electron-builder --mac",
-    "build:win": "bun run build:api && tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && vite build && electron-builder --win",
-    "build:linux": "bun run build:api && tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && vite build && electron-builder --linux"
+    "build:main": "bun build src/main/main.ts --outdir dist/main --target node --external electron",
+    "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --external electron",
+    "build": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder",
+    "build:mac": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --mac",
+    "build:win": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --win",
+    "build:linux": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --linux"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
