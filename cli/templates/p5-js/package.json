@@ -14,7 +14,7 @@
         "vite": "^7.2.4"
     },
     "dependencies": {
-        "@rcade/plugin-input-classic": "^0.1.14",
+        "@rcade/plugin-input-classic": "^0.1.4",
         "p5": "^1.11.3"
     }
 }
