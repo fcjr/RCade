@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["plugins/input-classic/rust","sdk/rust"]
+members = ["plugins/input-classic/clients/rust", "sdk/frontend/rust"]

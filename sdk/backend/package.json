@@ -1,0 +1,14 @@
+{
+  "name": "@rcade/sdk-plugin",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "electron": "^39.2.4"
+  }
+}

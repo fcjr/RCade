@@ -110,7 +110,7 @@
         "typescript": "^5",
       },
     },
-    "plugins/input-classic/typescript": {
+    "plugins/input-classic/clients/typescript": {
       "name": "@rcade/plugin-input-classic",
       "version": "0.1.4",
       "dependencies": {
@@ -141,7 +141,19 @@
         "typescript": "^5.0.0",
       },
     },
-    "sdk/typescript": {
+    "sdk/backend": {
+      "name": "@rcade/sdk-plugin",
+      "dependencies": {
+        "electron": "^39.2.4",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "sdk/frontend/typescript": {
       "name": "@rcade/sdk",
       "version": "0.1.3",
       "devDependencies": {
@@ -557,11 +569,13 @@
 
     "@rcade/client": ["@rcade/client@workspace:cabinet"],
 
-    "@rcade/plugin-input-classic": ["@rcade/plugin-input-classic@workspace:plugins/input-classic/typescript"],
+    "@rcade/plugin-input-classic": ["@rcade/plugin-input-classic@workspace:plugins/input-classic/clients/typescript"],
 
     "@rcade/runtime": ["@rcade/runtime@workspace:runtime"],
 
-    "@rcade/sdk": ["@rcade/sdk@workspace:sdk/typescript"],
+    "@rcade/sdk": ["@rcade/sdk@workspace:sdk/frontend/typescript"],
+
+    "@rcade/sdk-plugin": ["@rcade/sdk-plugin@workspace:sdk/backend"],
 
     "@rcade/web": ["@rcade/web@workspace:web"],
 
