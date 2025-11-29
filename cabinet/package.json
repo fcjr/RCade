@@ -46,35 +46,13 @@
     },
     "mac": {
       "category": "public.app-category.games",
-      "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ]
+      "target": "zip"
     },
     "win": {
-      "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
+      "target": "zip"
     },
     "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
+      "target": "AppImage"
     }
   }
 }

@@ -95,7 +95,7 @@ jobs:
           bun run build:main
           bun run build:preload
           bunx --bun vite build
-          bunx --bun electron-builder --mac --${{ matrix.arch }} -c.mac.target='[{"target":"zip","arch":["${{ matrix.arch }}"]}]'
+          bunx --bun electron-builder --mac --arch ${{ matrix.arch }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -128,7 +128,7 @@ jobs:
           bun run build:main
           bun run build:preload
           bunx --bun vite build
-          bunx --bun electron-builder --win --x64
+          bunx --bun electron-builder --win --arch x64
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -161,7 +161,7 @@ jobs:
           bun run build:main
           bun run build:preload
           bunx --bun vite build
-          bunx --bun electron-builder --linux --x64
+          bunx --bun electron-builder --linux --arch x64
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
