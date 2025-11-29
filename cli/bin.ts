@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import packageJson from "./package.json";
 
-import { createCommand } from "./src";
+import { createCommand } from "./src/create";
 import { devCommand } from "./src/dev";
 import { cacheCommand } from "./src/cache";
 
