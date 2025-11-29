@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { createWriteStream, existsSync } from 'fs';
@@ -182,6 +182,12 @@ function createWindow(): void {
   if (isDev) {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
+
+  // Auto-grant media permissions for games
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const allowedPermissions = ['media', 'mediaKeySystem', 'audioCapture', 'videoCapture'];
+    callback(allowedPermissions.includes(permission));
+  });
 
   // Capture ShiftLeft even when iframe has focus
   mainWindow.webContents.on('before-input-event', (_event, input) => {

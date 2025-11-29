@@ -162,7 +162,12 @@
     {/if}
   </div>
 {:else if gameUrl}
-  <iframe bind:this={frame} class="game-frame" src={gameUrl} title={game.name}
+  <iframe
+    bind:this={frame}
+    class="game-frame"
+    src={gameUrl}
+    title={game.name}
+    allow="accelerometer; gyroscope; camera; microphone; autoplay"
   ></iframe>
 {/if}
 
