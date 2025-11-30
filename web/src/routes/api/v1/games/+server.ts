@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ locals, request, platform }) => {
             status: 200,
             headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'public, max-age=31536000'
+                'Cache-Control': 's-maxage=31536000'
             }
         });
 
