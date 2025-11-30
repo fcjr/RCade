@@ -151,6 +151,12 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 
     let game = await Game.byName(deploymentName);
 
+    if (game !== undefined && !game.matchesRepo(auth.repository)) {
+        return jsonResponse({
+            error: `Game '${deploymentName}' is already registered to a different repository (${auth.repository})`
+        }, 403);
+    }
+
     try {
         let version: string;
 
