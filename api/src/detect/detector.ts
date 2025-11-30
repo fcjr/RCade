@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
 import * as semver from "semver";
+import * as JSON5 from "json5";
 import { parse as parseToml } from "smol-toml";
 import { pluginManifests } from "../plugins.js";
 import { Manifest as PluginManifestSchema } from "../plugin/manifest.js";
@@ -83,7 +84,7 @@ export class PluginDetector {
 
     private parsePackageJsonFile(filePath: string): DetectedPackage[] {
         const content = fs.readFileSync(filePath, "utf-8");
-        const packageJson = JSON.parse(content);
+        const packageJson = JSON5.parse(content);
         const packages: DetectedPackage[] = [];
         const allDeps: Record<string, unknown> = {
             ...packageJson.dependencies,
@@ -104,7 +105,7 @@ export class PluginDetector {
 
     private parseBunLockFile(filePath: string): DetectedPackage[] {
         const content = fs.readFileSync(filePath, "utf-8");
-        const lock = JSON.parse(content);
+        const lock = JSON5.parse(content);
         const packages: DetectedPackage[] = [];
 
         const pkgs = lock.packages;
@@ -143,7 +144,7 @@ export class PluginDetector {
 
     private parseNpmLockFile(filePath: string): DetectedPackage[] {
         const content = fs.readFileSync(filePath, "utf-8");
-        const lock = JSON.parse(content);
+        const lock = JSON5.parse(content);
         const packages: DetectedPackage[] = [];
 
         const pkgs = lock.packages;

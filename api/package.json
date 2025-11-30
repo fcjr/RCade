@@ -26,6 +26,7 @@
   "dependencies": {
     "@rcade/input-classic": "workspace:*",
     "js-yaml": "^4.1.1",
+    "json5": "^2.2.3",
     "semver": "^7.7.3",
     "smol-toml": "^1.5.2"
   },
