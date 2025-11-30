@@ -10,7 +10,7 @@ export class PluginManager {
     public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"]) {
         const manager = new PluginManager(wc);
 
-        for (let channel of preload) {
+        for (let channel of preload ?? []) {
             await manager.load(channel.name, channel.version);
         }
 

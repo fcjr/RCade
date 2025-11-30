@@ -52,7 +52,7 @@
     },
     "cabinet": {
       "name": "@rcade/client",
-      "version": "0.1.11",
+      "version": "0.1.12",
       "dependencies": {
         "@hono/node-server": "^1.13.7",
         "@rcade/api": "workspace:*",
@@ -136,7 +136,7 @@
       "name": "@rcade/plugin-input-classic",
       "version": "0.2.1",
       "dependencies": {
-        "@rcade/sdk": "workspace:*",
+        "@rcade/sdk": "^0.2.1",
       },
       "devDependencies": {
         "@types/bun": "latest",
