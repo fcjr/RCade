@@ -1,0 +1,29 @@
+{
+    "kind": "plugin",
+    "name": "@rcade/input-classic",
+    "description": "The classic input control scheme.",
+    "visibility": "public",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "display_name": "Rose Kodsi-Hall",
+            "recurse_id": 6834
+        }
+    ],
+    "libraries": [
+        {
+            "language": "javascript",
+            "package": {
+                "package": "@rcade/plugin-input-classic",
+                "versions": "1.x.x"
+            }
+        },
+        {
+            "language": "rust",
+            "package": {
+                "package": "rcade-plugin-input-classic",
+                "versions": "1.x.x"
+            }
+        }
+    ]
+}

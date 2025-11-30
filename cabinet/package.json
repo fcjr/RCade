@@ -19,13 +19,17 @@
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@rcade/api": "workspace:*",
+    "@rcade/sdk-plugin": "workspace:*",
     "hono": "^4.6.14",
+    "semver": "^7.7.3",
     "tar": "^7.4.3",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "@rcade/input-classic": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@types/node": "^22.0.0",
+    "@types/semver": "^7.7.1",
     "@types/tar": "^6.1.13",
     "concurrently": "^9.0.0",
     "electron": "^39.2.4",

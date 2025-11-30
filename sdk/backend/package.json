@@ -1,7 +1,11 @@
 {
   "name": "@rcade/sdk-plugin",
+  "version": "0.1.0",
   "module": "index.ts",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

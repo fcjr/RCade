@@ -16,6 +16,6 @@ export class PluginEnvironment {
 }
 
 export interface Plugin {
-    start(environment: PluginEnvironment): void;
-    stop(): void;
+    start(environment: PluginEnvironment): Promise<void> | void;
+    stop(): Promise<void> | void;
 }

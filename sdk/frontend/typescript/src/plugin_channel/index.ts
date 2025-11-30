@@ -1,62 +1,59 @@
 export class PluginChannel {
-    // Map of pending acquire requests: key is "name:version"
-    private static pendingAcquires = new Map<string, (channel: PluginChannel) => void>();
-
-    // Map of available channels that arrived before acquire was called
-    private static availableChannels = new Map<string, MessagePort>();
-
-    static {
-        window.parent.postMessage("request_plugin_channels", "*");
-
-        window.addEventListener('message', (event) => {
-            if (event.data?.type === 'plugin_channel_created') {
-                const { name, version } = event.data.channel;
-                const port = event.ports[0];
-
-                if (!name || !version || !port) {
-                    console.warn('Invalid plugin_channel_created event', event.data);
-                    return;
-                }
-
-                const key = `${name}:${version}`;
-
-                // Check if there's a pending acquire request
-                const resolver = PluginChannel.pendingAcquires.get(key);
-                if (resolver) {
-                    // Fulfill the pending request
-                    const channel = new PluginChannel(port);
-                    resolver(channel);
-                    PluginChannel.pendingAcquires.delete(key);
-                } else {
-                    // Store the channel for later
-                    PluginChannel.availableChannels.set(key, port);
-                }
-            }
-        });
-    }
-
     public static async acquire(name: string, version: string) {
-        const key = `${name}:${version}`;
+        const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-        // Check if channel is already available
-        const availablePort = PluginChannel.availableChannels.get(key);
-        if (availablePort) {
-            PluginChannel.availableChannels.delete(key);
-            return Promise.resolve(new PluginChannel(availablePort));
-        }
+        return new Promise<PluginChannel>((resolve, reject) => {
+            // Create a listener for this specific acquire request
+            const listener = (event: MessageEvent) => {
+                if (event.data?.type === 'plugin_channel' && event.data?.nonce === nonce) {
+                    const port = event.ports[0];
 
-        // Register a pending acquire request
-        return new Promise<PluginChannel>((resolve) => {
-            PluginChannel.pendingAcquires.set(key, resolve);
+                    // Check for error response
+                    if ("error" in event.data) {
+                        window.removeEventListener('message', listener);
+                        reject(new Error(event.data.error));
+                        return;
+                    }
+
+                    const { channel } = event.data;
+
+                    if (!channel?.name || !channel?.version || !port) {
+                        console.warn('Invalid plugin_channel event', event.data);
+                        return;
+                    }
+
+                    // Remove the listener
+                    window.removeEventListener('message', listener);
+
+                    // Resolve with the new channel
+                    const pluginChannel = new PluginChannel(port, channel);
+                    resolve(pluginChannel);
+                }
+            };
+
+            // Register the listener
+            window.addEventListener('message', listener);
+
+            // Send the acquire message
+            window.parent.postMessage({
+                type: "acquire_plugin_channel",
+                nonce,
+                channel: { name, version }
+            }, "*");
         });
     }
 
     private constructor(
         private port: MessagePort,
+        private channel: { name: unknown, version: unknown },
     ) { }
 
     // Utility method to access the message port
     public getPort(): MessagePort {
         return this.port;
+    }
+
+    public getVersion(): String {
+        return String(this.channel.version);
     }
 }

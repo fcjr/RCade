@@ -5,111 +5,19 @@ use alloc::format;
 use alloc::rc::Rc;
 use alloc::string::String;
 use core::cell::RefCell;
-use hashbrown::HashMap;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::DedicatedWorkerGlobalScope;
 use web_sys::{MessageEvent, MessagePort};
 
-type ChannelResolver = Box<dyn FnOnce(PluginChannel)>;
-
-pub struct PluginChannelStatic {
-    pending_acquires: HashMap<String, ChannelResolver>,
-    available_channels: HashMap<String, MessagePort>,
-}
-
-impl PluginChannelStatic {
-    fn new() -> Self {
-        Self {
-            pending_acquires: HashMap::new(),
-            available_channels: HashMap::new(),
-        }
-    }
-}
-
-thread_local! {
-    static PLUGIN_CHANNEL_STATE: Rc<RefCell<PluginChannelStatic>> = {
-        let state = Rc::new(RefCell::new(PluginChannelStatic::new()));
-        initialize_listener(state.clone());
-        state
-    };
-}
-
-fn get_state() -> Rc<RefCell<PluginChannelStatic>> {
-    PLUGIN_CHANNEL_STATE.with(|state| state.clone())
-}
-
-fn initialize_listener(state: Rc<RefCell<PluginChannelStatic>>) {
-    // Set up message event listener
-    let closure = Closure::wrap(Box::new(move |event: MessageEvent| {
-        handle_message(event, state.clone());
-    }) as Box<dyn FnMut(MessageEvent)>);
-
-    if let Some(window) = web_sys::window() {
-        // Request plugin channels from parent
-        if let Some(parent) = window.parent().ok().flatten() {
-            let _ = parent.post_message(&JsValue::from_str("request_plugin_channels"), "*");
-        }
-
-        window
-            .add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())
-            .expect("failed to add event listener");
-    } else if let Ok(worker) = js_sys::global().dyn_into::<DedicatedWorkerGlobalScope>() {
-        let _ = worker.post_message(&JsValue::from_str("request_plugin_channels"));
-
-        worker
-            .add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())
-            .expect("Failed to add listener");
-    }
-
-    closure.forget(); // Keep the closure alive
-}
-
-fn handle_message(event: MessageEvent, state: Rc<RefCell<PluginChannelStatic>>) {
-    let data = event.data();
-
-    // Check if this is a plugin_channel_created event
-    if let Ok(obj) = data.dyn_into::<js_sys::Object>() {
-        let type_val = js_sys::Reflect::get(&obj, &JsValue::from_str("type")).ok();
-
-        if let Some(type_str) = type_val.and_then(|v| v.as_string()) {
-            if type_str == "plugin_channel_created" {
-                let channel_obj = js_sys::Reflect::get(&obj, &JsValue::from_str("channel")).ok();
-
-                if let Some(channel) = channel_obj {
-                    let name = js_sys::Reflect::get(&channel, &JsValue::from_str("name"))
-                        .ok()
-                        .and_then(|v| v.as_string());
-                    let version = js_sys::Reflect::get(&channel, &JsValue::from_str("version"))
-                        .ok()
-                        .and_then(|v| v.as_string());
-
-                    let ports = event.ports();
-                    let port = if ports.length() > 0 {
-                        ports.get(0).dyn_into::<MessagePort>().ok()
-                    } else {
-                        None
-                    };
-
-                    if let (Some(name), Some(version), Some(port)) = (name, version, port) {
-                        let key = format!("{}:{}", name, version);
-                        let mut state_mut = state.borrow_mut();
-
-                        // Check for pending acquire request
-                        if let Some(resolver) = state_mut.pending_acquires.remove(&key) {
-                            drop(state_mut); // Drop the borrow before calling resolver
-                            let channel = PluginChannel::new(port);
-                            resolver(channel);
-                        } else {
-                            // Store for later
-                            state_mut.available_channels.insert(key, port);
-                        }
-                    }
-                }
-            }
-        }
-    }
+fn generate_nonce() -> String {
+    use js_sys::Math;
+    format!(
+        "{}{}",
+        (Math::random() * 1e15) as u64,
+        (Math::random() * 1e15) as u64
+    )
 }
 
 pub struct PluginChannel {
@@ -122,27 +30,179 @@ impl PluginChannel {
     }
 
     pub async fn acquire(name: &str, version: &str) -> Result<Self, JsValue> {
-        let key = format!("{}:{}", name, version);
-        let state = get_state();
-
-        // Check if channel is already available
-        {
-            let mut state_mut = state.borrow_mut();
-            if let Some(port) = state_mut.available_channels.remove(&key) {
-                return Ok(Self::new(port));
-            }
-        }
+        let nonce = generate_nonce();
 
         // Create a JS Promise
-        let promise = js_sys::Promise::new(&mut |resolve, _reject| {
-            let resolver = Box::new(move |channel: PluginChannel| {
-                let _ = resolve.call1(&JsValue::NULL, &JsValue::from(channel));
-            });
+        let promise = js_sys::Promise::new(&mut |resolve, reject| {
+            let nonce_for_closure = nonce.clone();
 
-            state
-                .borrow_mut()
-                .pending_acquires
-                .insert(key.clone(), resolver);
+            // Store the closure in an Rc<RefCell> so we can reference it from within
+            let closure_holder: Rc<RefCell<Option<Closure<dyn FnMut(MessageEvent)>>>> =
+                Rc::new(RefCell::new(None));
+            let closure_holder_clone = closure_holder.clone();
+
+            // Create a closure that will handle the message
+            let closure = Closure::wrap(Box::new(move |event: MessageEvent| {
+                let data = event.data();
+
+                // Check if this is a plugin_channel event with matching nonce
+                if let Ok(obj) = data.dyn_into::<js_sys::Object>() {
+                    let type_val = js_sys::Reflect::get(&obj, &JsValue::from_str("type")).ok();
+                    let nonce_val = js_sys::Reflect::get(&obj, &JsValue::from_str("nonce")).ok();
+
+                    if let (Some(type_str), Some(recv_nonce)) = (
+                        type_val.and_then(|v| v.as_string()),
+                        nonce_val.and_then(|v| v.as_string()),
+                    ) {
+                        if type_str == "plugin_channel" && recv_nonce == nonce_for_closure {
+                            let ports = event.ports();
+                            let port = if ports.length() > 0 {
+                                ports.get(0).dyn_into::<MessagePort>().ok()
+                            } else {
+                                None
+                            };
+
+                            // Check for error response
+                            if let Ok(error_val) =
+                                js_sys::Reflect::get(&obj, &JsValue::from_str("error"))
+                            {
+                                if !error_val.is_undefined() {
+                                    // Remove the event listener
+                                    if let Some(closure_ref) =
+                                        closure_holder_clone.borrow().as_ref()
+                                    {
+                                        let target = event.target();
+                                        if let Some(window) = target
+                                            .clone()
+                                            .and_then(|t| t.dyn_into::<web_sys::Window>().ok())
+                                        {
+                                            let _ = window.remove_event_listener_with_callback(
+                                                "message",
+                                                closure_ref.as_ref().unchecked_ref(),
+                                            );
+                                        } else if let Some(worker) = target.and_then(|t| {
+                                            t.dyn_into::<DedicatedWorkerGlobalScope>().ok()
+                                        }) {
+                                            let _ = worker.remove_event_listener_with_callback(
+                                                "message",
+                                                closure_ref.as_ref().unchecked_ref(),
+                                            );
+                                        }
+                                    }
+
+                                    // Reject with the error
+                                    let error_msg = error_val
+                                        .as_string()
+                                        .unwrap_or_else(|| "Unknown error".to_string());
+                                    let _ = reject
+                                        .call1(&JsValue::NULL, &JsValue::from_str(&error_msg));
+                                    return;
+                                }
+                            }
+
+                            let channel_obj =
+                                js_sys::Reflect::get(&obj, &JsValue::from_str("channel")).ok();
+
+                            if let Some(channel) = channel_obj {
+                                let name =
+                                    js_sys::Reflect::get(&channel, &JsValue::from_str("name"))
+                                        .ok()
+                                        .and_then(|v| v.as_string());
+                                let version =
+                                    js_sys::Reflect::get(&channel, &JsValue::from_str("version"))
+                                        .ok()
+                                        .and_then(|v| v.as_string());
+
+                                if let (Some(_name), Some(_version), Some(port)) =
+                                    (name, version, port)
+                                {
+                                    // Remove the event listener
+                                    if let Some(closure_ref) =
+                                        closure_holder_clone.borrow().as_ref()
+                                    {
+                                        let target = event.target();
+                                        if let Some(window) = target
+                                            .clone()
+                                            .and_then(|t| t.dyn_into::<web_sys::Window>().ok())
+                                        {
+                                            let _ = window.remove_event_listener_with_callback(
+                                                "message",
+                                                closure_ref.as_ref().unchecked_ref(),
+                                            );
+                                        } else if let Some(worker) = target.and_then(|t| {
+                                            t.dyn_into::<DedicatedWorkerGlobalScope>().ok()
+                                        }) {
+                                            let _ = worker.remove_event_listener_with_callback(
+                                                "message",
+                                                closure_ref.as_ref().unchecked_ref(),
+                                            );
+                                        }
+                                    }
+
+                                    // Resolve with the channel
+                                    let channel = PluginChannel::new(port);
+                                    let _ = resolve.call1(&JsValue::NULL, &JsValue::from(channel));
+                                }
+                            }
+                        }
+                    }
+                }
+            }) as Box<dyn FnMut(MessageEvent)>);
+
+            // Register the listener
+            if let Some(window) = web_sys::window() {
+                window
+                    .add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())
+                    .expect("failed to add event listener");
+            } else if let Ok(worker) = js_sys::global().dyn_into::<DedicatedWorkerGlobalScope>() {
+                worker
+                    .add_event_listener_with_callback("message", closure.as_ref().unchecked_ref())
+                    .expect("Failed to add listener");
+            }
+
+            // Store the closure so it can reference itself for removal
+            *closure_holder.borrow_mut() = Some(closure);
+
+            // Leak the closure holder so it stays alive
+            let _ = Rc::into_raw(closure_holder);
+
+            // Send the acquire message
+            let message = js_sys::Object::new();
+            js_sys::Reflect::set(
+                &message,
+                &JsValue::from_str("type"),
+                &JsValue::from_str("acquire_plugin_channel"),
+            )
+            .unwrap();
+            js_sys::Reflect::set(
+                &message,
+                &JsValue::from_str("nonce"),
+                &JsValue::from_str(&nonce),
+            )
+            .unwrap();
+
+            let channel_obj = js_sys::Object::new();
+            js_sys::Reflect::set(
+                &channel_obj,
+                &JsValue::from_str("name"),
+                &JsValue::from_str(name),
+            )
+            .unwrap();
+            js_sys::Reflect::set(
+                &channel_obj,
+                &JsValue::from_str("version"),
+                &JsValue::from_str(version),
+            )
+            .unwrap();
+            js_sys::Reflect::set(&message, &JsValue::from_str("channel"), &channel_obj).unwrap();
+
+            if let Some(window) = web_sys::window() {
+                if let Some(parent) = window.parent().ok().flatten() {
+                    let _ = parent.post_message(&message, "*");
+                }
+            } else if let Ok(worker) = js_sys::global().dyn_into::<DedicatedWorkerGlobalScope>() {
+                let _ = worker.post_message(&message);
+            }
         });
 
         // Await the promise

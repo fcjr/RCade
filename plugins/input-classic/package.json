@@ -1,0 +1,23 @@
+{
+  "name": "@rcade/input-classic",
+  "module": "index.ts",
+  "type": "module",
+  "files": [
+    "index.ts",
+    "rcade.manifest.json"
+  ],
+  "exports": {
+    ".": "./index.ts",
+    "./rcade.manifest.json": "./rcade.manifest.json"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "electron": "^39.2.4"
+  },
+  "dependencies": {
+    "@rcade/sdk-plugin": "0.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

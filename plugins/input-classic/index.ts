@@ -1,4 +1,5 @@
-import { MessageChannelMain, MessagePortMain } from "electron";
+import { type PluginEnvironment, type Plugin } from "@rcade/sdk-plugin";
+import type { MessagePortMain } from "electron";
 
 const MAP = {
     "ArrowUp": { type: "button", player: 1, button: "UP" },
@@ -19,8 +20,8 @@ const MAP = {
     "Digit2": { type: "system", player: 0, button: "TWO_PLAYER" },
 } as const;
 
-async function main(web: Electron.WebContents, port: MessagePortMain, aborter: AbortSignal) {
-    const handler = (event: Electron.Event, input: Electron.Input) => {
+export default class InputClassicPlugin implements Plugin {
+    private handleInput(port: MessagePortMain, _: Electron.Event, input: Electron.Input) {
         const mapping = MAP[input.code as keyof typeof MAP];
 
         if (mapping) {
@@ -31,19 +32,23 @@ async function main(web: Electron.WebContents, port: MessagePortMain, aborter: A
 
             port.postMessage(message);
         }
-    };
+    }
 
-    web.on('before-input-event', handler);
+    private handler: any;
+    private environment?: PluginEnvironment;
 
-    aborter.addEventListener('abort', () => {
-        web.off('before-input-event', handler);
-    }, { once: true });
-}
+    start(environment: PluginEnvironment): void {
+        this.environment = environment;
+        this.handler = (event: Electron.Event, input: Electron.Input) => {
+            this.handleInput(environment.getPort(), event, input);
+        }
 
-export function rcadeInputClassic(web: Electron.WebContents, aborter: AbortSignal): MessagePortMain {
-    const channel = new MessageChannelMain();
+        environment.getWebContents().on("before-input-event", this.handler);
+    }
 
-    main(web, channel.port1, aborter)
-
-    return channel.port2;
+    stop(): void {
+        this.environment?.getWebContents()?.off("before-input-event", this.handler);
+        this.handler = undefined;
+        this.environment = undefined;
+    }
 }

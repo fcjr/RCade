@@ -11,7 +11,8 @@
     "runtime",
     "sdk/frontend/typescript",
     "sdk/backend",
-    "plugins/input-classic/clients/typescript"
+    "plugins/input-classic/clients/typescript",
+    "plugins/input-classic"
   ],
   "scripts": {
     "dev:web": "bun run --cwd web dev",

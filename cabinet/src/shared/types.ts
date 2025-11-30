@@ -42,4 +42,5 @@ export interface RcadeAPI {
   loadGame: (game: GameInfo) => Promise<LoadGameResult>;
   unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined) => Promise<void>;
   onMenuKey: (callback: () => void) => () => void;
+  acquirePlugin: (name: string, version: string) => Promise<{ port: MessagePort, name: string, version: string }>;
 }

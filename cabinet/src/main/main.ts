@@ -10,8 +10,8 @@ import { Hono } from 'hono';
 import { Client, Game } from '@rcade/api';
 import * as tar from 'tar';
 import type { GameInfo, LoadGameResult } from '../shared/types';
-import { rcadeInputClassic } from '../plugins/rcade-input-classic/index.js';
 import { parseCliArgs } from "./args.js";
+import { PluginManager } from '../plugins/index.js';
 
 const args = parseCliArgs();
 
@@ -276,16 +276,11 @@ app.whenReady().then(async () => {
       throw new Error("Cannot load remote game with local_unversioned specifier. how did this happen?")
     }
 
-    const pluginPorts: Record<string, Record<string, number>> = {};
-    const ports = [];
+    const pm = await PluginManager.loadInto(event.sender, game.dependencies);
 
-    if (game.dependencies.findIndex(v => v.name === "@rcade/input-classic" && v.version === "1.0.0") != -1) {
-      pluginPorts["@rcade/input-classic"] = {
-        "1.0.0": ports.push(rcadeInputClassic(event.sender, abortController.signal)) - 1,
-      }
-    }
-
-    event.sender.postMessage("plugin-ports", { structure: pluginPorts }, ports);
+    abortController.signal.addEventListener("abort", () => {
+      pm.destroy();
+    })
 
     return { url };
   });

@@ -47,17 +47,21 @@
     },
     "cabinet": {
       "name": "@rcade/client",
-      "version": "0.1.9",
+      "version": "0.1.10",
       "dependencies": {
         "@hono/node-server": "^1.13.7",
         "@rcade/api": "workspace:*",
+        "@rcade/input-classic": "workspace:*",
+        "@rcade/sdk-plugin": "workspace:*",
         "hono": "^4.6.14",
+        "semver": "^7.7.3",
         "tar": "^7.4.3",
         "zod": "^4.1.13",
       },
       "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^5.0.0",
         "@types/node": "^22.0.0",
+        "@types/semver": "^7.7.1",
         "@types/tar": "^6.1.13",
         "concurrently": "^9.0.0",
         "electron": "^39.2.4",
@@ -69,7 +73,7 @@
     },
     "cli": {
       "name": "rcade",
-      "version": "0.0.21",
+      "version": "0.0.24",
       "bin": {
         "rcade": "./dist/bin.js",
       },
@@ -95,7 +99,7 @@
     },
     "create": {
       "name": "create-rcade",
-      "version": "0.0.21",
+      "version": "0.0.24",
       "bin": {
         "create-rcade": "./dist/bin.js",
       },
@@ -108,6 +112,19 @@
       },
       "peerDependencies": {
         "typescript": "^5",
+      },
+    },
+    "plugins/input-classic": {
+      "name": "@rcade/input-classic",
+      "dependencies": {
+        "@rcade/sdk-plugin": "0.1.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "electron": "^39.2.4",
+      },
+      "peerDependencies": {
+        "typescript": "^5.0.0",
       },
     },
     "plugins/input-classic/clients/typescript": {
@@ -143,6 +160,7 @@
     },
     "sdk/backend": {
       "name": "@rcade/sdk-plugin",
+      "version": "0.1.0",
       "dependencies": {
         "electron": "^39.2.4",
       },
@@ -568,6 +586,8 @@
     "@rcade/api": ["@rcade/api@workspace:api"],
 
     "@rcade/client": ["@rcade/client@workspace:cabinet"],
+
+    "@rcade/input-classic": ["@rcade/input-classic@workspace:plugins/input-classic"],
 
     "@rcade/plugin-input-classic": ["@rcade/plugin-input-classic@workspace:plugins/input-classic/clients/typescript"],
 

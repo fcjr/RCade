@@ -20,7 +20,7 @@ export const SYSTEM = {
 export const STATUS = { connected: false };
 
 (async () => {
-    const channel = await PluginChannel.acquire("@rcade/input-classic", "1.0.0");
+    const channel = await PluginChannel.acquire("@rcade/input-classic", "^1.0.0");
 
     STATUS.connected = true;
 
