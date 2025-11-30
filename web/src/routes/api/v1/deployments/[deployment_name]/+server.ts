@@ -149,6 +149,23 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
         return jsonResponse({ error: 'Deployment name does not match object name in manifest' }, 400);
     }
 
+    // Check deployment restrictions
+    if (manifest.deployment) {
+        const [actualOwner, actualRepo] = auth.repository.split('/');
+
+        if (manifest.deployment.github_owner && manifest.deployment.github_owner !== actualOwner) {
+            return jsonResponse({
+                error: `Deployment restricted: github_owner '${manifest.deployment.github_owner}' does not match '${actualOwner}'`
+            }, 403);
+        }
+
+        if (manifest.deployment.github_repo && manifest.deployment.github_repo !== actualRepo) {
+            return jsonResponse({
+                error: `Deployment restricted: github_repo '${manifest.deployment.github_repo}' does not match '${actualRepo}'`
+            }, 403);
+        }
+    }
+
     let game = await Game.byName(deploymentName);
 
     if (game !== undefined && !game.matchesRepo(auth.repository)) {

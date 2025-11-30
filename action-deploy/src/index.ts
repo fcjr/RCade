@@ -54,6 +54,23 @@ export async function run(): Promise<void> {
     core.info(`Found manifest for app ${manifest.name}`);
     core.info(JSON.stringify(manifest, null, 2));
     core.endGroup();
+
+    // Check deployment restrictions
+    if (manifest.deployment) {
+      const githubRepo = process.env.GITHUB_REPOSITORY || "";
+      const [actualOwner, actualRepo] = githubRepo.split("/");
+
+      if (manifest.deployment.github_owner && manifest.deployment.github_owner !== actualOwner) {
+        core.info(`⏭️ Deployment skipped: github_owner '${manifest.deployment.github_owner}' does not match '${actualOwner}'`);
+        return;
+      }
+
+      if (manifest.deployment.github_repo && manifest.deployment.github_repo !== actualRepo) {
+        core.info(`⏭️ Deployment skipped: github_repo '${manifest.deployment.github_repo}' does not match '${actualRepo}'`);
+        return;
+      }
+    }
+
     const absoluteArtifactPath = resolve(workspace, artifactPath);
 
     // ensure artfact folder has an index.html

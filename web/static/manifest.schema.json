@@ -131,6 +131,21 @@
           "required": ["name", "version"],
           "additionalProperties": false,
           "description": "Reference to the original game if this is a remix"
+        },
+        "deployment": {
+          "type": "object",
+          "properties": {
+            "github_owner": {
+              "type": "string",
+              "description": "GitHub owner (user or org) to restrict deployments to"
+            },
+            "github_repo": {
+              "type": "string",
+              "description": "GitHub repository name to restrict deployments to"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Optional deployment restrictions. If set, deployments will be skipped when the GitHub repository doesn't match"
         }
       },
       "required": ["name", "description", "visibility", "authors"],

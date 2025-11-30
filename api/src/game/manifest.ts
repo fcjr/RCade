@@ -41,6 +41,10 @@ export const Manifest = z.object({
             .regex(/[a-zA-Z0-9_-]*/),
         version: ZodSemverUnbranded,
     }).optional(),
+    deployment: z.object({
+        github_owner: z.string().optional(),
+        github_repo: z.string().optional(),
+    }).optional(),
 });
 
 export type Manifest = z.infer<typeof Manifest>;
