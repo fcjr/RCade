@@ -185,6 +185,12 @@ export const POST: RequestHandler = async ({ params, request }) => {
                 url: `https://github.com/${auth.repository}`,
             });
 
+            const primaryBranch = await git.currentBranch({
+                fs,
+                dir,
+                fullname: false
+            });
+
             const createRepoResponse = await fetch('https://api.github.com/orgs/rcade-community/repos', {
                 method: 'POST',
                 headers: {
@@ -238,6 +244,19 @@ export const POST: RequestHandler = async ({ params, request }) => {
                     }),
                 });
             }
+
+            await fetch(`https://api.github.com/repos/rcade-community/${deploymentName}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${await githubToken()}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'User-Agent': "RCade Community"
+                },
+                body: JSON.stringify({
+                    default_branch: `${version}/${primaryBranch}`
+                }),
+            });
         } catch (error) {
             return jsonResponse({ error: `Failed to clone your repository. ${error}` }, 500);
         }
