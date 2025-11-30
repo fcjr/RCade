@@ -13,6 +13,10 @@ on:
           - minor
           - major
 
+concurrency:
+  group: repo-commits
+  cancel-in-progress: false
+
 jobs:
   bump:
     name: Bump version
