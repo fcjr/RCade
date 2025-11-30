@@ -267,6 +267,18 @@ This monorepo contains:
 
 ---
 
+## Community Games
+
+Looking for inspiration? Check out the [rcade-community](https://github.com/recurse-center/rcade-community) archive—a collection of games created by the Recurse Center community.
+
+Found a game you'd like to build on? Use `remix` to create your own version:
+
+```bash
+npx rcade@latest remix <game-name>
+```
+
+---
+
 ## Get Started Now
 
 ```bash
