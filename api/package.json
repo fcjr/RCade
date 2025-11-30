@@ -20,10 +20,12 @@
   ],
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/js-yaml": "^4.0.9",
     "@types/semver": "^7.7.1"
   },
   "dependencies": {
     "@rcade/input-classic": "workspace:*",
+    "js-yaml": "^4.1.1",
     "semver": "^7.7.3",
     "smol-toml": "^1.5.2"
   },
