@@ -9,6 +9,24 @@ export const categories = sqliteTable('categories', {
     description: text('description'),
 });
 
+/// Apps & Keys
+
+export const apps = sqliteTable('apps', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    description: text('description'),
+    owner_rc_id: numeric("owner_rc_id").notNull(),
+});
+
+export const appKeys = sqliteTable('app_keys', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    appId: text('app_id').notNull().references(() => apps.id, { onDelete: "cascade" }),
+    rc_id: numeric("owner_rc_id").notNull(),
+    key: text('key').notNull(),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
 /// Games
 
 export const games = sqliteTable('games', {
@@ -133,3 +151,13 @@ export const gameVersionsRelations = relations(gameVersions, ({ many, one }) => 
     }),
 }));
 
+export const appsRelations = relations(apps, ({ many }) => ({
+    keys: many(appKeys),
+}));
+
+export const appKeysRelations = relations(appKeys, ({ one }) => ({
+    app: one(apps, {
+        fields: [appKeys.appId],
+        references: [apps.id],
+    }),
+}));
