@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "http://localhost:3000",
+          "http://localhost:8787",
+          "https://rcade.recurse.com"
+        ],
+        "methods": ["GET"]
+      }
+    }
+  ]
+}

@@ -15,7 +15,8 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:local": "wrangler d1 migrations apply rcade --local",
 		"db:migrate:remote": "wrangler d1 migrations apply rcade --remote",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"r2:cors": "wrangler r2 bucket cors set rcade --file cors.json"
 	},
 	"devDependencies": {
 		"@libsql/client": "^0.15.15",
@@ -23,7 +24,10 @@
 		"@sveltejs/kit": "^2.48.5",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/vite": "^4.1.17",
+		"@types/js-untar": "^2.0.0",
+		"@types/pako": "^2.0.3",
 		"@types/semver": "^7.7.1",
+		"@types/serviceworker": "^0.0.167",
 		"drizzle-kit": "^0.31.7",
 		"drizzle-orm": "^0.44.7",
 		"jose": "^6.1.2",
@@ -42,10 +46,13 @@
 		"@aws-sdk/client-s3": "^3.940.0",
 		"@aws-sdk/s3-request-presigner": "^3.940.0",
 		"@cloudflare/workers-types": "^4.20251126.0",
+		"@codesandbox/sandpack-client": "^2.19.8",
 		"@isomorphic-git/lightning-fs": "^4.6.2",
 		"@rcade/api": "workspace:*",
 		"isomorphic-git": "^1.35.1",
+		"js-untar": "^2.0.0",
 		"memfs": "^4.51.0",
+		"pako": "^2.1.0",
 		"semver": "^7.7.3"
 	}
 }
