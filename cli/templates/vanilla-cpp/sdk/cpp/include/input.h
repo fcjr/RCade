@@ -3,6 +3,9 @@
 
 #include <emscripten.h>
 #include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace rcade {
 
@@ -28,6 +31,26 @@ struct PlayerInput {
 struct SystemInput {
     bool PAUSE = false;
     bool SETTINGS = false;
+};
+
+/**
+ * Input event types from the input-classic plugin
+ */
+enum class InputEventType {
+    PRESS,       // Any button press (fires on key down)
+    INPUT_START, // Button press started (key down)
+    INPUT_END    // Button press ended (key up)
+};
+
+/**
+ * Input event data
+ */
+struct InputEvent {
+    InputEventType eventType;
+    std::string button;      // Button name (e.g., "UP", "A", "ONE_PLAYER")
+    bool pressed;            // True if pressed, false if released
+    std::string type;        // "button" or "system"
+    int player;              // 1 or 2 for button events, 0 for system events
 };
 
 /**
@@ -85,12 +108,35 @@ public:
         inputCallback_ = callback;
     }
 
+    /**
+     * Set a callback for input events (press, inputStart, inputEnd)
+     *
+     * @param eventType The type of event to listen for
+     * @param callback Function to call when the event occurs
+     */
+    void onInputEvent(InputEventType eventType, std::function<void(const InputEvent&)> callback);
+
+    /**
+     * Remove all event callbacks for a specific event type
+     *
+     * @param eventType The type of event to clear callbacks for
+     */
+    void clearEventCallbacks(InputEventType eventType);
+
+    /**
+     * Handle input event (called internally via JavaScript callback)
+     * Do not call this manually unless you're implementing custom input handling
+     */
+    void handleInputEvent(const char* eventTypeStr, const char* button, bool pressed,
+                         const char* type, int player);
+
 private:
     PlayerInput player1_;
     PlayerInput player2_;
     SystemInput system_;
     bool keyboardFallback_;
     std::function<void()> inputCallback_;
+    std::map<InputEventType, std::vector<std::function<void(const InputEvent&)>>> eventCallbacks_;
 
     void setupPlugin();
     void setupKeyboardFallback();
