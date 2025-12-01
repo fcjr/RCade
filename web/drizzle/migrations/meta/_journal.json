@@ -99,6 +99,13 @@
       "when": 1764493511525,
       "tag": "0013_clammy_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1764564881689,
+      "tag": "0014_sharp_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,9 @@ declare module "@auth/sveltekit" {
 		user: {
 			rc_id: string,
 			github?: string,
+			twitter?: string,
+			linkedin?: string,
+			personal_site_url?: string,
 		} & DefaultSession["user"]
 	}
 }
