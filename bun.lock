@@ -136,7 +136,7 @@
     },
     "plugins/input-classic/clients/typescript": {
       "name": "@rcade/plugin-input-classic",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "dependencies": {
         "@rcade/sdk": "^0.2.1",
       },
