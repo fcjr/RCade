@@ -21,15 +21,19 @@ export class Client {
         return this
     }
 
+    private get headers(): HeadersInit | undefined {
+        return this.api_key ? { 'Authorization': `Bearer ${this.api_key}` } : undefined;
+    }
+
     public async getAllGames(): Promise<Game[]> {
-        const response = await fetch(`${this.baseUrl}/games`);
+        const response = await fetch(`${this.baseUrl}/games`, { headers: this.headers });
         const list = GamesResponse.parse(await response.json());
 
         return list.map((g) => Game.fromApiResponse(g))
     }
 
     public async getGame(gameId: string): Promise<Game> {
-        const response = await fetch(`${this.baseUrl}/games/${gameId}`);
+        const response = await fetch(`${this.baseUrl}/games/${gameId}`, { headers: this.headers });
         return Game.fromApiResponse(await response.json());
     }
 }

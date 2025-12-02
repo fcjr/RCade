@@ -15,6 +15,7 @@ const GithubOIDCClaims = z.object({
     repository: z.string().nonempty(),
     repository_owner: z.string().nonempty(),
     repository_owner_id: z.string().nonempty(),
+    repository_visibility: z.enum(["public", "private", "internal"]),
     actor: z.string().nonempty(),
     actor_id: z.string().nonempty(),
     ref: z.string().nonempty(),

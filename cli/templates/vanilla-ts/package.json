@@ -10,7 +10,7 @@
     },
     "devDependencies": {
         "concurrently": "^9.0.0",
-        "rcade": "^0.0.19",
+        "rcade": "^{{rcade_version}}",
         "typescript": "~5.9.3",
         "vite": "^7.2.4"
     },

@@ -52,7 +52,7 @@
     },
     "cabinet": {
       "name": "@rcade/client",
-      "version": "0.1.18",
+      "version": "0.1.22",
       "dependencies": {
         "@hono/node-server": "^1.13.7",
         "@rcade/api": "workspace:*",
@@ -78,7 +78,7 @@
     },
     "cli": {
       "name": "rcade",
-      "version": "0.0.30",
+      "version": "0.0.32",
       "bin": {
         "rcade": "./dist/bin.js",
       },
@@ -106,7 +106,7 @@
     },
     "create": {
       "name": "create-rcade",
-      "version": "0.0.30",
+      "version": "0.0.32",
       "bin": {
         "create-rcade": "./dist/bin.js",
       },

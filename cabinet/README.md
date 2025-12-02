@@ -18,6 +18,14 @@ bun run build:win      # Windows
 bun run build:linux    # Linux
 ```
 
+## Raspberry Pi 5
+
+For WebGPU support on Raspberry Pi 5, ensure Mesa Vulkan drivers are installed:
+
+```bash
+sudo apt install mesa-vulkan-drivers
+```
+
 ## Architecture
 
 - **Main process**: Game loading, plugin management, input handling

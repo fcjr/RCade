@@ -11,6 +11,7 @@ import Mustache from "mustache";
 import { mkdir } from "node:fs/promises";
 import { write_workflow } from "./workflow";
 import { execa } from "execa";
+import packageJson from "../package.json";
 
 function expandTilde(filePath: string): string {
     if (filePath.startsWith("~/")) {
@@ -149,6 +150,7 @@ export const createCommand = new Command("create")
         display_name,
         description,
         private: String(visibility !== "public"),
+        rcade_version: packageJson.version,
     }
 
     // ensure project directory exists

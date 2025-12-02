@@ -30,12 +30,24 @@ const scaleFactor = args.scale ?? (isDev ? 2 : 1);
 
 app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
 
-// Hide cursor on Linux
 if (process.platform === 'linux') {
-  app.commandLine.appendSwitch('cursor', 'none');
+  // WebGPU via Vulkan/ANGLE
+  app.commandLine.appendSwitch('enable-unsafe-webgpu');
+  app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+  app.commandLine.appendSwitch('use-angle', 'vulkan');
+  app.commandLine.appendSwitch('use-gl', 'angle');
+  app.commandLine.appendSwitch('enable-features', 'Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,WaylandWindowDecorations');
+  // Override GPU blocklist for devices like Raspberry Pi 5 where V3DV Vulkan driver works but may be blocklisted
+  app.commandLine.appendSwitch('ignore-gpu-blocklist');
+
+  // Disable Cursor in production only
+  if (!isDev) {
+    app.commandLine.appendSwitch('cursor', 'none');
+  }
 }
 
-const apiClient = Client.new();
+const cabinetApiKey = process.env.CABINET_API_KEY;
+const apiClient = cabinetApiKey ? Client.newKeyed(cabinetApiKey) : Client.new();
 
 // Cache directory for game files
 const cacheDir = path.join(app.getPath('userData'), 'game-cache');
