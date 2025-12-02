@@ -41,7 +41,9 @@ use embassy_futures::select::{select3, Either3};
 use embassy_rp::bind_interrupts;
 use embassy_rp::gpio::{Input, Pull};
 use embassy_rp::peripherals::{UART0, UART1, USB};
-use embassy_rp::uart::{BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits};
+use embassy_rp::uart::{
+    BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
+};
 use embassy_rp::usb::{Driver, InterruptHandler as UsbInterruptHandler};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::signal::Signal;
@@ -60,15 +62,15 @@ bind_interrupts!(struct Irqs {
 
 const HID_DESCRIPTOR: &[u8] = &[
     0x06, 0x00, 0xFF, // Usage Page (Vendor Defined)
-    0x09, 0x01,       // Usage (Vendor Usage 1)
-    0xA1, 0x01,       // Collection (Application)
-    0x09, 0x02,       //   Usage (Vendor Usage 2)
-    0x15, 0x00,       //   Logical Minimum (0)
+    0x09, 0x01, // Usage (Vendor Usage 1)
+    0xA1, 0x01, // Collection (Application)
+    0x09, 0x02, //   Usage (Vendor Usage 2)
+    0x15, 0x00, //   Logical Minimum (0)
     0x26, 0xFF, 0x00, //   Logical Maximum (255)
-    0x75, 0x08,       //   Report Size (8 bits)
-    0x95, 0x08,       //   Report Count (8 bytes)
-    0x81, 0x02,       //   Input (Data, Var, Abs)
-    0xC0,             // End Collection
+    0x75, 0x08, //   Report Size (8 bits)
+    0x95, 0x08, //   Report Count (8 bytes)
+    0x81, 0x02, //   Input (Data, Var, Abs)
+    0xC0, // End Collection
 ];
 
 // Spinner signals
@@ -129,12 +131,22 @@ async fn main(spawner: Spawner) {
     // Spinner 1: RX on GPIO1 (UART0)
     // Spinner 2: RX on GPIO5 (UART1)
     let uart0 = BufferedUart::new(
-        p.UART0, Irqs, p.PIN_0, p.PIN_1,
-        UART0_TX.init([0; 16]), UART0_RX.init([0; 256]), uart_cfg,
+        p.UART0,
+        Irqs,
+        p.PIN_0,
+        p.PIN_1,
+        UART0_TX.init([0; 16]),
+        UART0_RX.init([0; 256]),
+        uart_cfg,
     );
     let uart1 = BufferedUart::new(
-        p.UART1, Irqs, p.PIN_4, p.PIN_5,
-        UART1_TX.init([0; 16]), UART1_RX.init([0; 256]), uart_cfg,
+        p.UART1,
+        Irqs,
+        p.PIN_4,
+        p.PIN_5,
+        UART1_TX.init([0; 16]),
+        UART1_RX.init([0; 256]),
+        uart_cfg,
     );
 
     // System buttons
@@ -172,13 +184,13 @@ async fn main(spawner: Spawner) {
 
     spawner.spawn(spinner1_task(uart0)).unwrap();
     spawner.spawn(spinner2_task(uart1)).unwrap();
-    spawner.spawn(input_task(
-        j1_up, j1_down, j1_left, j1_right,
-        j2_up, j2_down, j2_left, j2_right,
-        p1_btn_a, p1_btn_b, p1_btn_c, p1_btn_d, p1_btn_e, p1_btn_f,
-        p2_btn_a, p2_btn_b, p2_btn_c, p2_btn_d, p2_btn_e, p2_btn_f,
-        start_1p, start_2p, menu,
-    )).unwrap();
+    spawner
+        .spawn(input_task(
+            j1_up, j1_down, j1_left, j1_right, j2_up, j2_down, j2_left, j2_right, p1_btn_a,
+            p1_btn_b, p1_btn_c, p1_btn_d, p1_btn_e, p1_btn_f, p2_btn_a, p2_btn_b, p2_btn_c,
+            p2_btn_d, p2_btn_e, p2_btn_f, start_1p, start_2p, menu,
+        ))
+        .unwrap();
 
     // USB config
     let mut usb_config = Config::new(0x1209, 0x0001);
@@ -189,14 +201,18 @@ async fn main(spawner: Spawner) {
     usb_config.max_packet_size_0 = 64;
 
     let mut builder = Builder::new(
-        Driver::new(p.USB, Irqs), usb_config,
-        CONFIG_DESC.init([0; 256]), BOS_DESC.init([0; 256]),
-        MSOS_DESC.init([0; 256]), CONTROL_BUF.init([0; 64]),
+        Driver::new(p.USB, Irqs),
+        usb_config,
+        CONFIG_DESC.init([0; 256]),
+        BOS_DESC.init([0; 256]),
+        MSOS_DESC.init([0; 256]),
+        CONTROL_BUF.init([0; 64]),
     );
     builder.handler(DEVICE_HANDLER.init(DeviceHandler));
 
     let hid = HidReaderWriter::<_, 1, 8>::new(
-        &mut builder, HID_STATE.init(State::new()),
+        &mut builder,
+        HID_STATE.init(State::new()),
         embassy_usb::class::hid::Config {
             report_descriptor: HID_DESCRIPTOR,
             request_handler: None,
@@ -220,7 +236,9 @@ async fn spinner1_task(mut uart: BufferedUart<'static, UART0>) {
     loop {
         if uart.read(&mut buf).await.is_ok() {
             count += 1;
-            if count == 1 { info!("Spinner 1 connected"); }
+            if count == 1 {
+                info!("Spinner 1 connected");
+            }
             match buf[0] {
                 0x01 => delta += 1,
                 0xFE => delta -= 1,
@@ -243,7 +261,9 @@ async fn spinner2_task(mut uart: BufferedUart<'static, UART1>) {
     loop {
         if uart.read(&mut buf).await.is_ok() {
             count += 1;
-            if count == 1 { info!("Spinner 2 connected"); }
+            if count == 1 {
+                info!("Spinner 2 connected");
+            }
             match buf[0] {
                 0x01 => delta += 1,
                 0xFE => delta -= 1,
@@ -260,13 +280,29 @@ async fn spinner2_task(mut uart: BufferedUart<'static, UART1>) {
 #[embassy_executor::task]
 #[allow(clippy::too_many_arguments)]
 async fn input_task(
-    j1_up: Input<'static>, j1_down: Input<'static>, j1_left: Input<'static>, j1_right: Input<'static>,
-    j2_up: Input<'static>, j2_down: Input<'static>, j2_left: Input<'static>, j2_right: Input<'static>,
-    p1_btn_a: Input<'static>, p1_btn_b: Input<'static>, p1_btn_c: Input<'static>, p1_btn_d: Input<'static>,
-    p1_btn_e: Input<'static>, p1_btn_f: Input<'static>,
-    p2_btn_a: Input<'static>, p2_btn_b: Input<'static>, p2_btn_c: Input<'static>, p2_btn_d: Input<'static>,
-    p2_btn_e: Input<'static>, p2_btn_f: Input<'static>,
-    start_1p: Input<'static>, start_2p: Input<'static>, menu: Input<'static>,
+    j1_up: Input<'static>,
+    j1_down: Input<'static>,
+    j1_left: Input<'static>,
+    j1_right: Input<'static>,
+    j2_up: Input<'static>,
+    j2_down: Input<'static>,
+    j2_left: Input<'static>,
+    j2_right: Input<'static>,
+    p1_btn_a: Input<'static>,
+    p1_btn_b: Input<'static>,
+    p1_btn_c: Input<'static>,
+    p1_btn_d: Input<'static>,
+    p1_btn_e: Input<'static>,
+    p1_btn_f: Input<'static>,
+    p2_btn_a: Input<'static>,
+    p2_btn_b: Input<'static>,
+    p2_btn_c: Input<'static>,
+    p2_btn_d: Input<'static>,
+    p2_btn_e: Input<'static>,
+    p2_btn_f: Input<'static>,
+    start_1p: Input<'static>,
+    start_2p: Input<'static>,
+    menu: Input<'static>,
 ) {
     let mut last_p1 = 0u8;
     let mut last_p2 = 0u8;
@@ -318,7 +354,9 @@ async fn input_task(
 }
 
 #[embassy_executor::task]
-async fn hid_task(mut writer: embassy_usb::class::hid::HidWriter<'static, Driver<'static, USB>, 8>) {
+async fn hid_task(
+    mut writer: embassy_usb::class::hid::HidWriter<'static, Driver<'static, USB>, 8>,
+) {
     loop {
         // Wait for any input change
         let (d1, d2) = match select3(SPINNER1.wait(), SPINNER2.wait(), INPUT_CHANGED.wait()).await {
@@ -333,11 +371,18 @@ async fn hid_task(mut writer: embassy_usb::class::hid::HidWriter<'static, Driver
         let p2 = P2_STATE.load(Ordering::Relaxed);
         let sys = SYSTEM_STATE.load(Ordering::Relaxed);
 
-        let _ = writer.write(&[
-            d1 as u8, (d1 >> 8) as u8,
-            d2 as u8, (d2 >> 8) as u8,
-            p1, p2, sys, 0,
-        ]).await;
+        let _ = writer
+            .write(&[
+                d1 as u8,
+                (d1 >> 8) as u8,
+                d2 as u8,
+                (d2 >> 8) as u8,
+                p1,
+                p2,
+                sys,
+                0,
+            ])
+            .await;
     }
 }
 
@@ -348,6 +393,8 @@ impl Handler for DeviceHandler {
     fn reset(&mut self) {}
     fn addressed(&mut self, _: u8) {}
     fn configured(&mut self, configured: bool) {
-        if configured { info!("USB configured"); }
+        if configured {
+            info!("USB configured");
+        }
     }
 }
