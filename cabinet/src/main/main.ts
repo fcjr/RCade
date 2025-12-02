@@ -150,7 +150,7 @@ async function startGameServer(gameId: string, version: string, controller: Abor
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    "font-src 'self'",
+    "font-src *",
     "connect-src 'self'",  // allow fetching local assets, block external requests
     "media-src 'self'",
     // TODO: workers should be moved to a plugin API for better sandboxing
@@ -207,10 +207,10 @@ async function startGameServer(gameId: string, version: string, controller: Abor
 
 </script>`;
 
-  // Emoji font CSS to inject into game HTML for fallback support
+  // Emoji font CSS - provides embedded Noto Color Emoji as fallback
   const emojiFontStyle = `<style>
 @font-face {
-  font-family: 'NotoColorEmoji';
+  font-family: 'Noto Color Emoji';
   src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
   font-display: swap;
 }
