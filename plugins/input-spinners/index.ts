@@ -20,18 +20,19 @@ export default class InputSpinnersPlugin implements Plugin {
 
             this.hidDevice.on("data", (data: Buffer) => {
                 // HID report format (8 bytes):
-                // Byte 0-1: Player 1 Spinner delta (signed int16, little-endian)
-                // Byte 2-3: Player 2 Spinner delta (signed int16, little-endian)
+                // Byte 0-1: Player 1 Spinner step_delta (signed int16, little-endian)
+                // Byte 2-3: Player 2 Spinner step_delta (signed int16, little-endian)
                 // Byte 4-7: Reserved (buttons handled by input-classic)
 
-                const spinner1 = data.readInt16LE(0);
-                const spinner2 = data.readInt16LE(2);
+                const spinner1_step_delta = data.readInt16LE(0);
+                const spinner2_step_delta = data.readInt16LE(2);
 
-                if (spinner1 !== 0 || spinner2 !== 0) {
+                if (spinner1_step_delta !== 0 || spinner2_step_delta !== 0) {
                     port.postMessage({
                         type: "spinners",
-                        spinner1,
-                        spinner2,
+                        spinner1_step_delta,
+                        spinner2_step_delta,
+                        step_resolution: 1024,
                     });
                 }
             });

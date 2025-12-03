@@ -2,13 +2,13 @@
  * layout:
  * - 00 | Connected (1 byte)
  * - 01 | padding (1 byte, for alignment)
- * - 02-03 | spinner1 delta (i16, 2 bytes)
- * - 04-05 | spinner2 delta (i16, 2 bytes)
+ * - 02-03 | spinner1 step_delta (i16, 2 bytes)
+ * - 04-05 | spinner2 step_delta (i16, 2 bytes)
  */
 
 const CONNECTED = 0;
-const PLAYER1_SPINNER_DELTA = 2;
-const PLAYER2_SPINNER_DELTA = 4;
+const PLAYER1_SPINNER_STEP_DELTA = 2;
+const PLAYER2_SPINNER_STEP_DELTA = 4;
 const MAX_DELTA = 1000;
 
 function write(offset, value) {
@@ -36,16 +36,16 @@ function handleMessage(data) {
     const { type } = data;
 
     if (type === "spinners") {
-        const { spinner1, spinner2 } = data;
+        const { spinner1_step_delta, spinner2_step_delta } = data;
 
-        if (spinner1 !== 0) {
-            const current = readI16(PLAYER1_SPINNER_DELTA);
-            writeI16(PLAYER1_SPINNER_DELTA, Math.max(-MAX_DELTA, Math.min(MAX_DELTA, current + spinner1)));
+        if (spinner1_step_delta !== 0) {
+            const current = readI16(PLAYER1_SPINNER_STEP_DELTA);
+            writeI16(PLAYER1_SPINNER_STEP_DELTA, Math.max(-MAX_DELTA, Math.min(MAX_DELTA, current + spinner1_step_delta)));
         }
 
-        if (spinner2 !== 0) {
-            const current = readI16(PLAYER2_SPINNER_DELTA);
-            writeI16(PLAYER2_SPINNER_DELTA, Math.max(-MAX_DELTA, Math.min(MAX_DELTA, current + spinner2)));
+        if (spinner2_step_delta !== 0) {
+            const current = readI16(PLAYER2_SPINNER_STEP_DELTA);
+            writeI16(PLAYER2_SPINNER_STEP_DELTA, Math.max(-MAX_DELTA, Math.min(MAX_DELTA, current + spinner2_step_delta)));
         }
     }
 }

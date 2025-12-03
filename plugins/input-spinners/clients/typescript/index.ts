@@ -1,7 +1,8 @@
 import { PluginChannel } from "@rcade/sdk";
 
-let player1Delta = 0;
-let player2Delta = 0;
+let player1StepDelta = 0;
+let player2StepDelta = 0;
+let currentStepResolution = 0;
 const MAX_DELTA = 1000;
 
 /**
@@ -9,18 +10,22 @@ const MAX_DELTA = 1000;
  *
  * Two usage patterns (pick one, don't mix):
  *
- * 1. Polling (recommended): Read `PLAYER_1.SPINNER.delta` each frame.
+ * 1. Polling (recommended): Read `PLAYER_1.SPINNER.step_delta` each frame.
  *    Returns accumulated movement since last read, then resets to 0.
+ *    Also read `PLAYER_1.SPINNER.step_resolution` to get the encoder resolution.
  *
  * 2. Events: Use `on("spin", callback)` to react to each spin event.
- *    The callback receives the delta for that specific event.
+ *    The callback receives the step_delta and step_resolution for that specific event.
  */
 export const PLAYER_1 = {
     SPINNER: {
-        get delta() {
-            const d = player1Delta;
-            player1Delta = 0;
+        get step_delta() {
+            const d = player1StepDelta;
+            player1StepDelta = 0;
             return d;
+        },
+        get step_resolution() {
+            return currentStepResolution;
         }
     }
 };
@@ -28,10 +33,13 @@ export const PLAYER_1 = {
 /** Spinner input for Player 2. See {@link PLAYER_1} for usage. */
 export const PLAYER_2 = {
     SPINNER: {
-        get delta() {
-            const d = player2Delta;
-            player2Delta = 0;
+        get step_delta() {
+            const d = player2StepDelta;
+            player2StepDelta = 0;
             return d;
+        },
+        get step_resolution() {
+            return currentStepResolution;
         }
     },
 };
@@ -40,7 +48,8 @@ export const STATUS = { connected: false };
 
 type SpinEventData = {
     player: 1 | 2;
-    delta: number;
+    step_delta: number;
+    step_resolution: number;
 };
 type EventCallback = (data: SpinEventData) => void;
 
@@ -125,22 +134,24 @@ function emit(data: SpinEventData) {
 
     STATUS.connected = true;
 
-    type InputMessage = { type: "spinners"; spinner1: number; spinner2: number };
+    type InputMessage = { type: "spinners"; spinner1_step_delta: number; spinner2_step_delta: number; step_resolution: number };
 
     channel.getPort().onmessage = (event: MessageEvent<InputMessage>) => {
         const { type } = event.data;
 
         if (type === "spinners") {
-            const { spinner1, spinner2 } = event.data;
+            const { spinner1_step_delta, spinner2_step_delta, step_resolution } = event.data;
 
-            if (spinner1 !== 0) {
-                player1Delta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player1Delta + spinner1));
-                emit({ player: 1, delta: spinner1 });
+            currentStepResolution = step_resolution;
+
+            if (spinner1_step_delta !== 0) {
+                player1StepDelta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player1StepDelta + spinner1_step_delta));
+                emit({ player: 1, step_delta: spinner1_step_delta, step_resolution });
             }
 
-            if (spinner2 !== 0) {
-                player2Delta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player2Delta + spinner2));
-                emit({ player: 2, delta: spinner2 });
+            if (spinner2_step_delta !== 0) {
+                player2StepDelta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player2StepDelta + spinner2_step_delta));
+                emit({ player: 2, step_delta: spinner2_step_delta, step_resolution });
             }
         }
     };

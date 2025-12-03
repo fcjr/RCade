@@ -3,13 +3,14 @@ use wasm_bindgen::JsValue;
 
 const CONNECTED: usize = 0;
 // Byte 1 is padding for alignment
-const PLAYER1_SPINNER_DELTA: usize = 2; // i16 (2 bytes)
-const PLAYER2_SPINNER_DELTA: usize = 4; // i16 (2 bytes)
+const PLAYER1_SPINNER_STEP_DELTA: usize = 2; // i16 (2 bytes)
+const PLAYER2_SPINNER_STEP_DELTA: usize = 4; // i16 (2 bytes)
 
 /// Controller for spinner input devices.
 ///
-/// Use polling pattern: call `delta(player)` each frame to get accumulated
+/// Use polling pattern: call `step_delta(player)` each frame to get accumulated
 /// movement since last call. The value resets to 0 after reading.
+/// Also call `step_resolution()` to get the encoder resolution.
 pub struct SpinnerController {
     runner: PluginSharedMemoryRunner,
 }
@@ -29,11 +30,11 @@ impl SpinnerController {
         data_view.at(CONNECTED as i32).unwrap() != 0
     }
 
-    /// Returns accumulated delta for the given player (1 or 2) since last call, then resets to 0.
-    pub fn delta(&self, player: u8) -> i16 {
+    /// Returns accumulated step_delta for the given player (1 or 2) since last call, then resets to 0.
+    pub fn step_delta(&self, player: u8) -> i16 {
         let offset = match player {
-            1 => PLAYER1_SPINNER_DELTA,
-            2 => PLAYER2_SPINNER_DELTA,
+            1 => PLAYER1_SPINNER_STEP_DELTA,
+            2 => PLAYER2_SPINNER_STEP_DELTA,
             _ => return 0,
         };
 
@@ -44,6 +45,11 @@ impl SpinnerController {
         write_i16(&data_view, offset, 0);
 
         value
+    }
+
+    /// Returns the step resolution of the spinner encoder (steps per rotation).
+    pub fn step_resolution(&self) -> u16 {
+        1024
     }
 }
 
