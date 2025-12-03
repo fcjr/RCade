@@ -9,4 +9,4 @@ flash-probe:
 # Flash via USB bootloader (hold BOOTSEL, plug in, release)
 flash:
     cargo build --release
-    elf2uf2-rs -d target/thumbv6m-none-eabi/release/input-classic-controller
+    elf2uf2-rs -d ../../target/thumbv6m-none-eabi/release/input-classic-controller
