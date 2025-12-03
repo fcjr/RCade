@@ -38,10 +38,10 @@ const PLAYER2_RIGHT = 12;
 const PLAYER2_A = 13;
 const PLAYER2_B = 14;
 // Byte 15 is padding for alignment
-const SPINNER1_DELTA = 16;   // i16 (2 bytes)
-const SPINNER1_POSITION = 18; // i32 (4 bytes)
-const SPINNER2_DELTA = 22;   // i16 (2 bytes)
-const SPINNER2_POSITION = 24; // i32 (4 bytes)
+const PLAYER1_SPINNER_DELTA = 16;   // i16 (2 bytes)
+const PLAYER1_SPINNER_POSITION = 18; // i32 (4 bytes)
+const PLAYER2_SPINNER_DELTA = 22;   // i16 (2 bytes)
+const PLAYER2_SPINNER_POSITION = 24; // i32 (4 bytes)
 
 function write(action, state) {
     const cur_lock = lock();
@@ -113,13 +113,13 @@ function handleMessage(data) {
         }
     } else if (type === "spinner") {
         if (player === 1) {
-            writeI16(SPINNER1_DELTA, delta);
-            const currentPos = readI32(SPINNER1_POSITION);
-            writeI32(SPINNER1_POSITION, currentPos + delta);
+            writeI16(PLAYER1_SPINNER_DELTA, delta);
+            const currentPos = readI32(PLAYER1_SPINNER_POSITION);
+            writeI32(PLAYER1_SPINNER_POSITION, currentPos + delta);
         } else if (player === 2) {
-            writeI16(SPINNER2_DELTA, delta);
-            const currentPos = readI32(SPINNER2_POSITION);
-            writeI32(SPINNER2_POSITION, currentPos + delta);
+            writeI16(PLAYER2_SPINNER_DELTA, delta);
+            const currentPos = readI32(PLAYER2_SPINNER_POSITION);
+            writeI32(PLAYER2_SPINNER_POSITION, currentPos + delta);
         }
     }
 }
