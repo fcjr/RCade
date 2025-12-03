@@ -2,7 +2,7 @@
   "name": "@rcade/plugin-input-spinners",
   "module": "index.ts",
   "main": "./dist/index.js",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "types": "./index.ts",
   "exports": {

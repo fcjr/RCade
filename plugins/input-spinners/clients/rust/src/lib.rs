@@ -5,6 +5,9 @@ const CONNECTED: usize = 0;
 // Byte 1 is padding for alignment
 const PLAYER1_SPINNER_STEP_DELTA: usize = 2; // i16 (2 bytes)
 const PLAYER2_SPINNER_STEP_DELTA: usize = 4; // i16 (2 bytes)
+// Bytes 6-7 are padding for f32 alignment
+const PLAYER1_ANGLE: usize = 8; // f32 (4 bytes)
+const PLAYER2_ANGLE: usize = 12; // f32 (4 bytes)
 
 /// Controller for spinner input devices.
 ///
@@ -18,7 +21,7 @@ pub struct SpinnerController {
 impl SpinnerController {
     pub async fn acquire() -> Result<SpinnerController, JsValue> {
         let channel = PluginChannel::acquire("@rcade/input-spinners", "1.0.0").await?;
-        let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 6)?;
+        let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 16)?;
 
         Ok(SpinnerController { runner })
     }
@@ -51,6 +54,32 @@ impl SpinnerController {
     pub fn step_resolution(&self) -> u16 {
         1024
     }
+
+    /// Returns the cumulative angle in radians for the given player (1 or 2).
+    pub fn angle(&self, player: u8) -> f32 {
+        let offset = match player {
+            1 => PLAYER1_ANGLE,
+            2 => PLAYER2_ANGLE,
+            _ => return 0.0,
+        };
+
+        let lock = self.runner.lock_blocking();
+        let data_view = lock.data_view();
+        read_f32(&data_view, offset)
+    }
+
+    /// Resets the angle to 0 for the given player (1 or 2).
+    pub fn reset(&self, player: u8) {
+        let offset = match player {
+            1 => PLAYER1_ANGLE,
+            2 => PLAYER2_ANGLE,
+            _ => return,
+        };
+
+        let lock = self.runner.lock_blocking();
+        let data_view = lock.data_view();
+        write_f32(&data_view, offset, 0.0);
+    }
 }
 
 fn read_i16(data_view: &js_sys::Uint8Array, offset: usize) -> i16 {
@@ -63,4 +92,20 @@ fn write_i16(data_view: &js_sys::Uint8Array, offset: usize, value: i16) {
     let bytes = value.to_le_bytes();
     data_view.set_index(offset as u32, bytes[0]);
     data_view.set_index((offset + 1) as u32, bytes[1]);
+}
+
+fn read_f32(data_view: &js_sys::Uint8Array, offset: usize) -> f32 {
+    let b0 = data_view.at(offset as i32).unwrap_or(0);
+    let b1 = data_view.at((offset + 1) as i32).unwrap_or(0);
+    let b2 = data_view.at((offset + 2) as i32).unwrap_or(0);
+    let b3 = data_view.at((offset + 3) as i32).unwrap_or(0);
+    f32::from_le_bytes([b0, b1, b2, b3])
+}
+
+fn write_f32(data_view: &js_sys::Uint8Array, offset: usize, value: f32) {
+    let bytes = value.to_le_bytes();
+    data_view.set_index(offset as u32, bytes[0]);
+    data_view.set_index((offset + 1) as u32, bytes[1]);
+    data_view.set_index((offset + 2) as u32, bytes[2]);
+    data_view.set_index((offset + 3) as u32, bytes[3]);
 }

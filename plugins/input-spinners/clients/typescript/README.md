@@ -19,11 +19,28 @@ import { PLAYER_1, PLAYER_2 } from "@rcade/plugin-input-spinners";
 
 function gameLoop() {
   // Returns accumulated movement since last read, then resets to 0
-  const delta = PLAYER_1.SPINNER.delta;
-  paddleX += delta * speed;
+  const stepDelta = PLAYER_1.SPINNER.step_delta;
+  paddleX += stepDelta * speed;
 
   requestAnimationFrame(gameLoop);
 }
+```
+
+### Angle Tracking
+
+```javascript
+import { PLAYER_1 } from "@rcade/plugin-input-spinners";
+
+function gameLoop() {
+  // Get cumulative angle in radians (automatically updated)
+  const angle = PLAYER_1.SPINNER.angle;
+  knob.rotation = angle;
+
+  requestAnimationFrame(gameLoop);
+}
+
+// Reset angle to 0 when needed
+PLAYER_1.SPINNER.reset();
 ```
 
 ### Events
@@ -31,8 +48,8 @@ function gameLoop() {
 ```javascript
 import { on } from "@rcade/plugin-input-spinners";
 
-on("spin", ({ player, delta }) => {
-  console.log(`Player ${player} spun ${delta}`);
+on("spin", ({ player, step_delta, step_resolution }) => {
+  console.log(`Player ${player} spun ${step_delta} steps`);
 });
 ```
 
@@ -42,11 +59,19 @@ on("spin", ({ player, delta }) => {
 
 ```typescript
 {
-  SPINNER: { delta: number }
+  SPINNER: {
+    step_delta: number;
+    step_resolution: number;
+    angle: number;
+    reset(): void;
+  }
 }
 ```
 
-- `delta`: Accumulated movement since last read. Reading resets it to 0.
+- `step_delta`: Accumulated movement since last read. Reading resets it to 0.
+- `step_resolution`: Encoder resolution (1024 steps per rotation).
+- `angle`: Cumulative angle in radians (automatically updated).
+- `reset()`: Resets the angle to 0.
 
 ### STATUS
 
@@ -64,7 +89,7 @@ Subscribe to spin events.
 
 ```typescript
 const unsubscribe = on("spin", (data) => {
-  // data: { player: 1 | 2, delta: number }
+  // data: { player: 1 | 2, step_delta: number, step_resolution: number }
 });
 
 // Later: unsubscribe()

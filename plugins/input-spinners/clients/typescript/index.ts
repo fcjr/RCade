@@ -2,7 +2,9 @@ import { PluginChannel } from "@rcade/sdk";
 
 let player1StepDelta = 0;
 let player2StepDelta = 0;
-let currentStepResolution = 0;
+let player1Angle = 0;
+let player2Angle = 0;
+const STEP_RESOLUTION = 1024;
 const MAX_DELTA = 1000;
 
 /**
@@ -16,6 +18,10 @@ const MAX_DELTA = 1000;
  *
  * 2. Events: Use `on("spin", callback)` to react to each spin event.
  *    The callback receives the step_delta and step_resolution for that specific event.
+ *
+ * Convenience:
+ * - `angle`: Returns the cumulative angle in radians (updated automatically).
+ * - `reset()`: Resets the angle to 0.
  */
 export const PLAYER_1 = {
     SPINNER: {
@@ -25,7 +31,13 @@ export const PLAYER_1 = {
             return d;
         },
         get step_resolution() {
-            return currentStepResolution;
+            return STEP_RESOLUTION;
+        },
+        get angle() {
+            return player1Angle;
+        },
+        reset() {
+            player1Angle = 0;
         }
     }
 };
@@ -39,7 +51,13 @@ export const PLAYER_2 = {
             return d;
         },
         get step_resolution() {
-            return currentStepResolution;
+            return STEP_RESOLUTION;
+        },
+        get angle() {
+            return player2Angle;
+        },
+        reset() {
+            player2Angle = 0;
         }
     },
 };
@@ -142,15 +160,15 @@ function emit(data: SpinEventData) {
         if (type === "spinners") {
             const { spinner1_step_delta, spinner2_step_delta, step_resolution } = event.data;
 
-            currentStepResolution = step_resolution;
-
             if (spinner1_step_delta !== 0) {
                 player1StepDelta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player1StepDelta + spinner1_step_delta));
+                player1Angle += (spinner1_step_delta / STEP_RESOLUTION) * 2 * Math.PI;
                 emit({ player: 1, step_delta: spinner1_step_delta, step_resolution });
             }
 
             if (spinner2_step_delta !== 0) {
                 player2StepDelta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player2StepDelta + spinner2_step_delta));
+                player2Angle += (spinner2_step_delta / STEP_RESOLUTION) * 2 * Math.PI;
                 emit({ player: 2, step_delta: spinner2_step_delta, step_resolution });
             }
         }
