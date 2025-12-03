@@ -1,17 +1,15 @@
-pub mod state;
-
 use rcade_sdk::{channel::PluginChannel, shmem_runner::PluginSharedMemoryRunner};
 use wasm_bindgen::JsValue;
 
-use crate::state::SpinnerState;
-
-const CONNECTED: i32 = 0;
+const CONNECTED: usize = 0;
 // Byte 1 is padding for alignment
-const PLAYER1_SPINNER_DELTA: usize = 2;    // i16 (2 bytes)
-const PLAYER1_SPINNER_POSITION: usize = 4; // i32 (4 bytes)
-const PLAYER2_SPINNER_DELTA: usize = 8;    // i16 (2 bytes)
-const PLAYER2_SPINNER_POSITION: usize = 10; // i32 (4 bytes)
+const PLAYER1_SPINNER_DELTA: usize = 2; // i16 (2 bytes)
+const PLAYER2_SPINNER_DELTA: usize = 4; // i16 (2 bytes)
 
+/// Controller for spinner input devices.
+///
+/// Use polling pattern: call `delta(player)` each frame to get accumulated
+/// movement since last call. The value resets to 0 after reading.
 pub struct SpinnerController {
     runner: PluginSharedMemoryRunner,
 }
@@ -19,26 +17,33 @@ pub struct SpinnerController {
 impl SpinnerController {
     pub async fn acquire() -> Result<SpinnerController, JsValue> {
         let channel = PluginChannel::acquire("@rcade/input-spinners", "1.0.0").await?;
-        let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 14)?;
+        let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 6)?;
 
         Ok(SpinnerController { runner })
     }
 
-    pub fn state(&self) -> SpinnerState {
-        let data_view = self.runner.lock_blocking().data_view();
+    /// Returns whether the spinner controller is connected.
+    pub fn connected(&self) -> bool {
+        let lock = self.runner.lock_blocking();
+        let data_view = lock.data_view();
+        data_view.at(CONNECTED as i32).unwrap() != 0
+    }
 
-        let player1_spinner_delta = read_i16(&data_view, PLAYER1_SPINNER_DELTA);
-        let player1_spinner_position = read_i32(&data_view, PLAYER1_SPINNER_POSITION);
-        let player2_spinner_delta = read_i16(&data_view, PLAYER2_SPINNER_DELTA);
-        let player2_spinner_position = read_i32(&data_view, PLAYER2_SPINNER_POSITION);
+    /// Returns accumulated delta for the given player (1 or 2) since last call, then resets to 0.
+    pub fn delta(&self, player: u8) -> i16 {
+        let offset = match player {
+            1 => PLAYER1_SPINNER_DELTA,
+            2 => PLAYER2_SPINNER_DELTA,
+            _ => return 0,
+        };
 
-        SpinnerState {
-            connected: data_view.at(CONNECTED).unwrap() != 0,
-            player1_spinner_delta,
-            player1_spinner_position,
-            player2_spinner_delta,
-            player2_spinner_position,
-        }
+        let lock = self.runner.lock_blocking();
+        let data_view = lock.data_view();
+
+        let value = read_i16(&data_view, offset);
+        write_i16(&data_view, offset, 0);
+
+        value
     }
 }
 
@@ -48,10 +53,8 @@ fn read_i16(data_view: &js_sys::Uint8Array, offset: usize) -> i16 {
     i16::from_le_bytes([low, high])
 }
 
-fn read_i32(data_view: &js_sys::Uint8Array, offset: usize) -> i32 {
-    let b0 = data_view.at(offset as i32).unwrap_or(0);
-    let b1 = data_view.at((offset + 1) as i32).unwrap_or(0);
-    let b2 = data_view.at((offset + 2) as i32).unwrap_or(0);
-    let b3 = data_view.at((offset + 3) as i32).unwrap_or(0);
-    i32::from_le_bytes([b0, b1, b2, b3])
+fn write_i16(data_view: &js_sys::Uint8Array, offset: usize, value: i16) {
+    let bytes = value.to_le_bytes();
+    data_view.set_index(offset as u32, bytes[0]);
+    data_view.set_index((offset + 1) as u32, bytes[1]);
 }

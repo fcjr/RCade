@@ -1,11 +1,39 @@
 import { PluginChannel } from "@rcade/sdk";
 
+let player1Delta = 0;
+let player2Delta = 0;
+const MAX_DELTA = 1000;
+
+/**
+ * Spinner input for Player 1.
+ *
+ * Two usage patterns (pick one, don't mix):
+ *
+ * 1. Polling (recommended): Read `PLAYER_1.SPINNER.delta` each frame.
+ *    Returns accumulated movement since last read, then resets to 0.
+ *
+ * 2. Events: Use `on("spin", callback)` to react to each spin event.
+ *    The callback receives the delta for that specific event.
+ */
 export const PLAYER_1 = {
-    SPINNER: { delta: 0, position: 0 }
+    SPINNER: {
+        get delta() {
+            const d = player1Delta;
+            player1Delta = 0;
+            return d;
+        }
+    }
 };
 
+/** Spinner input for Player 2. See {@link PLAYER_1} for usage. */
 export const PLAYER_2 = {
-    SPINNER: { delta: 0, position: 0 },
+    SPINNER: {
+        get delta() {
+            const d = player2Delta;
+            player2Delta = 0;
+            return d;
+        }
+    },
 };
 
 export const STATUS = { connected: false };
@@ -13,7 +41,6 @@ export const STATUS = { connected: false };
 type SpinEventData = {
     player: 1 | 2;
     delta: number;
-    position: number;
 };
 type EventCallback = (data: SpinEventData) => void;
 
@@ -107,15 +134,13 @@ function emit(data: SpinEventData) {
             const { spinner1, spinner2 } = event.data;
 
             if (spinner1 !== 0) {
-                PLAYER_1.SPINNER.delta = spinner1;
-                PLAYER_1.SPINNER.position += spinner1;
-                emit({ player: 1, delta: spinner1, position: PLAYER_1.SPINNER.position });
+                player1Delta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player1Delta + spinner1));
+                emit({ player: 1, delta: spinner1 });
             }
 
             if (spinner2 !== 0) {
-                PLAYER_2.SPINNER.delta = spinner2;
-                PLAYER_2.SPINNER.position += spinner2;
-                emit({ player: 2, delta: spinner2, position: PLAYER_2.SPINNER.position });
+                player2Delta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player2Delta + spinner2));
+                emit({ player: 2, delta: spinner2 });
             }
         }
     };
