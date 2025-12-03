@@ -26,6 +26,12 @@ For WebGPU support on Raspberry Pi 5, ensure Mesa Vulkan drivers are installed:
 sudo apt install mesa-vulkan-drivers
 ```
 
+For gamepad/input device support, install libudev-dev:
+
+```bash
+sudo apt install libudev-dev
+```
+
 ## Architecture
 
 - **Main process**: Game loading, plugin management, input handling
