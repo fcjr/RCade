@@ -4,12 +4,14 @@ export const PLAYER_1 = {
     DPAD: { up: false, down: false, left: false, right: false },
     A: false,
     B: false,
+    SPINNER: { delta: 0, position: 0 }
 };
 
 export const PLAYER_2 = {
     DPAD: { up: false, down: false, left: false, right: false },
     A: false,
     B: false,
+    SPINNER: { delta: 0, position: 0 },
 };
 
 export const SYSTEM = {
@@ -19,18 +21,27 @@ export const SYSTEM = {
 
 export const STATUS = { connected: false };
 
-type EventType = "press" | "inputStart" | "inputEnd";
-type EventCallback = (data: {
+type EventType = "press" | "inputStart" | "inputEnd" | "spin";
+type ButtonEventData = {
     player?: 1 | 2;
     button: string;
     pressed?: boolean;
     type: "button" | "system";
-}) => void;
+};
+type SpinEventData = {
+    player: 1 | 2;
+    delta: number;
+    position: number;
+    type: "spinner";
+};
+type EventData = ButtonEventData | SpinEventData;
+type EventCallback = (data: EventData) => void;
 
 const eventListeners: Record<EventType, EventCallback[]> = {
     press: [],
     inputStart: [],
     inputEnd: [],
+    spin: [],
 };
 
 export function on(event: EventType, callback: EventCallback): () => void {
@@ -50,7 +61,7 @@ export function off(event: EventType, callback: EventCallback): void {
 type OnceFilter = {
     key?: string;
     player?: 1 | 2;
-    type?: "button" | "system";
+    type?: "button" | "system" | "spinner";
 };
 
 // Overload: once(event, callback)
@@ -83,7 +94,7 @@ export function once(
         return new Promise((resolve) => {
             const handler: EventCallback = (data) => {
                 if (filter) {
-                    const keyMatch = !filter.key || data.button === filter.key;
+                    const keyMatch = !filter.key || ("button" in data && data.button === filter.key);
                     const playerMatch = !filter.player || data.player === filter.player;
                     const typeMatch = !filter.type || data.type === filter.type;
                     if (keyMatch && playerMatch && typeMatch) {
@@ -102,7 +113,7 @@ export function once(
     // If callback provided, set up one-time listener
     const handler: EventCallback = (data) => {
         if (filter) {
-            const keyMatch = !filter.key || data.button === filter.key;
+            const keyMatch = !filter.key || ("button" in data && data.button === filter.key);
             const playerMatch = !filter.player || data.player === filter.player;
             const typeMatch = !filter.type || data.type === filter.type;
             if (keyMatch && playerMatch && typeMatch) {
@@ -128,10 +139,15 @@ function emit(event: EventType, data: Parameters<EventCallback>[0]) {
 
     STATUS.connected = true;
 
-    channel.getPort().onmessage = (event: MessageEvent<{ type: "button" | "system", player: 1 | 2, button: string, pressed: boolean }>) => {
-        const { type, player, button, pressed } = event.data;
+    type InputMessage =
+        | { type: "button" | "system"; player: 1 | 2; button: string; pressed: boolean }
+        | { type: "spinner"; player: 1 | 2; delta: number };
+
+    channel.getPort().onmessage = (event: MessageEvent<InputMessage>) => {
+        const { type, player } = event.data;
 
         if (type === "button") {
+            const { button, pressed } = event.data as { button: string; pressed: boolean };
             if (player === 1) {
                 if (button === "A" || button === "B") {
                     PLAYER_1[button as "A" | "B"] = pressed;
@@ -154,6 +170,7 @@ function emit(event: EventType, data: Parameters<EventCallback>[0]) {
                 emit("inputEnd", { player, button, pressed, type });
             }
         } else if (type === "system") {
+            const { button, pressed } = event.data as { button: string; pressed: boolean };
             if (button === "ONE_PLAYER") {
                 SYSTEM.ONE_PLAYER = pressed;
             } else if (button === "TWO_PLAYER") {
@@ -167,6 +184,13 @@ function emit(event: EventType, data: Parameters<EventCallback>[0]) {
             } else {
                 emit("inputEnd", { button, pressed, type });
             }
+        } else if (type === "spinner") {
+            const { delta } = event.data as { delta: number };
+            const spinner = player === 1 ? PLAYER_1.SPINNER : PLAYER_2.SPINNER;
+            spinner.delta = delta;
+            spinner.position += delta;
+
+            emit("spin", { player, delta, position: spinner.position, type: "spinner" });
         }
     };
 })()

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "bun run build:api && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
-    "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
+    "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings . --dev --no-exit --override 'rcade-sample@LOCAL=http://localhost:5173'",
     "build:api": "bun run --cwd ../api build",
     "build:main": "bun build src/main/main.ts --outdir dist/main --target node --external electron",
     "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron",

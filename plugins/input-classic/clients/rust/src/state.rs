@@ -15,4 +15,8 @@ pub struct ControllerState {
     pub player2_right: bool,
     pub player2_a: bool,
     pub player2_b: bool,
+    pub player1_spinner_delta: i16,
+    pub player1_spinner_position: i32,
+    pub player2_spinner_delta: i16,
+    pub player2_spinner_position: i32,
 }

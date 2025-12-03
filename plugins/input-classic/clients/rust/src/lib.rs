@@ -20,6 +20,11 @@ const PLAYER2_LEFT: i32 = 11;
 const PLAYER2_RIGHT: i32 = 12;
 const PLAYER2_A: i32 = 13;
 const PLAYER2_B: i32 = 14;
+// Byte 15 is padding for alignment
+const PLAYER1_SPINNER_DELTA: usize = 16; // i16 (2 bytes)
+const PLAYER1_SPINNER_POSITION: usize = 18; // i32 (4 bytes)
+const PLAYER2_SPINNER_DELTA: usize = 22; // i16 (2 bytes)
+const PLAYER2_SPINNER_POSITION: usize = 24; // i32 (4 bytes)
 
 pub struct ClassicController {
     runner: PluginSharedMemoryRunner,
@@ -28,7 +33,7 @@ pub struct ClassicController {
 impl ClassicController {
     pub async fn acquire() -> Result<ClassicController, JsValue> {
         let channel = PluginChannel::acquire("@rcade/input-classic", "1.0.0").await?;
-        let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 15)?;
+        let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 28)?;
 
         Ok(ClassicController { runner })
     }
@@ -36,7 +41,11 @@ impl ClassicController {
     pub fn state(&self) -> ControllerState {
         let data_view = self.runner.lock_blocking().data_view();
 
-        // web_sys::console::log_2(&JsValue::from_str("data_view"), &data_view);
+        // Read spinner values from the shared buffer
+        let player1_spinner_delta = read_i16(&data_view, PLAYER1_SPINNER_DELTA);
+        let player1_spinner_position = read_i32(&data_view, PLAYER1_SPINNER_POSITION);
+        let player2_spinner_delta = read_i16(&data_view, PLAYER2_SPINNER_DELTA);
+        let player2_spinner_position = read_i32(&data_view, PLAYER2_SPINNER_POSITION);
 
         ControllerState {
             connected: data_view.at(CONNECTED).unwrap() != 0,
@@ -54,6 +63,24 @@ impl ClassicController {
             player2_right: data_view.at(PLAYER2_RIGHT).unwrap() != 0,
             player2_a: data_view.at(PLAYER2_A).unwrap() != 0,
             player2_b: data_view.at(PLAYER2_B).unwrap() != 0,
+            player1_spinner_delta,
+            player1_spinner_position,
+            player2_spinner_delta,
+            player2_spinner_position,
         }
     }
+}
+
+fn read_i16(data_view: &js_sys::Uint8Array, offset: usize) -> i16 {
+    let low = data_view.at(offset as i32).unwrap_or(0);
+    let high = data_view.at((offset + 1) as i32).unwrap_or(0);
+    i16::from_le_bytes([low, high])
+}
+
+fn read_i32(data_view: &js_sys::Uint8Array, offset: usize) -> i32 {
+    let b0 = data_view.at(offset as i32).unwrap_or(0);
+    let b1 = data_view.at((offset + 1) as i32).unwrap_or(0);
+    let b2 = data_view.at((offset + 2) as i32).unwrap_or(0);
+    let b3 = data_view.at((offset + 3) as i32).unwrap_or(0);
+    i32::from_le_bytes([b0, b1, b2, b3])
 }

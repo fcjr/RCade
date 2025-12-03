@@ -12,10 +12,12 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node-hid": "^1.3.4",
     "electron": "^39.2.4"
   },
   "dependencies": {
-    "@rcade/sdk-plugin": "0.1.0"
+    "@rcade/sdk-plugin": "0.1.0",
+    "node-hid": "^3.1.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
