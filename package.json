@@ -12,7 +12,9 @@
     "sdk/frontend/typescript",
     "sdk/backend",
     "plugins/input-classic/clients/typescript",
-    "plugins/input-classic"
+    "plugins/input-classic",
+    "plugins/input-spinners/clients/typescript",
+    "plugins/input-spinners"
   ],
   "scripts": {
     "dev:web": "bun run --cwd web dev",

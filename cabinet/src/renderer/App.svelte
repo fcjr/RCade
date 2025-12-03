@@ -13,6 +13,12 @@
 {/if}
 
 <style>
+  @font-face {
+    font-family: 'NotoColorEmoji';
+    src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
+    font-display: swap;
+  }
+
   :global(*) {
     margin: 0;
     padding: 0;
@@ -32,7 +38,8 @@
     font-family:
       system-ui,
       -apple-system,
-      sans-serif;
+      sans-serif,
+      'NotoColorEmoji';
   }
 
   :global(*) {

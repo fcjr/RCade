@@ -35071,8 +35071,39 @@ var rcade_manifest_default = {
     }
   ]
 };
+var rcade_manifest_default2 = {
+  $schema: "../../web/static/manifest.schema.json",
+  kind: "plugin",
+  name: "@rcade/input-spinners",
+  description: "Support for dual arcade spinners.",
+  visibility: "public",
+  version: "1.0.0",
+  authors: [
+    {
+      display_name: "Frank Chiarulli Jr.",
+      recurse_id: 6859
+    }
+  ],
+  libraries: [
+    {
+      language: "javascript",
+      package: {
+        name: "@rcade/plugin-input-spinners",
+        versions: "0.x.x"
+      }
+    },
+    {
+      language: "rust",
+      package: {
+        name: "rcade-plugin-input-spinners",
+        versions: "0.x.x"
+      }
+    }
+  ]
+};
 var pluginManifests = [
-  rcade_manifest_default
+  rcade_manifest_default,
+  rcade_manifest_default2
 ];
 /*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {

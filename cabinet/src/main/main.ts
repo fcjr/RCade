@@ -24,6 +24,11 @@ const iconPath = isDev
   ? path.join(__dirname, '../../assets/icon.png')
   : path.join(__dirname, '../assets/icon.png');
 
+// Emoji font path for fallback support in iframed games
+const emojiFontPath = isDev
+  ? path.join(__dirname, '../../assets/fonts/NotoColorEmoji.ttf')
+  : path.join(__dirname, '../assets/fonts/NotoColorEmoji.ttf');
+
 // Scale factor of 2 is the largest reasonable size for a normal macbook screen
 // and should stay the default for development.
 const scaleFactor = args.scale ?? (isDev ? 2 : 1);
@@ -145,6 +150,7 @@ async function startGameServer(gameId: string, version: string, controller: Abor
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
+    "font-src *",
     "connect-src 'self'",  // allow fetching local assets, block external requests
     "media-src 'self'",
     // TODO: workers should be moved to a plugin API for better sandboxing
@@ -180,26 +186,49 @@ async function startGameServer(gameId: string, version: string, controller: Abor
     get: function() { throw new DOMException('Cache API is disabled', 'SecurityError'); },
     configurable: false
   });
-
-  // dlock keyboard/mouse/touch/pointer events on document
+  // Block keyboard/mouse/touch/pointer events on document
   var blockedEvents = [
     'keydown', 'keyup', 'keypress',
     'click', 'dblclick', 'mousedown', 'mouseup', 'mousemove',
     'mouseenter', 'mouseleave', 'mouseover', 'mouseout', 'contextmenu',
     'wheel', 'scroll',
-    'touchstart', 'touchend', 'touchmove', 'touchcancel',
     'pointerdown', 'pointerup', 'pointermove', 'pointerenter',
     'pointerleave', 'pointerover', 'pointerout', 'pointercancel'
   ];
   var originalDocAddEventListener = document.addEventListener.bind(document);
   document.addEventListener = function(type, listener, options) {
     if (blockedEvents.indexOf(type) !== -1) {
-      throw new DOMException('document.addEventListener("' + type + '") is disabled. Use the input plugin instead.', 'SecurityError');
+      console.error('document.addEventListener("' + type + '") is disabled. Use the input plugin instead.');
+      return;
     }
     return originalDocAddEventListener(type, listener, options);
   };
 })();
+
 </script>`;
+
+  // Emoji font CSS - provides embedded Noto Color Emoji as fallback
+  const emojiFontStyle = `<style>
+@font-face {
+  font-family: 'Noto Color Emoji';
+  src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
+  font-display: swap;
+}
+</style>`;
+
+  // Serve emoji font for games
+  app.get('/fonts/NotoColorEmoji.ttf', async (c) => {
+    try {
+      const fontContent = await fs.readFile(emojiFontPath);
+      return c.body(new Uint8Array(fontContent), 200, {
+        'Content-Type': 'font/ttf',
+        'Cache-Control': 'public, max-age=31536000',
+      });
+    } catch (e) {
+      console.log(`[GameServer] Font not found: ${emojiFontPath}`, e);
+      return c.text('Not Found', 404);
+    }
+  });
 
   app.get('/*', async (c) => {
     let filePath = c.req.path;
@@ -229,16 +258,17 @@ async function startGameServer(gameId: string, version: string, controller: Abor
         'Access-Control-Allow-Origin': 'null',
       };
 
-      // inject storage blocker script into HTML files
+      // inject storage blocker script and emoji font into HTML files
       if (ext === '.html') {
         let html = rawContent.toString('utf-8');
+        const injectedContent = storageBlockerScript + emojiFontStyle;
         // insert after <head> or at the start of the document
         if (html.includes('<head>')) {
-          html = html.replace('<head>', '<head>' + storageBlockerScript);
+          html = html.replace('<head>', '<head>' + injectedContent);
         } else if (html.includes('<html>')) {
-          html = html.replace('<html>', '<html><head>' + storageBlockerScript + '</head>');
+          html = html.replace('<html>', '<html><head>' + injectedContent + '</head>');
         } else {
-          html = storageBlockerScript + html;
+          html = injectedContent + html;
         }
         return c.body(html, 200, headers);
       }

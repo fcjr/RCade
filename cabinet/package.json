@@ -24,7 +24,8 @@
     "semver": "^7.7.3",
     "tar": "^7.4.3",
     "zod": "^4.1.13",
-    "@rcade/input-classic": "workspace:*"
+    "@rcade/input-classic": "workspace:*",
+    "@rcade/input-spinners": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",

@@ -12,9 +12,7 @@ export const GET: RequestHandler = async ({ locals, request, platform }) => {
     const cache = platform?.caches?.default;
     const cacheKey = auth.for !== "recurser" ? getGamesCacheKey(auth.for) : null;
 
-    // Worker Cache API won't store responses with private/no-store headers,
-    // so we cache without them but return to clients with them to prevent browser caching
-    const noCacheHeaders = { 'Cache-Control': 'private, no-store' };
+    const noCacheHeaders = { 'Cache-Control': 'private, no-store', 'CDN-Cache-Control': 'no-store' };
 
     if (cache && cacheKey) {
         const cached = await cache.match(cacheKey);

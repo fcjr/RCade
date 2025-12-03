@@ -1,8 +1,8 @@
 import { env } from "$env/dynamic/private";
-import { getDb } from "$lib/db";
-import { games } from "$lib/db/schema";
 import { Game } from "$lib/game";
 import type { RequestHandler } from "@sveltejs/kit";
+
+const noCacheHeaders = { 'Cache-Control': 'private, no-store', 'CDN-Cache-Control': 'no-store' };
 
 export const GET: RequestHandler = async ({ locals, params, request }) => {
     const session = await locals.auth();
@@ -20,13 +20,13 @@ export const GET: RequestHandler = async ({ locals, params, request }) => {
         if (response === undefined) {
             return new Response(
                 JSON.stringify({ error: 'Game not found' }),
-                { status: 404, headers: { 'Content-Type': 'application/json' } }
+                { status: 404, headers: { 'Content-Type': 'application/json', ...noCacheHeaders } }
             );
         }
 
         return new Response(
             JSON.stringify(response),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
+            { status: 200, headers: { 'Content-Type': 'application/json', ...noCacheHeaders } }
         );
     } catch (error) {
         console.error('Database error:', error);
