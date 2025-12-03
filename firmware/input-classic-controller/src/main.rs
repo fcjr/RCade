@@ -38,6 +38,7 @@ use core::sync::atomic::{AtomicU8, Ordering};
 use portable_atomic::AtomicI32;
 use defmt::*;
 use embassy_executor::Spawner;
+use embassy_futures::select::{select, Either};
 use embassy_rp::bind_interrupts;
 use embassy_rp::gpio::{Input, Pull};
 use embassy_rp::peripherals::{UART0, UART1, USB};
@@ -179,8 +180,7 @@ async fn main(spawner: Spawner) {
     let p2_btn_e = Input::new(p.PIN_27, Pull::Up);
     let p2_btn_f = Input::new(p.PIN_28, Pull::Up);
 
-    spawner.spawn(spinner1_task(uart0)).unwrap();
-    spawner.spawn(spinner2_task(uart1)).unwrap();
+    spawner.spawn(spinners_task(uart0, uart1)).unwrap();
     spawner
         .spawn(input_task(
             j1_up, j1_down, j1_left, j1_right, j2_up, j2_down, j2_left, j2_right, p1_btn_a,
@@ -225,41 +225,26 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
-async fn spinner1_task(mut uart: BufferedUart<'static, UART0>) {
-    let mut buf = [0u8; 1];
-    let mut connected = false;
+async fn spinners_task(
+    mut uart0: BufferedUart<'static, UART0>,
+    mut uart1: BufferedUart<'static, UART1>,
+) {
+    let mut buf0 = [0u8; 1];
+    let mut buf1 = [0u8; 1];
 
     loop {
-        if uart.read(&mut buf).await.is_ok() {
-            if !connected {
-                info!("Spinner 1 connected");
-                connected = true;
-            }
-            match buf[0] {
+        match select(uart0.read(&mut buf0), uart1.read(&mut buf1)).await {
+            Either::First(Ok(_)) => match buf0[0] {
                 0x01 => { SPINNER1_DELTA.fetch_add(1, Ordering::Relaxed); }
                 0xFE => { SPINNER1_DELTA.fetch_add(-1, Ordering::Relaxed); }
                 _ => {}
-            }
-        }
-    }
-}
-
-#[embassy_executor::task]
-async fn spinner2_task(mut uart: BufferedUart<'static, UART1>) {
-    let mut buf = [0u8; 1];
-    let mut connected = false;
-
-    loop {
-        if uart.read(&mut buf).await.is_ok() {
-            if !connected {
-                info!("Spinner 2 connected");
-                connected = true;
-            }
-            match buf[0] {
+            },
+            Either::Second(Ok(_)) => match buf1[0] {
                 0x01 => { SPINNER2_DELTA.fetch_add(1, Ordering::Relaxed); }
                 0xFE => { SPINNER2_DELTA.fetch_add(-1, Ordering::Relaxed); }
                 _ => {}
-            }
+            },
+            _ => {}
         }
     }
 }
