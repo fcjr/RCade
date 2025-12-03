@@ -35071,8 +35071,39 @@ var rcade_manifest_default = {
     }
   ]
 };
+var rcade_manifest_default2 = {
+  $schema: "../../web/static/manifest.schema.json",
+  kind: "plugin",
+  name: "@rcade/input-spinners",
+  description: "Support for dual arcade spinners.",
+  visibility: "public",
+  version: "1.0.0",
+  authors: [
+    {
+      display_name: "Frank Chiarulli Jr.",
+      recurse_id: 6859
+    }
+  ],
+  libraries: [
+    {
+      language: "javascript",
+      package: {
+        name: "@rcade/plugin-input-spinners",
+        versions: "0.x.x"
+      }
+    },
+    {
+      language: "rust",
+      package: {
+        name: "rcade-plugin-input-spinners",
+        versions: "0.x.x"
+      }
+    }
+  ]
+};
 var pluginManifests = [
-  rcade_manifest_default
+  rcade_manifest_default,
+  rcade_manifest_default2
 ];
 /*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
@@ -47974,7 +48005,7 @@ function superRefine2(fn) {
 // src/api-client.ts
 var import_http_client = __toESM(require_lib3(), 1);
 var import_auth = __toESM(require_auth2(), 1);
-var RECURSE_BASE_URL = "https://rcade.recurse.com/api/v1";
+var RECURSE_BASE_URL = "https://rcade.dev/api/v1";
 var DeploymentIntent = object2({
   upload_url: string6(),
   expires: number6(),
@@ -48037,7 +48068,7 @@ async function uploadFileStream(filePath, presignedUrl) {
 }
 
 // src/index.ts
-var TOKEN_AUDIENCE = "https://rcade.recurse.com";
+var TOKEN_AUDIENCE = "https://rcade.dev";
 async function getIdToken() {
   try {
     const idToken = await core5.getIDToken(TOKEN_AUDIENCE);

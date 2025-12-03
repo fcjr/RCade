@@ -7,7 +7,7 @@ import { resolve, basename, dirname, join } from "path";
 import { RCadeDeployClient } from "./api-client";
 import { uploadFileStream } from "./bucket";
 
-const TOKEN_AUDIENCE = "https://rcade.recurse.com";
+const TOKEN_AUDIENCE = "https://rcade.dev";
 
 async function getIdToken(): Promise<string> {
   try {

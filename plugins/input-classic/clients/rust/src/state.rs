@@ -1,3 +1,4 @@
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ControllerState {
     pub connected: bool,
     pub system_one_player: bool,

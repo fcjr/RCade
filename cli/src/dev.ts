@@ -261,12 +261,14 @@ export const devCommand = new Command("dev")
                 throw new Error(`Manifest not found: ${absoluteManifestPath}`);
             }
 
-            // Read manifest to get game name
+            // Read manifest to get game name and version
             const manifest = JSON.parse(fs.readFileSync(absoluteManifestPath, "utf-8"));
             const gameName = manifest.name;
             if (!gameName) {
                 throw new Error("Manifest is missing 'name' field");
             }
+            // Use manifest version if present, otherwise "LOCAL" for automatic versioning
+            const gameVersion = manifest.version ?? "LOCAL";
 
             const info = getPlatformInfo();
 
@@ -314,7 +316,7 @@ export const devCommand = new Command("dev")
                 absoluteManifestPath,
                 "--dev",
                 "--no-exit",
-                "--override", `${gameName}@LOCAL=${serverUrl}`
+                "--override", `${gameName}@${gameVersion}=${serverUrl}`
             ];
 
             if (options.scale) {

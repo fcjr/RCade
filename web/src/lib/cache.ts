@@ -1,5 +1,5 @@
-const GAMES_CACHE_KEY_CABINET = 'https://rcade.recurse.com/api/v1/games?auth=cabinet';
-const GAMES_CACHE_KEY_PUBLIC = 'https://rcade.recurse.com/api/v1/games?auth=public';
+const GAMES_CACHE_KEY_CABINET = 'https://rcade.dev/api/v1/games?auth=cabinet';
+const GAMES_CACHE_KEY_PUBLIC = 'https://rcade.dev/api/v1/games?auth=public';
 
 type CacheStorage = { default: Cache };
 

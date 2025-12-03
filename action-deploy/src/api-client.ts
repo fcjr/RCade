@@ -4,7 +4,7 @@ import { GameManifest } from "@rcade/api";
 import { HttpClient } from "@actions/http-client";
 import { BearerCredentialHandler } from "@actions/http-client/lib/auth";
 
-const RECURSE_BASE_URL = "https://rcade.recurse.com/api/v1";
+const RECURSE_BASE_URL = "https://rcade.dev/api/v1";
 
 const DeploymentIntent = z.object({
   upload_url: z.string(),

@@ -205,7 +205,7 @@ Every RCade game has an `rcade.manifest.json` that describes your game:
 
 ```json
 {
-  "$schema": "https://rcade.recurse.com/manifest.schema.json",
+  "$schema": "https://rcade.dev/manifest.schema.json",
   "name": "space-blaster",
   "display_name": "Space Blaster",
   "description": "An epic space shooter",

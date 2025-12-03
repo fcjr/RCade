@@ -56,7 +56,7 @@ interface RcadeGame {
 
 const CLEANUP_MARKER = '__CLEANUP_REMOTE_REFS__';
 const GITHUB_API = 'https://api.github.com/repos/rcade-community';
-const RCADE_API = 'https://rcade.recurse.com/api/v1';
+const RCADE_API = "https://rcade.dev/api/v1";
 
 async function fetchRepoInfo(packageName: string): Promise<GitHubRepo> {
     const response = await fetch(`${GITHUB_API}/${packageName}`, {

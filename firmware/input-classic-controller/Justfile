@@ -1,0 +1,12 @@
+# Build the firmware
+build:
+    cargo build --release
+
+# Flash via debug probe (requires probe-rs)
+flash-probe:
+    cargo run --release
+
+# Flash via USB bootloader (hold BOOTSEL, plug in, release)
+flash:
+    cargo build --release
+    elf2uf2-rs -d target/thumbv6m-none-eabi/release/input-classic-controller

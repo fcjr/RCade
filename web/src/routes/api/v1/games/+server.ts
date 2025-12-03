@@ -12,10 +12,15 @@ export const GET: RequestHandler = async ({ locals, request, platform }) => {
     const cache = platform?.caches?.default;
     const cacheKey = auth.for !== "recurser" ? getGamesCacheKey(auth.for) : null;
 
+    const noCacheHeaders = { 'Cache-Control': 'private, no-store', 'CDN-Cache-Control': 'no-store' };
+
     if (cache && cacheKey) {
         const cached = await cache.match(cacheKey);
         if (cached) {
-            return cached;
+            // Return cached response with no-cache headers for browser
+            const response = new Response(cached.body, cached);
+            response.headers.set('Cache-Control', 'private, no-store');
+            return response;
         }
     }
 
@@ -23,19 +28,24 @@ export const GET: RequestHandler = async ({ locals, request, platform }) => {
         const games = (await Promise.all((await Game.all()).map(async game => await game.intoResponse(auth)))).filter(v => v !== undefined);
         const body = JSON.stringify(games);
 
-        const response = new Response(body, {
+        // Response for worker cache (no restrictive headers)
+        const cacheResponse = new Response(body, {
             status: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Cache-Control': 's-maxage=31536000'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
 
         if (cache && cacheKey) {
-            await cache.put(cacheKey, response.clone());
+            await cache.put(cacheKey, cacheResponse.clone());
         }
 
-        return response;
+        // Response for client (with no-cache headers)
+        return new Response(body, {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                ...noCacheHeaders
+            }
+        });
     } catch (error) {
         console.error('Database error:', error);
 

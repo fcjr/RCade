@@ -5,6 +5,8 @@ import { PluginEnvironment, type Plugin } from "@rcade/sdk-plugin";
 
 import PluginInputClassic from "@rcade/input-classic";
 import PluginInputClassicManifest from "@rcade/input-classic/rcade.manifest.json";
+import PluginInputSpinners from "@rcade/input-spinners";
+import PluginInputSpinnersManifest from "@rcade/input-spinners/rcade.manifest.json";
 
 export class PluginManager {
     public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"]) {
@@ -43,6 +45,7 @@ export class PluginManager {
     private ref(name: string): { plugin: { new(): Plugin }, manifest: PluginManifest } {
         switch (name) {
             case "@rcade/input-classic": return { plugin: PluginInputClassic, manifest: PluginInputClassicManifest as PluginManifest };
+            case "@rcade/input-spinners": return { plugin: PluginInputSpinners, manifest: PluginInputSpinnersManifest as PluginManifest };
         }
 
         throw new Error(`Unknown Plugin ${name}`);

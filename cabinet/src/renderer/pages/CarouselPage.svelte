@@ -52,12 +52,13 @@
     console.log('keydown:', event.key, event.code);
     if (games.length === 0) return;
 
+    const startKeys = ['f', 'g', ';', '\'', '1', '2'];
     const key = event.key.toLowerCase();
-    if (key === 'd') {
+    if (key === 'd' || key === "l") {
       currentIndex = (currentIndex + 1) % games.length;
-    } else if (key === 'a') {
+    } else if (key === 'a' || key === "j") {
       currentIndex = (currentIndex - 1 + games.length) % games.length;
-    } else if (key === 'f' && currentGame) {
+    } else if (startKeys.includes(key) && currentGame) {
       navigateToGame(currentGame);
     }
   }

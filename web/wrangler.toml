@@ -4,6 +4,10 @@ main = ".svelte-kit/cloudflare/_worker.js"
 account_id = "9aee291c8fc8a03f6dacc66454177c60"
 compatibility_flags = ["nodejs_compat"]
 
+[[routes]]
+pattern = "rcade.dev"
+custom_domain = true
+
 [vars]
 BUCKET_S3_ENDPOINT = "https://9aee291c8fc8a03f6dacc66454177c60.r2.cloudflarestorage.com/rcade"
 
