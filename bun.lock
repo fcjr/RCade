@@ -80,7 +80,7 @@
     },
     "cli": {
       "name": "rcade",
-      "version": "0.0.34",
+      "version": "0.0.35",
       "bin": {
         "rcade": "./dist/bin.js",
       },
@@ -108,7 +108,7 @@
     },
     "create": {
       "name": "create-rcade",
-      "version": "0.0.34",
+      "version": "0.0.35",
       "bin": {
         "create-rcade": "./dist/bin.js",
       },
