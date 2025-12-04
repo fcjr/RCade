@@ -10,27 +10,30 @@
 namespace rcade {
 
 /**
+ * D-pad state
+ */
+struct DPad {
+    bool up = false;
+    bool down = false;
+    bool left = false;
+    bool right = false;
+};
+
+/**
  * Button state for a single player
  */
 struct PlayerInput {
-    bool UP = false;
-    bool DOWN = false;
-    bool LEFT = false;
-    bool RIGHT = false;
+    DPad DPAD;
     bool A = false;
     bool B = false;
-    bool C = false;
-    bool D = false;
-    bool E = false;
-    bool F = false;
 };
 
 /**
  * System button state
  */
 struct SystemInput {
-    bool PAUSE = false;
-    bool SETTINGS = false;
+    bool ONE_PLAYER = false;
+    bool TWO_PLAYER = false;
 };
 
 /**
