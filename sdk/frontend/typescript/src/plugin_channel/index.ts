@@ -1,4 +1,11 @@
+type PendingRequest = {
+    resolve: (data: unknown) => void;
+    reject: (error: Error) => void;
+};
+
 export class PluginChannel {
+    private pendingRequests = new Map<string, PendingRequest>();
+
     public static async acquire(name: string, version: string) {
         const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
@@ -46,7 +53,17 @@ export class PluginChannel {
     private constructor(
         private port: MessagePort,
         private channel: { name: unknown, version: unknown },
-    ) { }
+    ) {
+        // Listen for responses to requests
+        this.port.addEventListener('message', (event: MessageEvent) => {
+            const { _nonce } = event.data ?? {};
+            if (_nonce && this.pendingRequests.has(_nonce)) {
+                const pending = this.pendingRequests.get(_nonce)!;
+                this.pendingRequests.delete(_nonce);
+                pending.resolve(event.data);
+            }
+        });
+    }
 
     // Utility method to access the message port
     public getPort(): MessagePort {
@@ -55,5 +72,33 @@ export class PluginChannel {
 
     public getVersion(): String {
         return String(this.channel.version);
+    }
+
+    /**
+     * Send a request to the plugin and wait for a response.
+     * The plugin must respond with a message containing the same `_nonce` field.
+     */
+    public request<T = unknown>(message: Record<string, unknown>, timeoutMs = 5000): Promise<T> {
+        const _nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+        return new Promise<T>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                this.pendingRequests.delete(_nonce);
+                reject(new Error('Request timed out'));
+            }, timeoutMs);
+
+            this.pendingRequests.set(_nonce, {
+                resolve: (data) => {
+                    clearTimeout(timeout);
+                    resolve(data as T);
+                },
+                reject: (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                },
+            });
+
+            this.port.postMessage({ ...message, _nonce });
+        });
     }
 }

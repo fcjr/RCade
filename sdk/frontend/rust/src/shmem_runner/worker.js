@@ -17,7 +17,10 @@ self.addEventListener('message', (event) => {
 
         // Set up port message handler
         port.onmessage = (e) => {
-            handleMessage(e.data);
+            // Check if this is a response to a pending request
+            if (!handleResponse(e.data)) {
+                handleMessage(e.data);
+            }
         };
 
         // Initialize user code
@@ -75,6 +78,52 @@ function send(data) {
     if (port) {
         port.postMessage(data);
     }
+}
+
+const pendingRequests = new Map();
+
+function generateNonce() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+/**
+ * Send a request to the plugin and wait for a response.
+ * The plugin must respond with a message containing the same `_nonce` field.
+ */
+function request(message, timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+        const _nonce = generateNonce();
+
+        const timeout = setTimeout(() => {
+            pendingRequests.delete(_nonce);
+            reject(new Error('Request timed out'));
+        }, timeoutMs);
+
+        pendingRequests.set(_nonce, {
+            resolve: (data) => {
+                clearTimeout(timeout);
+                resolve(data);
+            },
+            reject: (error) => {
+                clearTimeout(timeout);
+                reject(error);
+            },
+        });
+
+        port.postMessage({ ...message, _nonce });
+    });
+}
+
+// Internal handler for responses
+function handleResponse(data) {
+    const { _nonce } = data ?? {};
+    if (_nonce && pendingRequests.has(_nonce)) {
+        const pending = pendingRequests.get(_nonce);
+        pendingRequests.delete(_nonce);
+        pending.resolve(data);
+        return true;
+    }
+    return false;
 }
 
 function getMemory() {

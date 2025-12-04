@@ -16,13 +16,20 @@ export default class InputSpinnersPlugin implements Plugin {
     }
 
     private tryOpenHidDevice(port: MessagePortMain): void {
+        // Handle requests from client
+        port.on("message", (event) => {
+            const { type, _nonce } = event.data ?? {};
+            if (type === "get_config" && _nonce) {
+                port.postMessage({
+                    _nonce,
+                    step_resolution: STEP_RESOLUTION,
+                });
+            }
+        });
+        port.start();
+
         try {
             this.hidDevice = new HID.HID(VID, PID);
-
-            port.postMessage({
-                type: "init",
-                step_resolution: STEP_RESOLUTION,
-            });
 
             this.hidDevice.on("data", (data: Buffer) => {
                 // HID report format (4 bytes):
