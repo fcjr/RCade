@@ -1,0 +1,19 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 336px;
+    height: 262px;
+    overflow: hidden;
+    background-color: #1a1a2e;
+}
+
+#canvas {
+    width: 336px;
+    height: 262px;
+    display: block;
+}
