@@ -2,8 +2,7 @@ import "./style.css";
 import { loadPyodide } from "pyodide";
 import { PLAYER_1, PLAYER_2, SYSTEM } from "@rcade/plugin-input-classic";
 import gameCode from "./game.py?raw";
-// Import list of wheels generated at build time
-import wheels from "virtual:pygame-wheels";
+import wheels from "virtual:pyodide-wheels";
 
 async function main() {
     const pyodide = await loadPyodide({
