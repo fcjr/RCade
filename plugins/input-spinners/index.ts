@@ -4,6 +4,7 @@ import HID from "node-hid";
 
 const VID = 0x1209;
 const PID = 0x0001;
+const STEP_RESOLUTION = 1024;
 
 export default class InputSpinnersPlugin implements Plugin {
     private environment?: PluginEnvironment;
@@ -18,11 +19,15 @@ export default class InputSpinnersPlugin implements Plugin {
         try {
             this.hidDevice = new HID.HID(VID, PID);
 
+            port.postMessage({
+                type: "init",
+                step_resolution: STEP_RESOLUTION,
+            });
+
             this.hidDevice.on("data", (data: Buffer) => {
-                // HID report format (8 bytes):
+                // HID report format (4 bytes):
                 // Byte 0-1: Player 1 Spinner step_delta (signed int16, little-endian)
                 // Byte 2-3: Player 2 Spinner step_delta (signed int16, little-endian)
-                // Byte 4-7: Reserved (buttons handled by input-classic)
 
                 if (data.length < 4) {
                     return;
@@ -36,7 +41,6 @@ export default class InputSpinnersPlugin implements Plugin {
                         type: "spinners",
                         spinner1_step_delta,
                         spinner2_step_delta,
-                        step_resolution: 1024,
                     });
                 }
             });

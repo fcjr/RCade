@@ -4,7 +4,7 @@ let player1StepDelta = 0;
 let player2StepDelta = 0;
 let player1Angle = 0;
 let player2Angle = 0;
-const STEP_RESOLUTION = 1024;
+let stepResolution = 1024; // default, updated by init message
 const MAX_DELTA = 1000;
 
 /** Normalize angle to [-π, π] range */
@@ -36,7 +36,7 @@ export const PLAYER_1 = {
             return d;
         },
         get step_resolution() {
-            return STEP_RESOLUTION;
+            return stepResolution;
         },
         get angle() {
             return player1Angle;
@@ -56,7 +56,7 @@ export const PLAYER_2 = {
             return d;
         },
         get step_resolution() {
-            return STEP_RESOLUTION;
+            return stepResolution;
         },
         get angle() {
             return player2Angle;
@@ -157,24 +157,30 @@ function emit(data: SpinEventData) {
 
     STATUS.connected = true;
 
-    type InputMessage = { type: "spinners"; spinner1_step_delta: number; spinner2_step_delta: number; step_resolution: number };
+    type InitMessage = { type: "init"; step_resolution: number };
+    type SpinnersMessage = { type: "spinners"; spinner1_step_delta: number; spinner2_step_delta: number };
+    type InputMessage = InitMessage | SpinnersMessage;
 
     channel.getPort().onmessage = (event: MessageEvent<InputMessage>) => {
         const { type } = event.data;
 
+        if (type === "init") {
+            stepResolution = event.data.step_resolution;
+        }
+
         if (type === "spinners") {
-            const { spinner1_step_delta, spinner2_step_delta, step_resolution } = event.data;
+            const { spinner1_step_delta, spinner2_step_delta } = event.data;
 
             if (spinner1_step_delta !== 0) {
                 player1StepDelta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player1StepDelta + spinner1_step_delta));
-                player1Angle = normalizeAngle(player1Angle + (spinner1_step_delta / STEP_RESOLUTION) * 2 * Math.PI);
-                emit({ player: 1, step_delta: spinner1_step_delta, step_resolution });
+                player1Angle = normalizeAngle(player1Angle + (spinner1_step_delta / stepResolution) * 2 * Math.PI);
+                emit({ player: 1, step_delta: spinner1_step_delta, step_resolution: stepResolution });
             }
 
             if (spinner2_step_delta !== 0) {
                 player2StepDelta = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, player2StepDelta + spinner2_step_delta));
-                player2Angle = normalizeAngle(player2Angle + (spinner2_step_delta / STEP_RESOLUTION) * 2 * Math.PI);
-                emit({ player: 2, step_delta: spinner2_step_delta, step_resolution });
+                player2Angle = normalizeAngle(player2Angle + (spinner2_step_delta / stepResolution) * 2 * Math.PI);
+                emit({ player: 2, step_delta: spinner2_step_delta, step_resolution: stepResolution });
             }
         }
     };

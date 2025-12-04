@@ -5,7 +5,7 @@ const CONNECTED: usize = 0;
 // Byte 1 is padding for alignment
 const PLAYER1_SPINNER_STEP_DELTA: usize = 2; // i16 (2 bytes)
 const PLAYER2_SPINNER_STEP_DELTA: usize = 4; // i16 (2 bytes)
-// Bytes 6-7 are padding for f32 alignment
+const STEP_RESOLUTION: usize = 6; // u16 (2 bytes)
 const PLAYER1_ANGLE: usize = 8; // f32 (4 bytes)
 const PLAYER2_ANGLE: usize = 12; // f32 (4 bytes)
 
@@ -52,7 +52,9 @@ impl SpinnerController {
 
     /// Returns the step resolution of the spinner encoder (steps per rotation).
     pub fn step_resolution(&self) -> u16 {
-        1024
+        let lock = self.runner.lock_blocking();
+        let data_view = lock.data_view();
+        read_u16(&data_view, STEP_RESOLUTION)
     }
 
     /// Returns the current angle in radians, normalized to [-π, π], for the given player (1 or 2).
@@ -86,6 +88,12 @@ fn read_i16(data_view: &js_sys::Uint8Array, offset: usize) -> i16 {
     let low = data_view.at(offset as i32).unwrap_or(0);
     let high = data_view.at((offset + 1) as i32).unwrap_or(0);
     i16::from_le_bytes([low, high])
+}
+
+fn read_u16(data_view: &js_sys::Uint8Array, offset: usize) -> u16 {
+    let low = data_view.at(offset as i32).unwrap_or(0);
+    let high = data_view.at((offset + 1) as i32).unwrap_or(0);
+    u16::from_le_bytes([low, high])
 }
 
 fn write_i16(data_view: &js_sys::Uint8Array, offset: usize, value: i16) {
