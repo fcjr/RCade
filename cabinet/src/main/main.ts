@@ -329,7 +329,6 @@ function createWindow(): void {
 
   // Show and focus window when ready - ensures proper input handling on Pi
   mainWindow.once('ready-to-show', () => {
-    mainWindow.setContentSize(336 * scaleFactor, 262 * scaleFactor);
     mainWindow.show();
     mainWindow.focus();
   });
@@ -353,6 +352,7 @@ function createWindow(): void {
   });
 
   mainWindow.webContents.on("did-finish-load", () => {
+    mainWindow.webContents.setZoomFactor(scaleFactor);
     // Ensure window has focus for input on Raspberry Pi
     mainWindow.focus();
     mainWindow.webContents.focus();
