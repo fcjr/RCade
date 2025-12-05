@@ -1,6 +1,6 @@
 {
   "name": "@rcade/sdk",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "module": "index.ts",
   "main": "./dist/index.js",
   "type": "module",

@@ -1,0 +1,21 @@
+{
+    "name": "{{project_name}}",
+    "private": {{private}},
+    "version": "1.0.0",
+    "description": "{{description}}",
+    "type": "module",
+    "scripts": {
+        "dev": "concurrently \"vite --port 5173 --strictPort\" \"rcade dev http://localhost:5173\"",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@rcade/vite-plugins": "0.1.0",
+        "concurrently": "^9.0.0",
+        "rcade": "^{{rcade_version}}",
+        "vite": "^7.2.4"
+    },
+    "dependencies": {
+        "@rcade/plugin-input-classic": "^0.2.1",
+        "pyodide": "^0.27.0"
+    }
+}

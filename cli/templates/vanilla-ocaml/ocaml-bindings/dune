@@ -1,0 +1,3 @@
+(library
+ (name rcade)
+ (libraries brr))

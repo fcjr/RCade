@@ -802,7 +802,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "input-classic-controller"
+name = "input-spinners-controller"
 version = "0.1.0"
 dependencies = [
  "cortex-m",
@@ -1159,6 +1159,16 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 [[package]]
 name = "rcade-plugin-input-classic"
 version = "0.2.1"
+dependencies = [
+ "js-sys",
+ "rcade-sdk 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "rcade-plugin-input-spinners"
+version = "0.1.0"
 dependencies = [
  "js-sys",
  "rcade-sdk 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",

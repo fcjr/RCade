@@ -1,0 +1,13 @@
+(executable
+ (name main)
+ (modes js)
+ (js_of_ocaml (sourcemap file))
+ (libraries brr rcade))
+
+(rule
+ (mode promote)
+ (action
+  (with-stdout-to main.js
+   (progn
+    (cat ../ocaml-bindings/bindings.js)
+    (cat main.bc.js)))))

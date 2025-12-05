@@ -69,7 +69,7 @@ on("spin", ({ player, step_delta, step_resolution }) => {
 ```
 
 - `step_delta`: Accumulated movement since last read. Reading resets it to 0.
-- `step_resolution`: Encoder resolution (1024 steps per rotation).
+- `step_resolution`: Encoder resolution (x steps per rotation).
 - `angle`: Cumulative angle in radians (automatically updated).
 - `reset()`: Resets the angle to 0.
 

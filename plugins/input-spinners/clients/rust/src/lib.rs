@@ -1,111 +1,110 @@
 use rcade_sdk::{channel::PluginChannel, shmem_runner::PluginSharedMemoryRunner};
 use wasm_bindgen::JsValue;
 
+// Shared memory layout (must match worker.js)
 const CONNECTED: usize = 0;
-// Byte 1 is padding for alignment
-const PLAYER1_SPINNER_STEP_DELTA: usize = 2; // i16 (2 bytes)
-const PLAYER2_SPINNER_STEP_DELTA: usize = 4; // i16 (2 bytes)
-// Bytes 6-7 are padding for f32 alignment
-const PLAYER1_ANGLE: usize = 8; // f32 (4 bytes)
-const PLAYER2_ANGLE: usize = 12; // f32 (4 bytes)
+const SPINNER1_DELTA: usize = 2;
+const SPINNER2_DELTA: usize = 4;
+const STEP_RES: usize = 6;
+const SPINNER1_ANGLE: usize = 8;
+const SPINNER2_ANGLE: usize = 12;
 
 /// Controller for spinner input devices.
 ///
-/// Use polling pattern: call `step_delta(player)` each frame to get accumulated
-/// movement since last call. The value resets to 0 after reading.
-/// Also call `step_resolution()` to get the encoder resolution.
+/// Poll `step_delta(player)` each frame to get accumulated movement (resets after read).
+/// Use `step_resolution()` to convert steps to rotations.
 pub struct SpinnerController {
     runner: PluginSharedMemoryRunner,
 }
 
 impl SpinnerController {
-    pub async fn acquire() -> Result<SpinnerController, JsValue> {
+    pub async fn acquire() -> Result<Self, JsValue> {
         let channel = PluginChannel::acquire("@rcade/input-spinners", "1.0.0").await?;
         let runner = PluginSharedMemoryRunner::spawn(include_str!("./worker.js"), channel, 16)?;
-
-        Ok(SpinnerController { runner })
+        Ok(Self { runner })
     }
 
-    /// Returns whether the spinner controller is connected.
     pub fn connected(&self) -> bool {
         let lock = self.runner.lock_blocking();
-        let data_view = lock.data_view();
-        data_view.at(CONNECTED as i32).unwrap() != 0
+        lock.data_view().at(CONNECTED as i32).unwrap_or(0) != 0
     }
 
-    /// Returns accumulated step_delta for the given player (1 or 2) since last call, then resets to 0.
+    /// Returns accumulated step delta since last call, then resets to 0.
     pub fn step_delta(&self, player: u8) -> i16 {
         let offset = match player {
-            1 => PLAYER1_SPINNER_STEP_DELTA,
-            2 => PLAYER2_SPINNER_STEP_DELTA,
+            1 => SPINNER1_DELTA,
+            2 => SPINNER2_DELTA,
             _ => return 0,
         };
-
         let lock = self.runner.lock_blocking();
-        let data_view = lock.data_view();
-
-        let value = read_i16(&data_view, offset);
-        write_i16(&data_view, offset, 0);
-
-        value
+        let view = lock.data_view();
+        let val = read_i16(&view, offset);
+        write_i16(&view, offset, 0);
+        val
     }
 
-    /// Returns the step resolution of the spinner encoder (steps per rotation).
+    /// Steps per full rotation.
     pub fn step_resolution(&self) -> u16 {
-        1024
+        let lock = self.runner.lock_blocking();
+        read_u16(&lock.data_view(), STEP_RES)
     }
 
-    /// Returns the current angle in radians, normalized to [-π, π], for the given player (1 or 2).
+    /// Current angle in radians, normalized to [-π, π].
     pub fn angle(&self, player: u8) -> f32 {
         let offset = match player {
-            1 => PLAYER1_ANGLE,
-            2 => PLAYER2_ANGLE,
+            1 => SPINNER1_ANGLE,
+            2 => SPINNER2_ANGLE,
             _ => return 0.0,
         };
-
         let lock = self.runner.lock_blocking();
-        let data_view = lock.data_view();
-        read_f32(&data_view, offset)
+        read_f32(&lock.data_view(), offset)
     }
 
-    /// Resets the angle to 0 for the given player (1 or 2).
+    /// Reset angle to 0.
     pub fn reset(&self, player: u8) {
         let offset = match player {
-            1 => PLAYER1_ANGLE,
-            2 => PLAYER2_ANGLE,
+            1 => SPINNER1_ANGLE,
+            2 => SPINNER2_ANGLE,
             _ => return,
         };
-
         let lock = self.runner.lock_blocking();
-        let data_view = lock.data_view();
-        write_f32(&data_view, offset, 0.0);
+        write_f32(&lock.data_view(), offset, 0.0);
     }
 }
 
-fn read_i16(data_view: &js_sys::Uint8Array, offset: usize) -> i16 {
-    let low = data_view.at(offset as i32).unwrap_or(0);
-    let high = data_view.at((offset + 1) as i32).unwrap_or(0);
-    i16::from_le_bytes([low, high])
+fn read_i16(view: &js_sys::Uint8Array, offset: usize) -> i16 {
+    i16::from_le_bytes([
+        view.at(offset as i32).unwrap_or(0),
+        view.at((offset + 1) as i32).unwrap_or(0),
+    ])
 }
 
-fn write_i16(data_view: &js_sys::Uint8Array, offset: usize, value: i16) {
-    let bytes = value.to_le_bytes();
-    data_view.set_index(offset as u32, bytes[0]);
-    data_view.set_index((offset + 1) as u32, bytes[1]);
+fn read_u16(view: &js_sys::Uint8Array, offset: usize) -> u16 {
+    u16::from_le_bytes([
+        view.at(offset as i32).unwrap_or(0),
+        view.at((offset + 1) as i32).unwrap_or(0),
+    ])
 }
 
-fn read_f32(data_view: &js_sys::Uint8Array, offset: usize) -> f32 {
-    let b0 = data_view.at(offset as i32).unwrap_or(0);
-    let b1 = data_view.at((offset + 1) as i32).unwrap_or(0);
-    let b2 = data_view.at((offset + 2) as i32).unwrap_or(0);
-    let b3 = data_view.at((offset + 3) as i32).unwrap_or(0);
-    f32::from_le_bytes([b0, b1, b2, b3])
+fn write_i16(view: &js_sys::Uint8Array, offset: usize, val: i16) {
+    let b = val.to_le_bytes();
+    view.set_index(offset as u32, b[0]);
+    view.set_index((offset + 1) as u32, b[1]);
 }
 
-fn write_f32(data_view: &js_sys::Uint8Array, offset: usize, value: f32) {
-    let bytes = value.to_le_bytes();
-    data_view.set_index(offset as u32, bytes[0]);
-    data_view.set_index((offset + 1) as u32, bytes[1]);
-    data_view.set_index((offset + 2) as u32, bytes[2]);
-    data_view.set_index((offset + 3) as u32, bytes[3]);
+fn read_f32(view: &js_sys::Uint8Array, offset: usize) -> f32 {
+    f32::from_le_bytes([
+        view.at(offset as i32).unwrap_or(0),
+        view.at((offset + 1) as i32).unwrap_or(0),
+        view.at((offset + 2) as i32).unwrap_or(0),
+        view.at((offset + 3) as i32).unwrap_or(0),
+    ])
+}
+
+fn write_f32(view: &js_sys::Uint8Array, offset: usize, val: f32) {
+    let b = val.to_le_bytes();
+    view.set_index(offset as u32, b[0]);
+    view.set_index((offset + 1) as u32, b[1]);
+    view.set_index((offset + 2) as u32, b[2]);
+    view.set_index((offset + 3) as u32, b[3]);
 }

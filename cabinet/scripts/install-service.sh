@@ -49,6 +49,7 @@ Wants=graphical.target
 Type=simple
 User=$CURRENT_USER
 Environment=DISPLAY=:0
+Environment=CABINET_API_KEY=${CABINET_API_KEY:-}
 ExecStart=$APP_PATH
 Restart=always
 RestartSec=5
