@@ -34,7 +34,7 @@ module Player1 = Make (struct
 end)
 
 module Player2 = Make (struct
-  let player_name = "PLAYER_1"
+  let player_name = "PLAYER_2"
 end)
 
 module System = struct
