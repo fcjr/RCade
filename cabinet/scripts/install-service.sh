@@ -7,6 +7,7 @@ SERVICE_NAME="rcade-cabinet"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CURRENT_USER="$(whoami)"
+CURRENT_UID="$(id -u)"
 
 # Find bun
 BUN_PATH=$(which bun 2>/dev/null || echo "$HOME/.bun/bin/bun")
@@ -49,6 +50,8 @@ Wants=graphical.target
 Type=simple
 User=$CURRENT_USER
 Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=/run/user/$CURRENT_UID
+Environment=PULSE_SERVER=unix:/run/user/$CURRENT_UID/pulse/native
 Environment=CABINET_API_KEY=${CABINET_API_KEY:-}
 ExecStart=$APP_PATH
 Restart=always

@@ -40,6 +40,8 @@ if (process.platform === 'linux') {
 
   app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
   app.commandLine.appendSwitch('ignore-gpu-blocklist');
+  // Enable audio output via ALSA (required for some Linux systems)
+  app.commandLine.appendSwitch('alsa-output-device', 'default');
 
   // Disable Cursor in production only
   if (!isDev) {
