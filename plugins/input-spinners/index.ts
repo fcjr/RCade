@@ -4,7 +4,7 @@ import HID from "node-hid";
 
 const VID = 0x1209;
 const PID = 0x0001;
-const STEP_RESOLUTION = 1024;
+const STEP_RESOLUTION = 64;
 
 export default class InputSpinnersPlugin implements Plugin {
     private environment?: PluginEnvironment;

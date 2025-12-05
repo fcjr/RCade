@@ -17,7 +17,7 @@ const SPINNER1_ANGLE = 8;
 const SPINNER2_ANGLE = 12;
 const MAX_DELTA = 1000;
 
-let stepResolution = 1024;
+let stepResolution = 64;
 
 function withLock(fn) {
     const l = lock();

@@ -2,7 +2,7 @@ import { PluginChannel } from "@rcade/sdk";
 
 const MAX_DELTA = 1000;
 
-let stepResolution = 1024;
+let stepResolution = 64;
 
 class Spinner {
     private _stepDelta = 0;

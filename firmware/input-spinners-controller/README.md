@@ -146,8 +146,8 @@ elf2uf2-rs -d target/thumbv6m-none-eabi/release/input-classic-controller
 ## GRS Spinner DIP Switch Settings
 
 Set the DIP switches on the GRS Spinner to:
-- **Resolution**: 1024 PPR
-- **Signal Duration**: 5ms
+- **Resolution**: 64 PPR
+- **Signal Duration**: 0.5ms
 
 ## Protocol Details
 
