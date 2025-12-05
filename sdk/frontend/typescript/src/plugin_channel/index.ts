@@ -63,6 +63,7 @@ export class PluginChannel {
                 pending.resolve(event.data);
             }
         });
+        this.port.start();
     }
 
     // Utility method to access the message port

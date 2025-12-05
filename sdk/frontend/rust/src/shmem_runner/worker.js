@@ -24,11 +24,9 @@ self.addEventListener('message', (event) => {
         };
 
         // Initialize user code
-        try {
-            init();
-        } catch (e) {
+        Promise.resolve().then(() => init()).catch((e) => {
             console.error('Plugin initialization error:', e);
-        }
+        });
     }
 });
 
