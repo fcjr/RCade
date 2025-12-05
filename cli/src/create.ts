@@ -108,8 +108,8 @@ export const createCommand = new Command("create")
             { value: "vanilla-js", name: "Vanilla (JavaScript)" },
             { value: "vanilla-rs", name: "Vanilla (Rust)" },
             { value: "vanilla-cpp", name: "Vanilla (C/C++)" },
-            { value: "pygame", name: "Pygame (Python)" },
             { value: "vanilla-ocaml", name: "Vanilla (OCaml)" },
+            { value: "pygame", name: "Pygame (Python)" },
         ]
     });
 
