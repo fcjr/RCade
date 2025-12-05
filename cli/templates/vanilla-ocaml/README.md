@@ -33,15 +33,7 @@ dune build --watch
 
 ## Releasing
 
-```bash
-dune build --profile release
-```
-
-```bash
-npm run build
-```
-
-Output goes to `dist/` and is ready for deployment.
+Just push to github. Don't forget to include the `<name>.opam` and `package-lock.json` files, as they are needed for the CI to run.
 
 ## Project Structure
 
