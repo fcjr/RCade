@@ -108,6 +108,7 @@ export const createCommand = new Command("create")
             { value: "vanilla-js", name: "Vanilla (JavaScript)" },
             { value: "vanilla-rs", name: "Vanilla (Rust)" },
             { value: "vanilla-cpp", name: "Vanilla (C/C++)" },
+            { value: "pygame", name: "Pygame (Python)" },
         ]
     });
 
@@ -177,6 +178,7 @@ export const createCommand = new Command("create")
         case "vanilla-js": await setup_js(projectDir); break;
         case "vanilla-rs": await setup_rs(projectDir); break;
         case "vanilla-cpp": await setup_cpp(projectDir); break;
+        case "pygame": await setup_js(projectDir); break;
     }
 });
 
@@ -283,3 +285,4 @@ async function setup_cpp(path: string) {
 
     await exc`git init`;
 }
+
