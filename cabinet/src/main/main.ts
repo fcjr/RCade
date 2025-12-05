@@ -151,7 +151,7 @@ async function startGameServer(gameId: string, version: string, controller: Abor
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src *",
-    "connect-src 'self'",  // allow fetching local assets, block external requests
+    "connect-src 'self' data: blob:",  // allow fetching local assets and data/blob URIs, block external requests
     "media-src 'self'",
     // TODO: workers should be moved to a plugin API for better sandboxing
     "worker-src 'self' blob:",
