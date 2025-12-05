@@ -109,6 +109,7 @@ export const createCommand = new Command("create")
             { value: "vanilla-rs", name: "Vanilla (Rust)" },
             { value: "vanilla-cpp", name: "Vanilla (C/C++)" },
             { value: "pygame", name: "Pygame (Python)" },
+            { value: "vanilla-ocaml", name: "Vanilla (OCaml)" },
         ]
     });
 
@@ -179,6 +180,7 @@ export const createCommand = new Command("create")
         case "vanilla-rs": await setup_rs(projectDir); break;
         case "vanilla-cpp": await setup_cpp(projectDir); break;
         case "pygame": await setup_js(projectDir); break;
+        case "vanilla-ocaml": await setup_ocaml(projectDir); break;
     }
 });
 
@@ -256,6 +258,46 @@ async function setup_rs(path: string) {
         {
             name: "Build Trunk project",
             run: "trunk build --release"
+        }
+    ])
+
+    await exc`git init`;
+}
+
+async function setup_ocaml(path: string) {
+    const exc = execa({ cwd: path, stdio: "inherit" });
+
+    write_workflow(path, [
+        {
+            name: "Setup OCaml",
+            uses: "ocaml/setup-ocaml@v3",
+            with: {
+                "ocaml-compiler": "5",
+            }
+        },
+        {
+            name: "Install dependencies",
+            run: "opam install . --deps-only",
+        },
+        {
+            name: "Build project",
+            run: "opam exec -- dune build --profile release"
+        },
+        {
+            name: "Setup Node.js",
+            uses: "actions/setup-node@v4",
+            with: {
+                "node-version": "20",
+                cache: "npm"
+            }
+        },
+        {
+            name: "Install dependencies",
+            run: `npm install`,
+        },
+        {
+            name: "Build Vite project",
+            run: `npm run build`,
         }
     ])
 
