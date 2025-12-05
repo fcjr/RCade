@@ -13,6 +13,7 @@ let () =
   <div id="controls"></div>
 |}
 
+let status = El.find_first_by_selector !!"#status" |> Option.get
 let controls = El.find_first_by_selector !!"#controls" |> Option.get
 
 let rec loop update time =
@@ -43,7 +44,9 @@ let rec main_loop _time =
   `Continue_with main_loop
 
 let rec start_loop _time =
-  if System.one_player () then `Continue_with main_loop
+  if System.one_player () then (
+    Jv.set (Brr.El.to_jv status) "textContent" (Jv.of_string "Game Started!");
+    `Continue_with main_loop)
   else `Continue_with start_loop
 
 let () = loop start_loop 0.
