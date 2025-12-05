@@ -4,6 +4,7 @@ import packageJson from "./package.json";
 
 import { createCommand } from "./src/create";
 import { devCommand } from "./src/dev";
+import { playCommand } from "./src/play";
 import { cacheCommand } from "./src/cache";
 import { remixCommand } from "./src/remix";
 
@@ -16,6 +17,7 @@ program
 
 program.addCommand(createCommand);
 program.addCommand(devCommand);
+program.addCommand(playCommand);
 program.addCommand(cacheCommand);
 program.addCommand(remixCommand);
 
