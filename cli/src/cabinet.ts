@@ -6,6 +6,24 @@ import { spawn } from "node:child_process";
 export const CACHE_DIR = path.join(os.homedir(), ".rcade", "bin");
 const GITHUB_REPO = "fcjr/RCade";
 
+function isWSL(): boolean {
+    if (os.platform() !== "linux") return false;
+    try {
+        const release = os.release().toLowerCase();
+        if (release.includes("microsoft") || release.includes("wsl")) {
+            return true;
+        }
+        // Check /proc/version as a fallback
+        if (fs.existsSync("/proc/version")) {
+            const procVersion = fs.readFileSync("/proc/version", "utf-8").toLowerCase();
+            return procVersion.includes("microsoft") || procVersion.includes("wsl");
+        }
+    } catch {
+        // Ignore errors
+    }
+    return false;
+}
+
 export interface PlatformInfo {
     nodePlatform: "darwin" | "win32" | "linux";
     ebPlatform: "mac" | "win" | "linux";
@@ -15,8 +33,12 @@ export interface PlatformInfo {
 }
 
 export function getPlatformInfo(): PlatformInfo {
-    const nodePlatform = os.platform() as "darwin" | "win32" | "linux";
+    const rawPlatform = os.platform() as "darwin" | "win32" | "linux";
     const arch = os.arch() as "x64" | "arm64";
+    const wsl = isWSL();
+
+    // On WSL, use Windows binaries since GUI apps need to run through Windows
+    const nodePlatform = wsl ? "win32" : rawPlatform;
 
     if (!["darwin", "win32", "linux"].includes(nodePlatform)) {
         throw new Error(`Unsupported platform: ${nodePlatform}`);
