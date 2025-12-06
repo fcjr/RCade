@@ -31,7 +31,8 @@ export function parseCliArgs(): CliOptions {
                 type: 'boolean'
             }
         },
-        allowPositionals: true
+        allowPositionals: true,
+        allowNegative: true
     });
 
     // Parse scale factor
