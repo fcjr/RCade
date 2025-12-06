@@ -34947,6 +34947,7 @@ var Manifest = object({
   categories: array(Categories).optional().default([]),
   authors: union([ManifestAuthor, array(ManifestAuthor).min(1)]),
   dependencies: array(ManifestDependency).optional(),
+  svg_preview: string2().optional(),
   remix_of: object({
     name: string2().nonempty().regex(/[a-zA-Z0-9_-]*/),
     version: ZodSemverUnbranded

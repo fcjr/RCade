@@ -389,6 +389,7 @@ app.whenReady().then(async () => {
         contentUrl: game.latest().contentUrl(),
         authors: game.latest().authors().map(a => ({ display_name: a.display_name })),
         dependencies: game.latest().dependencies(),
+        svgPreview: game.latest().svgPreview(),
       }));
 
       // cache the game list for offline use

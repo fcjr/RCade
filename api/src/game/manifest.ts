@@ -34,6 +34,7 @@ export const Manifest = z.object({
     categories: z.array(Categories).optional().default([]),
     authors: z.union([ManifestAuthor, z.array(ManifestAuthor).min(1)]),
     dependencies: z.array(ManifestDependency).optional(),
+    svg_preview: z.string().optional(),
     remix_of: z.object({
         name: z
             .string()

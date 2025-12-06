@@ -35,4 +35,8 @@ export class GameVersion {
     public displayName(): string | null | undefined {
         return this.apiResponse.displayName;
     }
+
+    public svgPreview(): string | null | undefined {
+        return this.apiResponse.svgPreview;
+    }
 }

@@ -34,6 +34,7 @@ export interface GameInfo {
     name: string,
     version: string,
   }[];
+  svgPreview?: string;
 }
 
 export interface LoadGameResult {

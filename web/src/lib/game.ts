@@ -109,6 +109,7 @@ export class Game {
             description: manifest.description,
             visibility: manifest.visibility,
             status: "pending",
+            svgPreview: manifest.svg_preview,
 
             remixOfGameId,
             remixOfVersion,
@@ -351,6 +352,7 @@ export class Game {
                 description: version.description,
                 visibility: version.visibility,
                 version: version.version,
+                svgPreview: version.svgPreview,
                 authors: version.authors.map(v => ({ display_name: v.display_name, recurse_id: v.recurse_id })),
                 dependencies: version.dependencies.map(v => ({ name: v.dependencyName, version: v.dependencyVersion })),
                 categories: version.categories.map(v => v.category.name),
