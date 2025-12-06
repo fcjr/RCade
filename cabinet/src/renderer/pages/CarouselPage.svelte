@@ -66,6 +66,19 @@
     }
   }
 
+  function projectToColor(project: string) {
+    let hash = 0;
+    const len = project.length;
+
+    for (let i = 0; i < len; i++) {
+        const char = project.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0;
+    }
+    const angle = Math.abs(hash) % 361;
+    return `hsl(${angle}, 50%, 25%)`
+  }
+
   onMount(() => {
     fetchGames();
     if (window.rcade) {
@@ -90,8 +103,8 @@
       {/if}
     </div>
     <div class="pagination">
-      {#each games as _, i}
-        <span class="dot" class:active={i === currentIndex}></span>
+      {#each games as game, i}
+        <span class="dot" class:active={i === currentIndex} style="background-color: {projectToColor(game.id!)};"></span>
       {/each}
     </div>
   {:else}
@@ -145,6 +158,7 @@
 
   .pagination {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     padding: 12px 0;
   }
@@ -158,7 +172,7 @@
   }
 
   .dot.active {
-    background: #fff;
+    border: 2px solid white;
   }
 
   .loading {
