@@ -54,11 +54,9 @@ export class Game {
     public static async new(name: string, pushInfo: GithubOIDCClaims & { recurser: RecurseResponse }): Promise<Game> {
         const result = await getDb().insert(games).values({
             name,
-
             github_author: pushInfo.repository_owner,
             github_repo: pushInfo.repository,
-
-            owner_rc_id: pushInfo.recurser.id.toString(), // TODO
+            owner_rc_id: pushInfo.recurser.id.toString(),
         }).returning();
 
         return new Game({
@@ -87,7 +85,6 @@ export class Game {
         const isFirstVersion = this.data.versions.length === 0;
 
         if (!isFirstVersion) {
-            // Validate remix consistency with existing versions
             await this.validateRemixConsistency(remixOf);
         }
 
@@ -95,7 +92,6 @@ export class Game {
         let remixOfVersion: string | null = null;
 
         if (remixOf) {
-            // Parse and validate the remix_of reference
             const remixData = await this.parseAndValidateRemix(manifest, remixOf, isFirstVersion);
             remixOfGameId = remixData.gameId;
             remixOfVersion = remixData.version;
@@ -104,12 +100,10 @@ export class Game {
         await getDb().insert(gameVersions).values({
             gameId: this.data.id,
             version,
-
             displayName: manifest.display_name,
             description: manifest.description,
             visibility: manifest.visibility,
             status: "pending",
-
             remixOfGameId,
             remixOfVersion,
         });
@@ -119,24 +113,20 @@ export class Game {
         await getDb().insert(gameAuthors).values(authors.map(author => ({
             gameId: this.data.id,
             gameVersion: version,
-
             display_name: author.display_name,
             recurse_id: author.recurse_id
         })));
 
         if (manifest.categories && manifest.categories.length > 0) {
-            // First, fetch the category IDs from the database
             const categoryRecords = await getDb()
                 .select()
                 .from(categories)
                 .where(inArray(categories.name, manifest.categories));
 
-            // Create a map of category names to IDs for quick lookup
             const categoryMap = new Map(
                 categoryRecords.map(cat => [cat.name, cat.id])
             );
 
-            // Filter out any categories that don't exist in the database
             const validCategories = manifest.categories
                 .filter(name => categoryMap.has(name))
                 .map(name => ({
@@ -145,12 +135,10 @@ export class Game {
                     categoryId: categoryMap.get(name)!
                 }));
 
-            // Insert the valid categories
             if (validCategories.length > 0) {
                 await getDb().insert(gameVersionCategories).values(validCategories);
             }
 
-            // Optional: Log or handle invalid categories
             const invalidCategories = manifest.categories.filter(name => !categoryMap.has(name));
             if (invalidCategories.length > 0) {
                 console.warn(`Invalid categories found: ${invalidCategories.join(', ')}`);
@@ -161,7 +149,6 @@ export class Game {
             await getDb().insert(gameDependencies).values(manifest.dependencies.map(dependency => ({
                 gameId: this.data.id,
                 gameVersion: version,
-
                 dependencyName: dependency.name,
                 dependencyVersion: dependency.version,
             })));
@@ -180,18 +167,15 @@ export class Game {
         name: string;
         version: string;
     } | undefined): Promise<void> {
-        // Get the most recent version to check remix consistency
         const existingVersions = this.data.versions;
 
         if (existingVersions.length === 0) {
-            return; // First version, no validation needed
+            return;
         }
 
-        // Check if any existing version has a remix
         const existingRemix = existingVersions.find(v => v.remixOf !== null);
 
         if (!remixOf && existingRemix) {
-            // Previous versions remixed something, but this one doesn't
             throw new Error(
                 `Cannot publish version without remix: previous versions remix game '${existingRemix.remixOf!.game.name}@${existingRemix.remixOf!.version}'. ` +
                 `All versions must remix the same game.`
@@ -199,7 +183,6 @@ export class Game {
         }
 
         if (remixOf && !existingRemix) {
-            // This version remixes something, but previous versions didn't
             throw new Error(
                 `Cannot publish version with remix: previous versions do not remix any game. ` +
                 `All versions must be consistent (either all remix or none remix).`
@@ -207,7 +190,6 @@ export class Game {
         }
 
         if (remixOf && existingRemix) {
-            // Both remix something - they must remix the same game
             const existingRemixGameName = existingRemix.remixOf!.game.name;
 
             if (remixOf.name !== existingRemixGameName) {
@@ -241,7 +223,6 @@ export class Game {
 
         const gameId = targetGame[0].id;
 
-        // Verify the specific version exists
         const remixTarget = await getDb().query.gameVersions.findFirst({
             where: (gameVersions, { and, eq }) =>
                 and(
@@ -287,17 +268,14 @@ export class Game {
             }
         }
 
-        // If not the first version, validate version progression
         if (!isFirstVersion) {
             const existingVersionsWithRemix = this.data.versions.filter(v => v.remixOf !== null);
 
             if (existingVersionsWithRemix.length > 0) {
-                // Find the latest remixed version
                 const latestRemixedVersion = existingVersionsWithRemix
                     .map(v => v.remixOf!.version)
                     .sort((a, b) => semver.rcompare(a, b))[0];
 
-                // Validate that the new remix version is >= the latest remixed version
                 if (semver.lt(remixOf.version, latestRemixedVersion)) {
                     throw new Error(
                         `Cannot remix older version: attempting to remix version '${remixOf.version}', ` +
@@ -325,8 +303,15 @@ export class Game {
             }
 
             if (version.visibility !== "public") {
-                if (auth.for === "public" || (auth.for == "recurser" && auth.rc_id !== this.data.owner_rc_id))
+                if (auth.for === "public") return undefined;
+
+                if (
+                    version.visibility === "private" &&
+                    auth.for === "recurser" &&
+                    auth.rc_id !== this.data.owner_rc_id
+                ) {
                     return undefined;
+                }
             }
 
             if (version.visibility === "private" && auth.for === "cabinet") {
