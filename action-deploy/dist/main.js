@@ -34950,6 +34950,10 @@ var Manifest = object({
   remix_of: object({
     name: string2().nonempty().regex(/[a-zA-Z0-9_-]*/),
     version: ZodSemverUnbranded
+  }).optional(),
+  deployment: object({
+    github_owner: string2().optional(),
+    github_repo: string2().optional()
   }).optional()
 });
 var import_semver = __toESM2(require_semver2(), 1);
@@ -48107,6 +48111,18 @@ async function run() {
     core5.info(`Found manifest for app ${manifest.name}`);
     core5.info(JSON.stringify(manifest, null, 2));
     core5.endGroup();
+    if (manifest.deployment) {
+      const githubRepo = process.env.GITHUB_REPOSITORY || "";
+      const [actualOwner, actualRepo] = githubRepo.split("/");
+      if (manifest.deployment.github_owner && manifest.deployment.github_owner !== actualOwner) {
+        core5.info(`⏭️ Deployment skipped: github_owner '${manifest.deployment.github_owner}' does not match '${actualOwner}'`);
+        return;
+      }
+      if (manifest.deployment.github_repo && manifest.deployment.github_repo !== actualRepo) {
+        core5.info(`⏭️ Deployment skipped: github_repo '${manifest.deployment.github_repo}' does not match '${actualRepo}'`);
+        return;
+      }
+    }
     const absoluteArtifactPath = resolve(workspace, artifactPath);
     if (!fs13.existsSync(`${absoluteArtifactPath}/index.html`)) {
       throw new Error(`Artifact folder ${artifactPath} does not contain an index.html file`);
