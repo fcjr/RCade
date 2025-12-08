@@ -109,6 +109,7 @@ export class Game {
             description: manifest.description,
             visibility: manifest.visibility,
             status: "pending",
+            permissions: manifest.permissions ?? [],
 
             remixOfGameId,
             remixOfVersion,
@@ -353,6 +354,7 @@ export class Game {
                 version: version.version,
                 authors: version.authors.map(v => ({ display_name: v.display_name, recurse_id: v.recurse_id })),
                 dependencies: version.dependencies.map(v => ({ name: v.dependencyName, version: v.dependencyVersion })),
+                permissions: version.permissions ?? [],
                 categories: version.categories.map(v => v.category.name),
                 remixOf: version.remixOf == null ? undefined : {
                     id: version.remixOf.game.id,
