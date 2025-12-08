@@ -16,6 +16,7 @@ let currentRoute = $state<Route>(initialManifest == null ? { page: 'carousel' } 
       ? initialManifest.authors.map(a => ({ display_name: a.display_name }))
       : [{ display_name: initialManifest.authors.display_name }],
     dependencies: initialManifest.dependencies ?? [],
+    permissions: initialManifest.permissions ?? [],
   }
 });
 

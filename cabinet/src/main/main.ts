@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import net from 'net';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
-import { Client, Game } from '@rcade/api';
+import { Client, Game, Permission } from '@rcade/api';
 import * as tar from 'tar';
 import type { GameInfo, LoadGameResult } from '../shared/types';
 import { parseCliArgs } from "./args.js";
@@ -65,6 +65,9 @@ const gamesListCachePath = path.join(app.getPath('userData'), 'games-list.json')
 
 // Track running game servers
 const gameServers = new Map<string, { server?: ReturnType<typeof serve>; url: string; controller: AbortController }>();
+
+// Track current game's permissions for the permission handler
+let currentGamePermissions: Permission[] = [];
 
 function getCachePath(gameId: string, version: string): string {
   return path.join(cacheDir, gameId, version);
@@ -352,9 +355,14 @@ function createWindow(): void {
     });
   }
 
-  // deny all permissions for sandboxed iframe content
+  // Handle permissions for sandboxed iframe content based on game manifest
   session.defaultSession.setPermissionRequestHandler(
-    (_webContents, _permission, callback) => {
+    (_webContents, permission, callback) => {
+      // Map Electron permission names to our Permission type
+      if (permission === 'media' && currentGamePermissions.includes('camera')) {
+        callback(true);
+        return;
+      }
       callback(false);
     }
   );
@@ -401,6 +409,7 @@ app.whenReady().then(async () => {
         contentUrl: game.latest().contentUrl(),
         authors: game.latest().authors().map(a => ({ display_name: a.display_name })),
         dependencies: game.latest().dependencies(),
+        permissions: game.latest().permissions(),
       }));
 
       // cache the game list for offline use
@@ -432,6 +441,9 @@ app.whenReady().then(async () => {
   ipcMain.handle('load-game', async (event, game: GameInfo): Promise<Omit<LoadGameResult, "pluginPorts">> => {
     const { id, latestVersion } = game;
     const abortController = new AbortController();
+
+    // Set current game permissions for the permission handler
+    currentGamePermissions = game.permissions ?? [];
 
     let url;
 
@@ -481,6 +493,9 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('unload-game', async (_event, gameId: string | undefined, gameName: string, version: string | undefined): Promise<void> => {
+    // Clear game permissions when unloading
+    currentGamePermissions = [];
+
     let serverKey;
 
     if (gameId != undefined && version != undefined) {

@@ -70,6 +70,11 @@
       "enum": ["screensaver"],
       "description": "Category tags for the game"
     },
+    "permission": {
+      "type": "string",
+      "enum": ["camera"],
+      "description": "Permission for hardware/system access"
+    },
     "gameManifest": {
       "type": "object",
       "properties": {
@@ -131,6 +136,11 @@
           "required": ["name", "version"],
           "additionalProperties": false,
           "description": "Reference to the original game if this is a remix"
+        },
+        "permissions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/permission" },
+          "description": "Permissions for hardware/system access (e.g., camera)"
         }
       },
       "required": ["name", "description", "visibility", "authors"],

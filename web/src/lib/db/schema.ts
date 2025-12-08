@@ -28,6 +28,7 @@ export const gameVersions = sqliteTable('game_versions', {
     visibility: text("visibility", { enum: ["public", "internal", "private"] }).notNull(),
     version: text("version").notNull(),
     status: text("status", { enum: ["pending", "published"] }).notNull(),
+    permissions: text("permissions", { mode: "json" }).$type<string[]>(),
 
     remixOfGameId: text("remix_of_game_id"),
     remixOfVersion: text("remix_of_version"),
@@ -79,6 +80,7 @@ export const gameAuthors = sqliteTable('game_authors', {
     }).onDelete("cascade"),
     index("game_authors_game_id_version_idx").on(t.gameId, t.gameVersion),
 ]);
+
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
     gameVersionCategories: many(gameVersionCategories),

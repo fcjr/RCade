@@ -1,4 +1,4 @@
-export { Manifest as GameManifest, ManifestAuthor as GameManifestAuthor } from "./game/manifest.js"
+export { Manifest as GameManifest, ManifestAuthor as GameManifestAuthor, Permission } from "./game/manifest.js"
 export { Game } from "./game/index.js";
 export { GameVersion } from "./game/version.js";
 export { Client } from "./client.js";

@@ -1,4 +1,4 @@
-import { GameManifest } from '@rcade/api';
+import { GameManifest, Permission } from '@rcade/api';
 import { z } from 'zod';
 
 export interface PackageVersion {
@@ -35,6 +35,7 @@ export interface GameInfo {
     name: string,
     version: string,
   }[];
+  permissions: Permission[];
 }
 
 export interface LoadGameResult {
