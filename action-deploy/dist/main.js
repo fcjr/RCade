@@ -34927,6 +34927,7 @@ var zod_default = exports_external;
 var Categories = zod_default.enum([
   "screensaver"
 ]);
+var Permission = _enum2(["camera"]);
 var ManifestAuthor = object({
   display_name: string2(),
   recurse_id: number2().optional()
@@ -34950,7 +34951,8 @@ var Manifest = object({
   remix_of: object({
     name: string2().nonempty().regex(/[a-zA-Z0-9_-]*/),
     version: ZodSemverUnbranded
-  }).optional()
+  }).optional(),
+  permissions: array(Permission).optional()
 });
 var import_semver = __toESM2(require_semver2(), 1);
 var GameAuthorResponse = exports_external.object({

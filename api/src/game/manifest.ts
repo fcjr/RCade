@@ -1,6 +1,9 @@
 import * as z from "zod";
 import { Categories } from "../categories";
 
+export const Permission = z.enum(["camera"]);
+export type Permission = z.infer<typeof Permission>;
+
 export const ManifestAuthor = z.object({
     display_name: z.string(),
     recurse_id: z.number().optional(),
@@ -41,6 +44,7 @@ export const Manifest = z.object({
             .regex(/[a-zA-Z0-9_-]*/),
         version: ZodSemverUnbranded,
     }).optional(),
+    permissions: z.array(Permission).optional(),
 });
 
 export type Manifest = z.infer<typeof Manifest>;

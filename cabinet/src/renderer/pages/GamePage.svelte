@@ -169,7 +169,7 @@
       src={gameUrl}
       title={game.name}
       sandbox="allow-scripts allow-same-origin"
-      allow=""
+      allow={game.permissions.includes('camera') ? 'camera' : ''}
     ></iframe>
   </div>
 {/if}

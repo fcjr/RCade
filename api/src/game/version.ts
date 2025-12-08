@@ -1,3 +1,5 @@
+import type { Permission } from "./manifest.js";
+
 export class GameVersion {
     public static fromApiResponse(game_id: string, response: any) {
         return new GameVersion(game_id, response);
@@ -34,5 +36,9 @@ export class GameVersion {
 
     public displayName(): string | null | undefined {
         return this.apiResponse.displayName;
+    }
+
+    public permissions(): Permission[] {
+        return this.apiResponse.permissions ?? [];
     }
 }
