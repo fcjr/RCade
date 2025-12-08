@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Categories } from "./categories";
+import { Permission } from "./game/manifest";
 
 export const GameAuthorResponse = z.object({
   display_name: z.string(),
@@ -44,6 +45,7 @@ export const GameVersionResponse = z.object({
     url: z.string(),
     expires: z.number(),
   }).optional(),
+  permissions: z.array(Permission).optional(),
 });
 
 export const GameResponse = z.object({

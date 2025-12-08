@@ -34995,7 +34995,8 @@ var GameVersionResponse = exports_external.object({
   contents: exports_external.object({
     url: exports_external.string(),
     expires: exports_external.number()
-  }).optional()
+  }).optional(),
+  permissions: exports_external.array(Permission).optional()
 });
 var GameResponse = exports_external.object({
   id: exports_external.string(),
