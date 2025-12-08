@@ -46,7 +46,7 @@ if (process.platform === 'linux') {
   // Disable Cursor in production only
   if (!isDev) {
     app.commandLine.appendSwitch('use-angle', 'vulkan');
-    app.commandLine.appendSwitch('use-gl', 'angle');
+    app.commandLine.appendSwitch('use-gl', 'egl');
     app.commandLine.appendSwitch('enable-features', 'Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,WaylandWindowDecorations,SharedArrayBuffer');
     app.commandLine.appendSwitch('enable-unsafe-webgpu');
 
