@@ -33,13 +33,32 @@ Output goes to `dist/` and is ready for deployment.
 ## Project Structure
 
 ```
+├── public/           # Static assets (copied as-is)
 ├── src/
 │   ├── main.ts       # Game entry point
 │   └── style.css     # Styles
 ├── index.html        # HTML entry
+├── vite.config.js    # Vite configuration
 ├── tsconfig.json     # TypeScript config
 └── package.json
 ```
+
+## Adding Assets
+
+**Imported assets** (recommended) - Place in `src/` and import them. Vite bundles these with hashed filenames for cache busting:
+
+```ts
+import spriteUrl from './sprite.png';
+import jumpSound from './jump.mp3';
+
+const img = new Image();
+img.src = spriteUrl;
+
+const sound = new Audio(jumpSound);
+sound.play();
+```
+
+**Static assets** - Place in `public/` for files copied as-is. Access via root path (`/sprite.png`).
 
 ## Arcade Controls
 

@@ -33,13 +33,35 @@ Output goes to `dist/` and is ready for deployment.
 ## Project Structure
 
 ```
+├── public/           # Static assets (copied as-is)
 ├── src/
 │   ├── sketch.ts     # p5.js sketch (game code)
 │   └── style.css     # Styles
 ├── index.html        # HTML entry
+├── vite.config.js    # Vite configuration
 ├── tsconfig.json     # TypeScript config
 └── package.json
 ```
+
+## Adding Assets
+
+**Imported assets** (recommended) - Place in `src/` and import them. Vite bundles these with hashed filenames for cache busting:
+
+```ts
+import spriteUrl from './sprite.png';
+
+let sprite: p5.Image;
+
+p.preload = () => {
+    sprite = p.loadImage(spriteUrl);
+};
+
+p.draw = () => {
+    p.image(sprite, x, y);
+};
+```
+
+**Static assets** - Place in `public/` for files copied as-is. Access via root path (`/sprite.png`).
 
 ## p5.js Basics
 

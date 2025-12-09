@@ -38,6 +38,7 @@ Just push to github. Don't forget to include the `<name>.opam` and `package-lock
 ## Project Structure
 
 ```
+├── public/           # Static assets (copied as-is)
 ├── src/
 │   ├── main.ml       # Game entry point
 │   ├── style.css     # Styles
@@ -45,9 +46,16 @@ Just push to github. Don't forget to include the `<name>.opam` and `package-lock
 ├── ocaml-bindings/
 │   └── ...           # Bindings to the input
 ├── index.html        # HTML entry
+├── vite.config.js    # Vite configuration
 ├── dune-project
 └── package.json
 ```
+
+## Adding Assets
+
+**Imported assets** (recommended) - Import assets in a JS file and expose them globally, then access via Js_of_ocaml. Vite bundles these with hashed filenames for cache busting.
+
+**Static assets** - Place in `public/` for files copied as-is. Access via root path (`/sprite.png`).
 
 ## Arcade Controls
 

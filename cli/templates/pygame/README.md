@@ -33,6 +33,7 @@ Output goes to `dist/` and is ready for deployment.
 ## Project Structure
 
 ```
+├── public/           # Static assets (copied as-is)
 ├── src/
 │   ├── game.py       # Pygame game code
 │   ├── main.js       # JavaScript entry point
@@ -42,6 +43,29 @@ Output goes to `dist/` and is ready for deployment.
 ├── rcade.manifest.json  # RCade game metadata
 └── package.json
 ```
+
+## Adding Assets
+
+**Imported assets** (recommended) - Place in `src/` and import them in `src/main.js`. Vite bundles these with hashed filenames for cache busting:
+
+```js
+import spriteUrl from './sprite.png';
+import jumpSound from './jump.wav';
+
+// Pass asset URLs to Python via globalThis
+globalThis.assets = { spriteUrl, jumpSound };
+```
+
+Then access them in Python:
+
+```python
+from js import assets
+
+sprite = pygame.image.load(assets.spriteUrl)
+sound = pygame.mixer.Sound(assets.jumpSound)
+```
+
+**Static assets** - Place in `public/` for files copied as-is. Access via root path (`/sprite.png`).
 
 ## Adding Python Dependencies
 

@@ -125,12 +125,38 @@ my-game/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yaml      # Auto-deployment to RCade
+├── public/                  # Static assets (images, audio, fonts)
 ├── src/
 │   └── main.js              # Your game code
 ├── index.html               # Entry point
+├── vite.config.js           # Vite configuration
 ├── package.json             # Dependencies
 └── rcade.manifest.json      # Game metadata
 ```
+
+## Adding Assets
+
+**Imported assets** (recommended) - Place in `src/` and import them. Vite bundles these with hashed filenames for cache busting:
+
+```js
+import spriteUrl from './sprite.png';
+import jumpSound from './jump.mp3';
+
+const img = new Image();
+img.src = spriteUrl;
+
+const sound = new Audio(jumpSound);
+sound.play();
+```
+
+**Static assets** - Place in `public/` for files copied as-is without processing. Access via root path:
+
+```js
+const img = new Image();
+img.src = '/sprite.png';
+```
+
+See each template's README for language-specific examples.
 
 ## Development
 
