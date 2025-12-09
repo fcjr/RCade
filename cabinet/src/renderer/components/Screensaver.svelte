@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
+  import octopusImg from "/octopus.png";
 
   const IDLE_TIMEOUT_MS = 15000;
   const LOGO_SIZE = 60;
@@ -92,7 +93,7 @@
   <div class="screensaver">
     <img
       class="logo"
-      src="./octopus.png"
+      src={octopusImg}
       alt="Octopus"
       style="left: {logoX}px; top: {logoY}px; width: {LOGO_SIZE}px; height: {LOGO_SIZE}px;"
     />
