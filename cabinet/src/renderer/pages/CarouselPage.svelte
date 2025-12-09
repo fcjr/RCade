@@ -8,6 +8,11 @@
   let unsubscribeMenuKey: (() => void) | undefined;
   let lastFetchTime = 0;
 
+  let p2UpPressed = $state<boolean>(false);
+  let p2DownPressed = $state<boolean>(false);
+  let p2LeftPressed = $state<boolean>(false);
+  let p2RightPressed = $state<boolean>(false);
+
   const currentGame = $derived(games.length > 0 ? games[currentIndex] : null);
 
   function gamesMatch(a: GameInfo, b: GameInfo): boolean {
@@ -53,16 +58,39 @@
 
   function handleKeydown(event: KeyboardEvent) {
     console.log('keydown:', event.key, event.code);
-    if (games.length === 0) return;
+    const hasGames = !(games.length === 0);
 
     const startKeys = ['f', 'g', ';', '\'', '1', '2'];
     const key = event.key.toLowerCase();
-    if (key === 'd' || key === "l") {
+    if (key === 'd' && hasGames) {
       currentIndex = (currentIndex + 1) % games.length;
-    } else if (key === 'a' || key === "j") {
+    } else if (key === 'a' && hasGames) {
       currentIndex = (currentIndex - 1 + games.length) % games.length;
-    } else if (startKeys.includes(key) && currentGame) {
+    } else if (startKeys.includes(key) && currentGame && hasGames) {
       navigateToGame(currentGame);
+    } else if (key === 'i') {
+      p2UpPressed = true;
+    } else if (key === 'k') {
+      p2DownPressed = true;
+    } else if (key === 'j') {
+      p2LeftPressed = true;
+    } else if (key === 'l') {
+      p2RightPressed = true;
+    }
+  }
+
+  function handleKeyUp(event: KeyboardEvent) {
+    console.log('keyup:', event.key, event.code);
+    const key = event.key.toLowerCase();
+
+    if (key === 'i') {
+      p2UpPressed = false;
+    } else if (key === 'k') {
+      p2DownPressed = false;
+    } else if (key === 'j') {
+      p2LeftPressed = false;
+    } else if (key === 'l') {
+      p2RightPressed = false;
     }
   }
 
@@ -85,15 +113,17 @@
       unsubscribeMenuKey = window.rcade.onMenuKey(fetchGames);
     }
     window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keyup', handleKeyUp);
   });
 
   onDestroy(() => {
     unsubscribeMenuKey?.();
     window.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('keyup', handleKeyUp);
   });
 </script>
 
-<div class="carousel">
+<div class="carousel" class:up={p2UpPressed} class:down={p2DownPressed} class:left={p2LeftPressed} class:right={p2RightPressed}>
   {#if currentGame}
     <div class="game-card">
       <h1 class="game-name">{currentGame.displayName ?? currentGame.name}</h1>
@@ -113,6 +143,31 @@
 </div>
 
 <style>
+  .up {
+    transform: perspective(400px) rotateX(15deg);
+  }
+  .up.left {
+    transform: perspective(400px) rotateX(15deg) rotateY(-15deg);
+  }
+  .up.right {
+    transform: perspective(400px) rotateX(15deg) rotateY(15deg);
+  }
+  .down {
+    transform: perspective(400px) rotateX(-15deg);
+  }
+  .down.left {
+     transform: perspective(400px) rotateX(-15deg) rotateY(-15deg);
+  }
+  .down.right {
+     transform: perspective(400px) rotateX(-15deg) rotateY(15deg);
+  }
+  .left {
+    transform: perspective(400px) rotateY(-15deg);
+  }
+  .right {
+    transform: perspective(400px) rotateY(15deg);
+  }
+
   .carousel {
     display: flex;
     flex-direction: column;
