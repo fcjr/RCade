@@ -34,7 +34,7 @@ export default class InputSpinnersPlugin implements Plugin {
         const port = environment.getPort();
 
         this.setupKeyboardEmulation(environment, port);
-        this.tryOpenHidDevice(port);
+        this.tryOpenHidDevice(environment, port);
     }
 
     private setupKeyboardEmulation(environment: PluginEnvironment, port: MessagePortMain): void {
@@ -64,7 +64,7 @@ export default class InputSpinnersPlugin implements Plugin {
         environment.getWebContents().on("before-input-event", this.keyboardHandler);
     }
 
-    private tryOpenHidDevice(port: MessagePortMain): void {
+    private tryOpenHidDevice(environment: PluginEnvironment, port: MessagePortMain): void {
         // Handle requests from client
         port.on("message", (event) => {
             const { type, _nonce } = event.data ?? {};
