@@ -9,11 +9,12 @@
   let unsubscribeMenuKey: (() => void) | undefined;
   let lastFetchTime = 0;
 
-  let p2UpPressed = $state<boolean>(false);
-  let p2DownPressed = $state<boolean>(false);
-  let p2LeftPressed = $state<boolean>(false);
-  let p2RightPressed = $state<boolean>(false);
   let fireworksComponent: Fireworks;
+
+  const p2DirKeys: Record<string, string> = { i: 'up', k: 'down', j: 'left', l: 'right' };
+  let p2Pressed = $state<Set<string>>(new Set());
+  const tiltX = $derived(p2Pressed.has('up') ? 15 : p2Pressed.has('down') ? -15 : 0);
+  const tiltY = $derived(p2Pressed.has('right') ? 15 : p2Pressed.has('left') ? -15 : 0);
 
   const currentGame = $derived(games.length > 0 ? games[currentIndex] : null);
 
@@ -70,14 +71,8 @@
       currentIndex = (currentIndex - 1 + games.length) % games.length;
     } else if (startKeys.includes(key) && currentGame && hasGames) {
       navigateToGame(currentGame);
-    } else if (key === 'i') {
-      p2UpPressed = true;
-    } else if (key === 'k') {
-      p2DownPressed = true;
-    } else if (key === 'j') {
-      p2LeftPressed = true;
-    } else if (key === 'l') {
-      p2RightPressed = true;
+    } else if (p2DirKeys[key]) {
+      p2Pressed = new Set([...p2Pressed, p2DirKeys[key]]);
     } else if ((key === ';' || key === '\'') && !event.repeat) {
       fireworksComponent?.fireworksInstance()?.launch(1);
     }
@@ -86,15 +81,10 @@
   function handleKeyUp(event: KeyboardEvent) {
     console.log('keyup:', event.key, event.code);
     const key = event.key.toLowerCase();
-
-    if (key === 'i') {
-      p2UpPressed = false;
-    } else if (key === 'k') {
-      p2DownPressed = false;
-    } else if (key === 'j') {
-      p2LeftPressed = false;
-    } else if (key === 'l') {
-      p2RightPressed = false;
+    if (p2DirKeys[key]) {
+      const next = new Set(p2Pressed);
+      next.delete(p2DirKeys[key]);
+      p2Pressed = next;
     }
   }
 
@@ -138,7 +128,7 @@
   }
 </script>
 
-<div class="carousel" class:up={p2UpPressed} class:down={p2DownPressed} class:left={p2LeftPressed} class:right={p2RightPressed}>
+<div class="carousel" style:--tilt-x="{tiltX}deg" style:--tilt-y="{tiltY}deg">
   <Fireworks class="fireworks" options={fireworkOptions} bind:this={fireworksComponent} autostart={false} />
   {#if currentGame}
     <div class="game-card">
@@ -159,31 +149,6 @@
 </div>
 
 <style>
-  .up {
-    transform: perspective(400px) rotateX(15deg);
-  }
-  .up.left {
-    transform: perspective(400px) rotateX(15deg) rotateY(-15deg);
-  }
-  .up.right {
-    transform: perspective(400px) rotateX(15deg) rotateY(15deg);
-  }
-  .down {
-    transform: perspective(400px) rotateX(-15deg);
-  }
-  .down.left {
-     transform: perspective(400px) rotateX(-15deg) rotateY(-15deg);
-  }
-  .down.right {
-     transform: perspective(400px) rotateX(-15deg) rotateY(15deg);
-  }
-  .left {
-    transform: perspective(400px) rotateY(-15deg);
-  }
-  .right {
-    transform: perspective(400px) rotateY(15deg);
-  }
-
   :global(.fireworks) {
     top: 0;
     left: 0;
@@ -200,6 +165,7 @@
     min-height: 100vh;
     padding: 8px;
     text-align: center;
+    transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
   }
 
   .game-card {
