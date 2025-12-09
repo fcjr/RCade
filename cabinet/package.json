@@ -17,15 +17,16 @@
     "build:linux": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@fireworks-js/svelte": "^2.10.8",
     "@hono/node-server": "^1.13.7",
     "@rcade/api": "workspace:*",
+    "@rcade/input-classic": "workspace:*",
+    "@rcade/input-spinners": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
     "hono": "^4.6.14",
     "semver": "^7.7.3",
     "tar": "^7.4.3",
-    "zod": "^4.1.13",
-    "@rcade/input-classic": "workspace:*",
-    "@rcade/input-spinners": "workspace:*"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",

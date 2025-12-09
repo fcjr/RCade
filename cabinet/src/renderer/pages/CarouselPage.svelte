@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import type { GameInfo } from '../../shared/types';
   import { navigateToGame, getLastPlayedGame } from '../router.svelte';
+  import { Fireworks, type FireworksOptions } from '@fireworks-js/svelte'
 
   let games = $state<GameInfo[]>([]);
   let currentIndex = $state(0);
@@ -12,6 +13,9 @@
   let p2DownPressed = $state<boolean>(false);
   let p2LeftPressed = $state<boolean>(false);
   let p2RightPressed = $state<boolean>(false);
+  let p2aPressed = $state<boolean>(false);
+  let p2bPressed = $state<boolean>(false);
+  let showFireworks = $derived(p2aPressed && p2bPressed);
 
   const currentGame = $derived(games.length > 0 ? games[currentIndex] : null);
 
@@ -60,7 +64,7 @@
     console.log('keydown:', event.key, event.code);
     const hasGames = !(games.length === 0);
 
-    const startKeys = ['f', 'g', ';', '\'', '1', '2'];
+    const startKeys = ['f', 'g', '1', '2'];
     const key = event.key.toLowerCase();
     if (key === 'd' && hasGames) {
       currentIndex = (currentIndex + 1) % games.length;
@@ -76,6 +80,10 @@
       p2LeftPressed = true;
     } else if (key === 'l') {
       p2RightPressed = true;
+    } else if (key === ';') {
+      p2aPressed = true;
+    } else if (key === '\'') {
+      p2bPressed = true;
     }
   }
 
@@ -91,6 +99,10 @@
       p2LeftPressed = false;
     } else if (key === 'l') {
       p2RightPressed = false;
+    } else if (key === ';') {
+      p2aPressed = false;
+    } else if (key === '\'') {
+      p2bPressed = false;
     }
   }
 
@@ -121,9 +133,23 @@
     window.removeEventListener('keydown', handleKeydown);
     window.removeEventListener('keyup', handleKeyUp);
   });
+
+  const fireworkOptions: FireworksOptions = {
+    sound: {
+      enabled: true,
+      files: [
+        'explosion0.mp3',
+        'explosion1.mp3',
+        'explosion2.mp3'
+      ],
+    }
+  }
 </script>
 
 <div class="carousel" class:up={p2UpPressed} class:down={p2DownPressed} class:left={p2LeftPressed} class:right={p2RightPressed}>
+  {#if showFireworks}
+    <Fireworks options={fireworkOptions} />
+  {/if}
   {#if currentGame}
     <div class="game-card">
       <h1 class="game-name">{currentGame.displayName ?? currentGame.name}</h1>
