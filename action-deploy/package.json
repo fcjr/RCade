@@ -20,7 +20,8 @@
     "@actions/core": "^1.11.1",
     "@actions/http-client": "^3.0.0",
     "@aws-sdk/client-s3": "^3.940.0",
-    "install": "^0.13.0",
-    "@rcade/api": "workspace:*"
+    "@rcade/api": "workspace:*",
+    "image-size": "^2.0.2",
+    "install": "^0.13.0"
   }
 }

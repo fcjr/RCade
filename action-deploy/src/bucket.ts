@@ -24,3 +24,23 @@ export async function uploadFileStream(
     throw new Error(`Upload failed: ${response.message.statusCode} - ${body}`);
   }
 }
+
+export async function uploadFromBuffer(
+  buffer: Buffer,
+  presignedUrl: string
+): Promise<void> {
+  const client = new httpm.HttpClient("rcade-deploy-bucket-client", [], {
+    allowRetries: true,
+    maxRetries: 3,
+  });
+
+  const response = await client.put(presignedUrl, buffer.toString('binary'), {
+    "Content-Type": "application/octet-stream",
+    "Content-Length": buffer.length.toString(),
+  });
+
+  if (response.message.statusCode !== 200) {
+    const body = await response.readBody();
+    throw new Error(`Upload failed: ${response.message.statusCode} - ${body}`);
+  }
+}
