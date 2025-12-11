@@ -5,7 +5,7 @@
 </script>
 
 <header class="header">
-	<StatusBar currentGame={'Snake Evolved'} />
+	<!-- <StatusBar currentGame={'Snake Evolved'} /> -->
 	<div class="container">
 		<div class="logo-wrapper">
 			<a class="logo-text" href="/">

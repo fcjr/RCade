@@ -8,7 +8,9 @@ export const GET: RequestHandler = async ({ locals, request, platform }) => {
     const auth = session?.user ? { for: "recurser" as const, rc_id: session.user.rc_id } : request.headers.get("Authorization") == `Bearer ${env.CABINET_API_KEY}` ? { for: "cabinet" as const } : { for: "public" as const };
 
     try {
-        const games = (await Promise.all((await Game.all()).map(async game => await game.intoResponse(auth)))).filter(v => v !== undefined);
+        // with r2Key if the parameter 'with_r2_key' is present and set to 'true'
+        const withR2Key = new URL(request.url).searchParams.get('with_r2_key') === 'true';
+        const games = (await Promise.all((await Game.all()).map(async game => await game.intoResponse(auth, { withR2Key })))).filter(v => v !== undefined);
         const body = JSON.stringify(games);
 
         return new Response(body, {

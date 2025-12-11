@@ -15,7 +15,7 @@
 </script>
 
 <section class="hero-section">
-	<div class="container grid-2col">
+	<div class="container" class:grid-layout={visual} class:centered-layout={!visual}>
 		<div class="hero-content" in:fly={{ y: 20, duration: 600, delay: 0 }}>
 			{#if badge}
 				<div class="badge-pill">
@@ -42,6 +42,10 @@
 			</div>
 		{/if}
 	</div>
+
+	{#if !visual}
+		<div class="ambient-glow"></div>
+	{/if}
 </section>
 
 <style>
@@ -50,19 +54,56 @@
 		position: relative;
 	}
 
-	.grid-2col {
+	/* --- LAYOUT VARIANTS --- */
+
+	/* Variant 1: The standard 2-column Grid (With Visual) */
+	.grid-layout {
 		display: grid;
 		grid-template-columns: 1.2fr 1fr;
 		gap: var(--spacing-4xl);
 		align-items: center;
 	}
 
+	/* Variant 2: The Centered Layout (No Visual) */
+	.centered-layout {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		max-width: 900px; /* Constrain width for readability */
+		margin: 0 auto;
+	}
+
+	/* Specific overrides for centered layout */
+	.centered-layout .hero-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.centered-layout .badge-pill {
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.centered-layout .actions {
+		justify-content: center;
+	}
+
+	.centered-layout .hero-subtitle {
+		margin-left: auto;
+		margin-right: auto;
+		max-width: 600px;
+	}
+
+	/* --- TYPOGRAPHY & ELEMENTS --- */
+
 	.hero-content h1 {
 		font-family: var(--font-title);
 		font-size: clamp(3.5rem, 6vw, 7.5rem);
 		font-weight: 400;
 		margin: 0 0 1.5rem;
-		line-height: 0.65;
+		line-height: 0.85; /* Increased slightly for better standalone readability */
 		letter-spacing: -0.02em;
 		color: #fff;
 	}
@@ -111,7 +152,7 @@
 		color: rgba(255, 255, 255, 0.6);
 		margin: 0 0 3rem;
 		line-height: 1.6;
-		max-width: 500px;
+		max-width: 500px; /* Default max-width */
 	}
 
 	.actions {
@@ -120,6 +161,8 @@
 		gap: 1.5rem;
 		flex-wrap: wrap;
 	}
+
+	/* --- VISUALS --- */
 
 	.hero-visual {
 		position: relative;
@@ -134,29 +177,48 @@
 		z-index: -1;
 	}
 
+	/* Ambient glow for text-only version */
+	.ambient-glow {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 60%;
+		height: 60%;
+		background: radial-gradient(circle, rgba(255, 255, 255, 0.03), transparent 70%);
+		filter: blur(90px);
+		z-index: -1;
+		pointer-events: none;
+	}
+
+	/* --- RESPONSIVE --- */
+
 	@media (max-width: 1024px) {
 		.hero-section {
 			padding: var(--spacing-3xl) 0 var(--spacing-2xl);
 		}
 
-		.grid-2col {
+		/* Collapse grid on tablet/mobile regardless of visual presence */
+		.grid-layout {
 			grid-template-columns: 1fr;
 			gap: var(--spacing-2xl);
-		}
-
-		.hero-content {
 			text-align: center;
 		}
 
-		.hero-subtitle {
-			margin: 0 auto 3rem;
+		/* Ensure grid layout behaves like centered layout on mobile */
+		.grid-layout .hero-content {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
 		}
 
-		.badge-pill {
-			margin: 0 auto 2rem;
+		.grid-layout .badge-pill,
+		.grid-layout .hero-subtitle {
+			margin-left: auto;
+			margin-right: auto;
 		}
 
-		.actions {
+		.grid-layout .actions {
 			justify-content: center;
 		}
 
@@ -169,10 +231,12 @@
 	@media (max-width: 640px) {
 		.hero-content h1 {
 			font-size: 3rem;
+			line-height: 1;
 		}
 
 		.actions {
 			width: 100%;
+			justify-content: center;
 		}
 	}
 </style>

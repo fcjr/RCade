@@ -1,7 +1,22 @@
 {
   "name": "@rcade/engine",
   "module": "src/index.ts",
+  "types": "dist/src/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "import": "./dist/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "prepare": "bun build src/index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly"
+  },
+  "files": [
+    "dist"
+  ],
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"

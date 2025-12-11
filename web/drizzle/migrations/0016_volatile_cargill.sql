@@ -1,0 +1,1 @@
+ALTER TABLE `game_versions` ADD `has_thumbnail` integer NOT NULL DEFAULT 0;

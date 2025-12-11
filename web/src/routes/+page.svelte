@@ -49,7 +49,7 @@
 			>
 		</a>
 
-		{#snippet visual()}
+		<!-- {#snippet visual()}
 			<FeaturedGameCard
 				title="miRCo Engine"
 				authors={['Claire Froelich', 'Jack Ratner', 'Jonathan Rippy', 'Greg Sadetsky']}
@@ -57,7 +57,7 @@
 				badge="MOST LOVED"
 				onPlay={() => handlePlayGame('micro-engine')}
 			/>
-		{/snippet}
+		{/snippet} -->
 	</HeroSection>
 
 	<div class="container section">

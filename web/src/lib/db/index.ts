@@ -5,9 +5,18 @@ import { env } from '$env/dynamic/private';
 
 let _db: DrizzleD1Database<typeof schema> | null = null;
 
-export function getDb(): DrizzleD1Database<typeof schema> {
+let DBG_ENV: any = undefined;
+
+export async function getDb(): Promise<DrizzleD1Database<typeof schema>> {
 	if (!_db) {
-		if (!env.DB) throw new Error('DB is not set');
+		if (!env.DB) {
+			if (DBG_ENV == undefined) {
+				const { getPlatformProxy } = await import('wrangler');
+				DBG_ENV = await getPlatformProxy({ persist: { path: '.wrangler/state/v3' } });
+			}
+
+			return drizzle(DBG_ENV.env.DB, { schema });
+		};
 		_db = drizzle(env.DB, { schema });
 	}
 	return _db;

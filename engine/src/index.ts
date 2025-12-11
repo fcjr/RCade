@@ -1,5 +1,7 @@
 import type { PluginProvider } from "./plugin/provider";
 
+export { type PluginProvider } from "./plugin/provider";
+
 export type RCadeWebEngineConfig = {
     appUrl: string,
     cancellationToken?: AbortSignal,

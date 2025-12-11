@@ -43,12 +43,12 @@ async function fileExists(bucket: string, key: string) {
 
 export class Game {
     public static async all(): Promise<Game[]> {
-        return (await getDb().query.games.findMany({ with: { versions: { with: { authors: true, dependencies: true, categories: { with: { category: true } }, remixOf: { with: { game: true } } } } } }))
+        return (await (await getDb()).query.games.findMany({ with: { versions: { with: { authors: true, dependencies: true, categories: { with: { category: true } }, remixOf: { with: { game: true } } } } } }))
             .map(game => new Game(game));
     }
 
     public static async byId(id: string): Promise<Game | undefined> {
-        let v = await getDb().query.games.findFirst({ with: { versions: { with: { authors: true, dependencies: true, categories: { with: { category: true } }, remixOf: { with: { game: true } } } } }, where: eq(games.id, id) });
+        let v = await (await getDb()).query.games.findFirst({ with: { versions: { with: { authors: true, dependencies: true, categories: { with: { category: true } }, remixOf: { with: { game: true } } } } }, where: eq(games.id, id) });
 
         if (v === undefined) {
             return undefined;
@@ -58,7 +58,7 @@ export class Game {
     }
 
     public static async byName(name: string): Promise<Game | undefined> {
-        let v = await getDb().query.games.findFirst({ with: { versions: { with: { authors: true, dependencies: true, categories: { with: { category: true } }, remixOf: { with: { game: true } } } } }, where: eq(games.name, name) });
+        let v = await (await getDb()).query.games.findFirst({ with: { versions: { with: { authors: true, dependencies: true, categories: { with: { category: true } }, remixOf: { with: { game: true } } } } }, where: eq(games.name, name) });
 
         if (v === undefined) {
             return undefined;
@@ -68,7 +68,7 @@ export class Game {
     }
 
     public static async new(name: string, pushInfo: GithubOIDCClaims & { recurser: RecurseResponse }): Promise<Game> {
-        const result = await getDb().insert(games).values({
+        const result = await (await getDb()).insert(games).values({
             name,
 
             github_author: pushInfo.repository_owner,
@@ -117,7 +117,7 @@ export class Game {
             remixOfVersion = remixData.version;
         }
 
-        await getDb().insert(gameVersions).values({
+        await (await getDb()).insert(gameVersions).values({
             gameId: this.data.id,
             version,
 
@@ -133,7 +133,7 @@ export class Game {
 
         const authors = Array.isArray(manifest.authors) ? manifest.authors : [manifest.authors];
 
-        await getDb().insert(gameAuthors).values(authors.map(author => ({
+        await (await getDb()).insert(gameAuthors).values(authors.map(author => ({
             gameId: this.data.id,
             gameVersion: version,
 
@@ -143,7 +143,7 @@ export class Game {
 
         if (manifest.categories && manifest.categories.length > 0) {
             // First, fetch the category IDs from the database
-            const categoryRecords = await getDb()
+            const categoryRecords = await (await getDb())
                 .select()
                 .from(categories)
                 .where(inArray(categories.name, manifest.categories));
@@ -164,7 +164,7 @@ export class Game {
 
             // Insert the valid categories
             if (validCategories.length > 0) {
-                await getDb().insert(gameVersionCategories).values(validCategories);
+                await (await getDb()).insert(gameVersionCategories).values(validCategories);
             }
 
             // Optional: Log or handle invalid categories
@@ -175,7 +175,7 @@ export class Game {
         }
 
         if (manifest.dependencies && manifest.dependencies.length > 0) {
-            await getDb().insert(gameDependencies).values(manifest.dependencies.map(dependency => ({
+            await (await getDb()).insert(gameDependencies).values(manifest.dependencies.map(dependency => ({
                 gameId: this.data.id,
                 gameVersion: version,
 
@@ -250,7 +250,7 @@ export class Game {
         },
         isFirstVersion: boolean
     ): Promise<{ gameId: string, version: string }> {
-        const targetGame = await getDb()
+        const targetGame = await (await getDb())
             .select()
             .from(games)
             .where(eq(games.name, remixOf.name))
@@ -265,7 +265,7 @@ export class Game {
         const gameId = targetGame[0].id;
 
         // Verify the specific version exists
-        const remixTarget = await getDb().query.gameVersions.findFirst({
+        const remixTarget = await (await getDb()).query.gameVersions.findFirst({
             where: (gameVersions, { and, eq }) =>
                 and(
                     eq(gameVersions.gameId, gameId),
@@ -365,7 +365,7 @@ export class Game {
                         new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/build.tar.gz` }),
                         { expiresIn: 3600 }
                     ),
-                    thumbnail_url: await fileExists("rcade", `games/${this.data.id}/${version.version}/thumbnail.png`) ? await getSignedUrl(
+                    thumbnail_url: version.hasThumbnail != 0 ? await getSignedUrl(
                         S3,
                         new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/thumbnail.png`, ResponseContentType: 'image/png' }),
                         { expiresIn: 3600 }
@@ -437,7 +437,7 @@ export class Game {
     }
 
     public async setVersionStatus(version: string, status: "pending" | "published"): Promise<boolean> {
-        const result = await getDb()
+        const result = await (await getDb())
             .update(gameVersions)
             .set({ status })
             .where(and(

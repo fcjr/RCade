@@ -1,6 +1,14 @@
-export function getCoverArt(name: string) {
+import type { Game, GameVersion } from "@rcade/api";
+
+export function getCoverArt(game: GameVersion) {
+    const thumbnail = game.thumbnailUrl();
+
+    if (thumbnail) {
+        return `background-image: url(${thumbnail}); background-size: cover; background-position: center;`;
+    }
+
     const colors = ['#D24D57', '#2C3E50', '#e67e22', '#27ae60'];
-    const c = colors[name.length % colors.length];
+    const c = colors[(game.displayName() ?? "").length % colors.length];
     return `
         background-color: ${c};
         background-image: 
@@ -12,24 +20,21 @@ export function getCoverArt(name: string) {
 
 export function getCapabilities(dependencies: any[]) {
     const pluginMap: Record<string, string> = {
-        '@rcade/input-classic': 'ARCADEARCADEARCADE',
-        '@rcade/input-gamepad': 'GAMEPAD',
-        '@rcade/input-mouse': 'MOUSE',
-        '@rcade/input-keyboard': 'KEYBOARD',
-        '@rcade/threads': 'THREADS',
-        '@rcade/marquee': 'MARQUEE'
+        '@rcade/input-classic': 'CLASSIC',
+        '@rcade/input-spinners': 'SPINNERS',
     };
     return dependencies.map((d) => pluginMap[d.name] || d.name.toUpperCase()).filter(Boolean);
 }
 
-export function getVisConfig(visibility: string) {
+export function getVisConfig(visibility: "public" | "internal" | "private" | null | undefined) {
     switch (visibility) {
         case 'public':
             return { label: 'GLOBAL', class: 'vis-public', icon: '●' };
         case 'internal':
             return { label: 'HUB', class: 'vis-internal', icon: '▲' };
         case 'private':
-        default:
             return { label: 'LOCAL', class: 'vis-private', icon: '■' };
+        default:
+            return { label: 'UNKNOWN', class: 'vis-unknown', icon: '?' };
     }
 }

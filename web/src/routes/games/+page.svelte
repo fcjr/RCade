@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { games } from '$lib/mock-data';
 	import GameCard from '$lib/component/GameCard.svelte';
 	import SearchControls from '$lib/component/sections/SearchControls.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let searchQuery = $state('');
 	let activeFilter = $state('ALL');
@@ -35,7 +37,7 @@
 
 	<div class="container">
 		<section class="games-grid">
-			{#each games as game, i (game.id)}
+			{#each data.games as game, i (game.id())}
 				<GameCard {game} index={i} />
 			{/each}
 		</section>

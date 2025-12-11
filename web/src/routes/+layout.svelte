@@ -10,6 +10,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<meta name="darkreader-lock" content="" />
 </svelte:head>
 
 <Header />
@@ -19,8 +20,7 @@
 <Footer />
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-	@import url('https://fonts.googleapis.com/css2?family=Jersey+15&family=Jersey+10&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Jersey+15&family=Jersey+10&family=Chakra+Petch:wght@500;600;700&family=Orbitron:wght@500;700&family=Roboto+Mono:wght@400;700&display=block');
 
 	:global(body) {
 		margin: 0;

@@ -1,26 +1,26 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { getCapabilities, getCoverArt, getVisConfig } from '$lib/utils';
+	import type { Game } from '@rcade/api';
 
-	export let game: any;
-	export let index: number;
+	const { game, index }: { game: Game; index: number } = $props();
 
-	const latest = game.versions[0];
-	const plugins = getCapabilities(latest.dependencies);
-	const visConfig = getVisConfig(latest.visibility);
+	const latest = game.latest();
+	const plugins = getCapabilities(latest.dependencies());
+	const visConfig = getVisConfig(latest.visibility());
 </script>
 
 <div class="deck-unit" in:fly={{ y: 40, duration: 600, delay: index * 100 }}>
 	<div class="mount-holes">
 		<div class="screw"></div>
-		<div class="serial-no">{game.name}@{game.versions[0].version}</div>
+		<div class="serial-no">{game.name()}@{latest.version()}</div>
 		<div class="screw"></div>
 	</div>
 
 	<div class="bezel-housing">
 		<div class="monitor-frame">
 			<div class="screen-glare"></div>
-			<div class="crt-surface" style={getCoverArt(game.name)}>
+			<div class="crt-surface" style={getCoverArt(latest)}>
 				{#if 'remixOf' in latest && latest.remixOf}
 					<div class="remix-tag">
 						<div class="stripe"></div>
@@ -35,30 +35,42 @@
 			<div class="spec-grid">
 				<div class="cell full">
 					<span class="cell-label">NAME</span>
-					<span class="cell-value highlight">{latest.displayName ?? game.name}</span>
+					<span class="cell-value highlight">{latest.displayName()}</span>
 				</div>
 
 				<div class="cell">
 					<span class="cell-label">VERSION</span>
-					<span class="cell-value mono">{latest.version}</span>
+					<span class="cell-value mono">{latest.version()}</span>
 				</div>
 
 				<div class="cell">
 					<span class="cell-label">AUTHORS</span>
-					<span
-						class="cell-value mono"
-						title={latest.authors.map((a: any) => a.display_name).join(', ')}
-					>
-						{latest.authors
-							.map((a: any) => a.display_name.split(' ')[0])
-							.join(', ')
-							.toUpperCase()}
+					<span class="cell-value">
+						{#each latest.authors() as author, i (author)}
+							{@const display = author.display_name.split(' ')[0]}
+
+							<span title={author.display_name} class="name">
+								{#if author.recurse_id != undefined}
+									<a
+										href="https://www.recurse.com/directory/{author.recurse_id}"
+										target="_blank"
+										rel="noopener noreferrer"
+										title={author.display_name}
+									>
+										{display}
+									</a>
+									<span>{i < latest.authors().length - 1 ? ', ' : ''}</span>
+								{:else}
+									{display}{i < latest.authors().length - 1 ? ', ' : ''}
+								{/if}
+							</span>
+						{/each}
 					</span>
 				</div>
 
 				<div class="cell full">
 					<span class="cell-label">DESCRIPTION</span>
-					<p class="cell-text">{latest.description}</p>
+					<p class="cell-text">{latest.description()}</p>
 				</div>
 
 				<div class="cell">
@@ -83,7 +95,7 @@
 
 	<div class="unit-footer">
 		<div class="grip-texture"></div>
-		<a class="eject-btn" href="/games/a">PLAY</a>
+		<a class="eject-btn" href="/games/{game.name()}">PLAY</a>
 	</div>
 </div>
 
@@ -182,6 +194,7 @@
 		overflow: hidden;
 		border-radius: 2px;
 		filter: brightness(0.9) contrast(1.1);
+		image-rendering: pixelated;
 	}
 
 	.screen-glare {
@@ -251,14 +264,18 @@
 		letter-spacing: 0.5px;
 	}
 
-	.cell-value {
+	.cell-value,
+	.cell-value a,
+	.cell-value span {
 		font-family: 'Chakra Petch', sans-serif;
 		color: #ccc;
 		font-size: 0.9rem;
 		font-weight: 600;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		text-transform: uppercase;
+	}
+
+	.cell-value a {
+		text-decoration: underline;
 	}
 
 	.cell-value.highlight {
@@ -369,5 +386,11 @@
 		background: var(--deck-accent);
 		color: #000;
 		box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+	}
+
+	.name {
+		display: inline-flex;
+		align-items: center;
+		padding-right: 0.25rem;
 	}
 </style>

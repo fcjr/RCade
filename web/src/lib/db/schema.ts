@@ -29,6 +29,7 @@ export const gameVersions = sqliteTable('game_versions', {
     version: text("version").notNull(),
     status: text("status", { enum: ["pending", "published"] }).notNull(),
     permissions: text("permissions", { mode: "json" }).$type<string[]>(),
+    hasThumbnail: integer("has_thumbnail").notNull().$default(() => 0),
 
     remixOfGameId: text("remix_of_game_id"),
     remixOfVersion: text("remix_of_version"),

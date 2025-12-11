@@ -1,67 +1,14 @@
 <script lang="ts">
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
+	import type { PageData } from './$types';
+	import { getCoverArt } from '$lib/utils';
+	import DeckUnit from '$lib/component/DeckUnit.svelte';
+	import InputClassicPlugin, {
+		InputClassicEmulator
+	} from '$lib/component/plugins/@rcade/input-classic/plugin.svelte';
+	import { RCadeWebEngine } from '@rcade/engine';
 
-	// --- Mock Data (Updated) ---
-	const game = {
-		id: 'g_001',
-		name: 'snake-evolved',
-		displayName: 'Snake Evolved',
-		version: '2.1.0', // Current loaded version
-		updatedAt: '2023-10-24',
-		// New: Multiple Authors with optional metadata
-		authors: [
-			{
-				id: 'rc_user_1',
-				name: 'Demo User',
-				role: 'Core Logic',
-				image: 'https://i.pravatar.cc/150?u=rc_user_1'
-			},
-			{
-				name: 'Another User'
-				// No image provided for this user
-			}
-		],
-		// New: Version History
-		versionHistory: [
-			{ id: '2.1.0', label: 'Release', date: 'Oct 24', current: true },
-			{ id: '2.0.5', label: 'Beta', date: 'Oct 10', current: false },
-			{ id: '1.9.0', label: 'Legacy', date: 'Sep 01', current: false }
-		],
-		description:
-			'Physics-based movement matrix. Survival mode active. Navigate the grid, consume data packets, and avoid tail-collision events.',
-		instructions:
-			'USE [W,A,S,D] OR [ARROW KEYS] FOR TRAVERSAL.\nPRESS [SPACE] TO ENGAGE BOOST MECHANIC.\nAVOID CORRUPTION ZONES.',
-		notes:
-			'Version 2.1.0 patches the infinite length glitch. Special thanks to @JackRatner for the audio synthesis module.',
-		views: 4021,
-		likes: 355,
-		remixes: 12,
-		visibility: 'public',
-		dependencies: [
-			{ name: 'bevy', version: '0.12' },
-			{ name: '@rcade/input-classic', version: '1.0.0' }
-		],
-		comments: [
-			{
-				user: 'RetroKing',
-				text: 'Lag on level 5 is crazy optimized now. Good job.',
-				time: '2h ago'
-			},
-			{ user: 'NeonDrifter', text: 'Can I fork this for the jam?', time: '5h ago' }
-		]
-	};
-
-	function getCoverArt(name: string) {
-		const colors = ['#D24D57', '#2C3E50', '#e67e22', '#27ae60'];
-		const c = colors[name.length % colors.length];
-		return `
-            background-color: ${c};
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-        `;
-	}
+	let { data }: { data: PageData } = $props();
 
 	// Helper to get initials for users without images
 	function getInitials(name: string) {
@@ -72,113 +19,167 @@
 			.substring(0, 2)
 			.toUpperCase();
 	}
+
+	let gameContents: HTMLDivElement;
+	let plugin: InputClassicEmulator = $state(new InputClassicEmulator());
+
+	let playing = $state(false);
+
+	async function play() {
+		playing = true;
+
+		const engine = await RCadeWebEngine.initialize(gameContents, {
+			appUrl: 'http://localhost:5174/__rcade_blank'
+		});
+
+		engine.register(plugin);
+
+		await engine.load(data.game.id(), data.version.version());
+	}
 </script>
 
 <div class="game-detail-page">
 	<nav class="nav-bar" in:fly={{ y: -20, duration: 500 }}>
 		<a href="/games" class="back-link">&lt; // GAMES</a>
 		<span class="path-separator">/</span>
-		<span class="current-path">{game.id.toUpperCase()}</span>
+		<span class="current-path">{data.game.name().toUpperCase()}</span>
+		{#if data.version.version() !== data.game.latest().version()}
+			<span class="path-separator">/</span>
+			<span class="current-path">v{data.version.version()}</span>
+		{/if}
 	</nav>
 
 	<main class="console-grid">
 		<section class="stage-column" in:fly={{ x: -20, duration: 600, delay: 100 }}>
-			<div class="deck-unit full-size">
-				<div class="mount-holes top">
-					<div class="screw"></div>
-					<div class="serial-no">DISPLAY_UNIT_PRIMARY</div>
-					<div class="screw"></div>
-				</div>
-
+			<DeckUnit serialNo="DISPLAY_UNIT_PRIMARY" class="full-size">
 				<div class="bezel-housing">
 					<div class="monitor-frame large">
-						<div class="crt-surface" style={getCoverArt(game.name)}>
-							<div class="screen-glare"></div>
-							<div class="overlay-ui">
-								<div class="click-to-start">
-									<button class="play-trigger">PLAY</button>
+						<div class="game">
+							{#if !playing}
+								<div class="crt-surface" style={getCoverArt(data.version)}>
+									<div class="screen-glare"></div>
+									<div class="overlay-ui">
+										<div class="click-to-start">
+											<button class="play-trigger" onclick={play}>PLAY</button>
+										</div>
+									</div>
 								</div>
-							</div>
+							{/if}
+							<div class="game-contents" bind:this={gameContents}></div>
 						</div>
 
-						<div class="bezel-label">RES: 336x262 | REFRESH: 60HZ</div>
+						<div class="bezel-label">RES: 336x262</div>
 					</div>
 				</div>
-			</div>
+			</DeckUnit>
+
+			<InputClassicPlugin bind:provider={plugin} />
 		</section>
 
 		<section class="info-column" in:fly={{ x: 20, duration: 600, delay: 200 }}>
 			<div class="header-panel">
-				<h1 class="game-title">{game.displayName}</h1>
+				<h1 class="game-title">{data.version.displayName()}</h1>
 				<div class="meta-row">
-					<span class="updated-tag">LAST UPDATE: {game.updatedAt}</span>
-					<span class="updated-tag">ID: {game.id}</span>
+					<span class="updated-tag">ID: {data.game.id()}</span>
 				</div>
 			</div>
 
-			<div class="deck-unit info-unit">
-				<div class="mount-holes">
-					<div class="screw"></div>
-					<div class="serial-no">AUTHORS</div>
-					<div class="screw"></div>
-				</div>
+			<DeckUnit serialNo="AUTHORS" class="info-unit">
 				<div class="panel-body table-body">
-					{#each game.authors as author}
-						<div class="author-row">
-							<div class="author-avatar">
-								{#if author.image}
-									<img src={author.image} alt={author.name} />
-								{:else}
-									<div class="avatar-placeholder">{getInitials(author.name)}</div>
-								{/if}
+					{#each data.version.authors() as author}
+						{#if author.recurse_id}
+							<a
+								href="https://www.recurse.com/directory/{author.recurse_id}"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="author-row author-row-link"
+							>
+								<div class="author-avatar">
+									{#if false}
+										<!-- <img src={author.image} alt={author.name} /> -->
+									{:else}
+										<div class="avatar-placeholder">{getInitials(author.display_name)}</div>
+									{/if}
+								</div>
+								<div class="author-details">
+									<span class="author-name">{author.display_name}</span>
+									<!-- {#if author.role}
+                                        <span class="author-role">[{author.role}]</span>
+                                    {/if} -->
+								</div>
+								<svg
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									class="recurse-icon"
+								>
+									<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+									<polyline points="15 3 21 3 21 9"></polyline>
+									<line x1="10" y1="14" x2="21" y2="3"></line>
+								</svg>
+							</a>
+						{:else}
+							<div class="author-row">
+								<div class="author-avatar">
+									{#if false}
+										<!-- <img src={author.image} alt={author.name} /> -->
+									{:else}
+										<div class="avatar-placeholder">{getInitials(author.display_name)}</div>
+									{/if}
+								</div>
+								<div class="author-details">
+									<span class="author-name">{author.display_name}</span>
+									<!-- {#if author.role}
+                                        <span class="author-role">[{author.role}]</span>
+                                    {/if} -->
+								</div>
 							</div>
-							<div class="author-details">
-								<span class="author-name">{author.name}</span>
-								{#if author.role}
-									<span class="author-role">[{author.role}]</span>
-								{/if}
-							</div>
-						</div>
+						{/if}
 					{/each}
 				</div>
-			</div>
+			</DeckUnit>
 
-			<div class="deck-unit info-unit">
-				<div class="mount-holes">
-					<div class="screw"></div>
-					<div class="serial-no">DESCRIPTION</div>
-					<div class="screw"></div>
-				</div>
+			<DeckUnit serialNo="DESCRIPTION" class="info-unit">
 				<div class="panel-body">
-					<p class="desc-text">{game.description}</p>
+					<p class="desc-text">{data.version.description()}</p>
 				</div>
-			</div>
+			</DeckUnit>
 
-			<div class="deck-unit info-unit">
-				<div class="mount-holes">
-					<div class="screw"></div>
-					<div class="serial-no">VERSIONS</div>
-					<div class="screw"></div>
-				</div>
+			<DeckUnit serialNo="VERSIONS" class="info-unit">
 				<div class="panel-body list-body">
-					{#each game.versionHistory as ver}
-						<a href="./{ver.id}" class="version-row" class:active={ver.id === game.version}>
+					{#each data.game.versions().reverse() as ver}
+						<a
+							href="/games/{data.game.name()}/{ver.version()}"
+							class="version-row"
+							class:active={ver.version() === data.version.version()}
+						>
 							<div class="ver-info">
-								<span class="ver-id">v{ver.id}</span>
+								<span class="ver-id">v{ver.version()}</span>
 							</div>
 							<div class="ver-meta">
-								<span class="ver-date">{ver.date}</span>
+								<span class="ver-date">TODO</span>
 							</div>
 						</a>
 					{/each}
 				</div>
-			</div>
+			</DeckUnit>
 
 			<div class="tags-panel">
-				{#each game.dependencies as dep}
+				{#each data.version.dependencies() as dep}
 					<span class="tech-pill">{dep.name}@{dep.version}</span>
 				{/each}
-				<span class="tech-pill vis-public">PUBLIC_ACCESS</span>
+				{#if data.version.visibility() === 'public'}
+					<span class="tech-pill vis-public">PUBLIC</span>
+				{/if}
+				{#if data.version.visibility() === 'internal'}
+					<span class="tech-pill vis-unlisted">INTERNAL</span>
+				{/if}
+				{#if data.version.visibility() === 'private'}
+					<span class="tech-pill vis-private">PRIVATE</span>
+				{/if}
 			</div>
 		</section>
 	</main>
@@ -243,7 +244,7 @@
 		flex-direction: column;
 	}
 
-	/* --- Controls & Monitor (Unchanged styles compressed for brevity) --- */
+	/* --- Controls & Monitor --- */
 	.deck-controls-strip {
 		padding: 10px 16px;
 		display: flex;
@@ -271,12 +272,21 @@
 		display: flex;
 		flex-direction: column;
 	}
+	.game {
+		aspect-ratio: 336 / 262;
+		display: grid;
+		place-items: center;
+	}
+	.game > * {
+		grid-area: 1 / 1;
+	}
 	.crt-surface {
 		width: 100%;
-		aspect-ratio: 336 / 262;
+		height: 100%;
 		position: relative;
 		border-radius: 2px;
 		overflow: hidden;
+		image-rendering: pixelated;
 	}
 	.bezel-label {
 		font-size: 0.55rem;
@@ -346,14 +356,6 @@
 		font-size: 1.2rem;
 		padding: 1rem 2rem;
 		cursor: pointer;
-		clip-path: polygon(
-			10px 0,
-			100% 0,
-			100% calc(100% - 10px),
-			calc(100% - 10px) 100%,
-			0 100%,
-			0 10px
-		);
 		transition:
 			transform 0.1s,
 			box-shadow 0.1s;
@@ -381,7 +383,8 @@
 	}
 
 	/* --- Info Column --- */
-	.info-column {
+	.info-column,
+	.stage-column {
 		display: flex;
 		flex-direction: column;
 		gap: 1.5rem;
@@ -410,19 +413,17 @@
 		color: #666;
 	}
 
-	.info-unit {
-		background: var(--deck-bg);
-		border: 1px solid #000;
-	}
 	.info-unit .panel-body {
-		padding: 1rem;
 		background: var(--deck-face);
 		border-left: 2px solid rgba(255, 255, 255, 0.05);
 	}
 
-	/* --- NEW: Version List Styling --- */
+	.info-unit .panel-body:not(.list-body):not(.table-body) {
+		padding: 1rem;
+	}
+
 	.list-body {
-		padding: 0 !important; /* Reset padding for list */
+		padding: 0;
 		background: var(--deck-face);
 		display: flex;
 		flex-direction: column;
@@ -484,20 +485,18 @@
 		font-weight: 700;
 		letter-spacing: 1px;
 	}
-
-	/* --- NEW: Authors Table Styling --- */
 	.table-body {
-		padding: 0.5rem 1rem !important;
+		padding: 0 !important;
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 	}
 	.author-row {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		padding: 0.5rem 0;
-		border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+		border-left: 2px solid transparent;
 	}
 	.author-row:last-child {
 		border-bottom: none;
@@ -533,12 +532,30 @@
 		font-size: 0.7rem;
 		color: var(--deck-accent);
 	}
-
-	/* --- Description & Tags --- */
+	.author-row-link {
+		text-decoration: none;
+		color: var(--deck-text);
+		transition: background 0.2s;
+		border-left: 2px solid transparent;
+	}
+	.author-row-link:hover {
+		background: rgba(255, 255, 255, 0.02);
+		color: #fff;
+	}
+	.recurse-icon {
+		margin-left: auto;
+		color: #666;
+		transition: color 0.2s;
+		flex-shrink: 0;
+	}
+	.author-row-link:hover .recurse-icon {
+		color: var(--deck-accent);
+	}
 	.desc-text {
 		font-size: 0.9rem;
 		line-height: 1.5;
 		color: #aeb0b3;
+		padding: 1rem;
 	}
 	.tags-panel {
 		display: flex;
@@ -558,40 +575,15 @@
 		border-color: var(--deck-success);
 		color: var(--deck-success);
 	}
+	.tech-pill.vis-unlisted {
+		border-color: #f39c12;
+		color: #f39c12;
+	}
+	.tech-pill.vis-private {
+		border-color: var(--deck-danger);
+		color: var(--deck-danger);
+	}
 
-	/* Common Helpers */
-	.mount-holes {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 8px 12px;
-		background: #15171a;
-		border-bottom: 1px solid #000;
-	}
-	.screw {
-		width: 10px;
-		height: 10px;
-		background: #333;
-		border-radius: 50%;
-		box-shadow: inset 1px 1px 2px #000;
-		position: relative;
-	}
-	.screw::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 1px;
-		right: 1px;
-		height: 1px;
-		background: #555;
-		transform: rotate(-45deg);
-	}
-	.serial-no {
-		font-size: 0.6rem;
-		color: #555;
-		letter-spacing: 2px;
-		font-weight: 700;
-	}
 	.screen-glare {
 		position: absolute;
 		top: 0;
@@ -606,9 +598,6 @@
 	@media (max-width: 768px) {
 		.console-grid {
 			grid-template-columns: 1fr;
-		}
-		.crt-surface {
-			aspect-ratio: 16/9;
 		}
 	}
 </style>
