@@ -170,7 +170,7 @@ export class Game {
 
         const upload_url = await getSignedUrl(
             S3,
-            new PutObjectCommand({ Bucket: "rcade", Key: `games/builds/${this.data.id}/${version}.tar.gz` }),
+            new PutObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version}/build.tar.gz` }),
             { expiresIn: 3600 }
         );
 
@@ -340,7 +340,7 @@ export class Game {
                 r2Key["contents"] = {
                     url: await getSignedUrl(
                         S3,
-                        new GetObjectCommand({ Bucket: "rcade", Key: `games/builds/${this.data.id}/${version.version}.tar.gz` }),
+                        new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/build.tar.gz` }),
                         { expiresIn: 3600 }
                     ),
                     expires: Date.now() + (3600 * 1000),
