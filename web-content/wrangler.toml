@@ -1,0 +1,17 @@
+name = "rcade-usercontent"
+compatibility_date = "2024-11-25"
+main = ".svelte-kit/cloudflare/_worker.js"
+account_id = "9aee291c8fc8a03f6dacc66454177c60"
+
+[build]
+command = "bun x vite build"
+
+[assets]
+directory = ".svelte-kit/cloudflare/assets"
+binding = "ASSETS"
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
