@@ -48063,6 +48063,7 @@ class RCadeDeployClient {
 var httpm = __toESM(require_lib3(), 1);
 import fs12 from "fs";
 import { stat } from "fs/promises";
+import { Readable } from "stream";
 async function uploadFileStream(filePath, presignedUrl) {
   const client = new httpm.HttpClient("rcade-deploy-bucket-client", [], {
     allowRetries: true,
@@ -48084,7 +48085,8 @@ async function uploadFromBuffer(buffer, presignedUrl) {
     allowRetries: true,
     maxRetries: 3
   });
-  const response = await client.put(presignedUrl, buffer.toString("binary"), {
+  const stream = Readable.from(buffer);
+  const response = await client.sendStream("PUT", presignedUrl, stream, {
     "Content-Type": "application/octet-stream",
     "Content-Length": buffer.length.toString()
   });
