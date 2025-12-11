@@ -15,7 +15,9 @@
     "plugins/input-classic",
     "plugins/input-spinners/clients/typescript",
     "plugins/input-spinners",
-    "vite-plugins"
+    "vite-plugins",
+    "web-content",
+    "engine"
   ],
   "scripts": {
     "dev:web": "bun run --cwd web dev",
