@@ -86,14 +86,15 @@
 
 	/* --- Brand --- */
 	.logo-text {
-		font-family: 'Syne', sans-serif;
-		font-size: 1.5rem;
-		font-weight: 800;
+		font-family: 'Jersey 10', sans-serif;
+		font-size: 3rem;
+		font-weight: 400;
 		color: #f5f5f5;
 		text-decoration: none;
 		letter-spacing: -0.03em;
 		display: flex;
 		align-items: center;
+		line-height: 0.6;
 	}
 
 	.dot {

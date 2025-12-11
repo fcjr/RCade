@@ -2,7 +2,7 @@
 	<div class="container">
 		<div class="footer-content">
 			<div class="footer-brand">
-				<h4 class="brand-logo">RCade<span class="dot">.</span></h4>
+				<h4 class="brand-logo"><span class="dot">@</span>RCade</h4>
 				<p>The open-source arcade platform built at The Recurse Center. Push code, play games.</p>
 			</div>
 
@@ -117,12 +117,13 @@
 	}
 
 	.brand-logo {
-		font-family: 'Syne', sans-serif;
-		font-size: 1.5rem;
-		font-weight: 800;
+		font-family: 'Jersey 10', sans-serif;
+		font-size: 3rem;
+		font-weight: 400;
 		margin: 0 0 1rem;
 		color: #fff;
 		letter-spacing: -0.02em;
+		line-height: 0.6;
 	}
 
 	.dot {

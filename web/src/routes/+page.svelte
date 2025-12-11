@@ -199,12 +199,13 @@
 	}
 
 	.hero-content h1 {
-		font-family: 'Syne', sans-serif;
+		font-family: 'Jersey 15', sans-serif;
 		font-size: clamp(3.5rem, 6vw, 5.5rem);
-		font-weight: 800;
+		font-weight: 400;
 		margin: 0 0 1.5rem;
-		line-height: 0.95;
+		line-height: 0.6;
 		letter-spacing: -0.02em;
+		font-size: 8rem;
 		color: #fff;
 	}
 
