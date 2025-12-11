@@ -152,11 +152,11 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
             console.error('Error triggering community clone:', err);
         });
 
-        const { upload_url, expires } = await game.publishVersion(version, manifest);
+        const { upload_url, upload_thumbnail_url, expires } = await game.publishVersion(version, manifest);
 
         await invalidateGamesCache(platform?.caches);
 
-        return jsonResponse({ upload_url, expires, version }, 200);
+        return jsonResponse({ upload_url, upload_thumbnail_url, expires, version }, 200);
     } catch (error) {
         if (error instanceof Error && error.message === "Version mismatch") {
             return jsonResponse({ error: 'Manifest version does not match the target version' }, 409);
