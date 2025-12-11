@@ -26,6 +26,18 @@ export class GameVersion {
         return this.apiResponse.contents.url
     }
 
+    public thumbnailUrl(): string | undefined {
+        if (!("contents" in this.apiResponse))
+            return undefined
+
+        const now = Date.now();
+
+        if (now > this.apiResponse.contents.expires)
+            return undefined;
+
+        return this.apiResponse.contents.thumbnail_url
+    }
+
     public dependencies(): { name: string, version: string }[] {
         return this.apiResponse.dependencies;
     }

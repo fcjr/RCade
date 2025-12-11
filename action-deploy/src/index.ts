@@ -5,7 +5,9 @@ import * as tar from "tar";
 import { stat } from "fs/promises";
 import { resolve, basename, dirname, join } from "path";
 import { RCadeDeployClient } from "./api-client";
-import { uploadFileStream } from "./bucket";
+import { uploadFileStream, uploadFromBuffer } from "./bucket";
+import sizeOf from "image-size";
+import * as httpm from "@actions/http-client";
 
 const TOKEN_AUDIENCE = "https://rcade.dev";
 
@@ -17,6 +19,41 @@ async function getIdToken(): Promise<string> {
   } catch (error) {
     throw new Error(`Failed to get ID token: ${error}`);
   }
+}
+
+async function validateThumbnail(pathOrUrl: string, isUrl: boolean): Promise<Buffer> {
+  let dimensions;
+  let isPng = false;
+  let data;
+
+  if (isUrl) {
+    // Download the image temporarily to validate it
+    const client = new httpm.HttpClient("rcade-thumbnail-validator");
+    const response = await client.get(pathOrUrl);
+
+    if (response.message.statusCode !== 200) {
+      throw new Error(`Failed to download thumbnail from URL: ${response.message.statusCode}`);
+    }
+
+    const buffer = await response.readBody();
+    data = Buffer.from(buffer);
+  } else {
+    data = fs.readFileSync(pathOrUrl);
+  }
+
+  dimensions = sizeOf(data);
+
+  if (dimensions.type !== "png") {
+    throw new Error(`Thumbnail must be a PNG image. Found: ${dimensions.type}`);
+  }
+
+  if (dimensions.width !== 336 || dimensions.height !== 262) {
+    throw new Error(
+      `Thumbnail must be 336x262 pixels. Found: ${dimensions.width}x${dimensions.height}`
+    );
+  }
+
+  return data;
 }
 
 export async function run(): Promise<void> {
@@ -98,6 +135,32 @@ export async function run(): Promise<void> {
     await uploadFileStream(outputPath, intent.upload_url);
     core.info(`✅ Uploaded artifact`);
     core.endGroup();
+
+    if (manifest.thumbnail) {
+      core.startGroup("🖼️ Uploading Thumbnail");
+      let data: Buffer;
+
+      if ("url" in manifest.thumbnail) {
+        core.info(`Uploading thumbnail from URL: ${manifest.thumbnail.url}`);
+        data = await validateThumbnail(manifest.thumbnail.url, true);
+      } else if ("path" in manifest.thumbnail) {
+        const thumbnailPath = resolve(workspace, manifest.thumbnail.path);
+        core.info(`Uploading thumbnail from path: ${thumbnailPath}`);
+
+        if (!fs.existsSync(thumbnailPath)) {
+          throw new Error(`Thumbnail file not found: ${manifest.thumbnail.path}`);
+        }
+
+        data = await validateThumbnail(thumbnailPath, false);
+      } else {
+        throw new Error("Invalid thumbnail configuration, must specify 'url' or 'path'");
+      }
+
+      await uploadFromBuffer(data, intent.upload_thumbnail_url);
+
+      core.info(`✅ Uploaded thumbnail`);
+      core.endGroup();
+    }
 
     core.startGroup(`📢 Publishing Version ${intent.version}`);
     await client.publishVersion(manifest.name, intent.version);

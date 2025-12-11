@@ -6,7 +6,7 @@ import * as z from "zod";
 import { GameManifest } from "@rcade/api";
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { env } from "$env/dynamic/private";
 import type { RecurseResponse } from "./rc_oauth";
 import semver from "semver";
@@ -24,6 +24,22 @@ const S3 = new S3Client({
         secretAccessKey: env.BUCKET_ACCESS_KEY_SECRET!,
     },
 });
+
+async function fileExists(bucket: string, key: string) {
+    try {
+        await S3.send(new HeadObjectCommand({
+            Bucket: bucket,
+            Key: key
+        }));
+        return true;
+    } catch (error: any) {
+        if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+            return false;
+        }
+        // Re-throw other errors (permissions, network issues, etc.)
+        throw error;
+    }
+}
 
 export class Game {
     public static async all(): Promise<Game[]> {
@@ -78,7 +94,7 @@ export class Game {
         })[]
     }) { }
 
-    public async publishVersion(version: string, manifest: z.infer<typeof GameManifest>): Promise<{ upload_url: string, expires: number }> {
+    public async publishVersion(version: string, manifest: z.infer<typeof GameManifest>): Promise<{ upload_url: string, upload_thumbnail_url: string, expires: number }> {
         if (manifest.version !== undefined && manifest.version !== version) {
             throw new Error("Version mismatch");
         }
@@ -174,7 +190,13 @@ export class Game {
             { expiresIn: 3600 }
         );
 
-        return { upload_url, expires: (Date.now() + 3600) }
+        const upload_thumbnail_url = await getSignedUrl(
+            S3,
+            new PutObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version}/thumbnail.png` }),
+            { expiresIn: 3600 }
+        );
+
+        return { upload_url, upload_thumbnail_url, expires: (Date.now() + 3600) }
     }
 
     private async validateRemixConsistency(remixOf: {
@@ -343,6 +365,11 @@ export class Game {
                         new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/build.tar.gz` }),
                         { expiresIn: 3600 }
                     ),
+                    thumbnail_url: await fileExists("rcade", `games/${this.data.id}/${version.version}/thumbnail.png`) ? await getSignedUrl(
+                        S3,
+                        new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/thumbnail.png` }),
+                        { expiresIn: 3600 }
+                    ) : undefined,
                     expires: Date.now() + (3600 * 1000),
                 };
             }

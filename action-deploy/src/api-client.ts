@@ -8,6 +8,7 @@ const RECURSE_BASE_URL = "https://rcade.dev/api/v1";
 
 const DeploymentIntent = z.object({
   upload_url: z.string(),
+  upload_thumbnail_url: z.string(),
   expires: z.number(),
   version: z.string(),
 });
@@ -47,6 +48,7 @@ export class RCadeDeployClient {
 
     // Mark the presigned URL as a secret to prevent it from appearing in logs
     core.setSecret(deploymentIntent.upload_url);
+    core.setSecret(deploymentIntent.upload_thumbnail_url);
 
     return deploymentIntent;
   }
