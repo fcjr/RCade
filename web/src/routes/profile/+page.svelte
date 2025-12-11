@@ -66,36 +66,7 @@
 	// --- Actions ---
 
 	async function deleteKey(keyId: string) {
-		if (!confirm('Revoke this key? Access will stop immediately.')) return;
-
-		// 1. Set Loading State
-		const newSet = new Set(deletingIds);
-		newSet.add(keyId);
-		deletingIds = newSet;
-
-		try {
-			// 2. Perform Async Operation
-			const res = await fetch(`/api/v1/keys/${keyId}`, {
-				method: 'DELETE'
-			});
-
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to revoke key');
-			}
-
-			// 3. Success: Update Data
-			appKeys = appKeys.filter((k) => k.id !== keyId);
-		} catch (err) {
-			// 4. Handle Error
-			alert('Error revoking key. Please try again.');
-			console.error(err);
-		} finally {
-			// 5. Cleanup Loading State
-			const cleanupSet = new Set(deletingIds);
-			cleanupSet.delete(keyId);
-			deletingIds = cleanupSet;
-		}
+		throw new Error('Not implemented');
 	}
 </script>
 
