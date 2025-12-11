@@ -25,9 +25,6 @@
 				onclick={() => onPlay()}
 				aria-label="Play {title}"
 			>
-				<div class="screen-glare"></div>
-				<div class="scanlines"></div>
-
 				<div class="hud-overlay">
 					<div class="play-trigger">
 						<span class="blink-text">PLAY</span>
@@ -153,31 +150,6 @@
 		image-rendering: pixelated;
 	}
 
-	/* Screen Effects */
-	.screen-glare {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 40%;
-		background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
-		z-index: 2;
-		pointer-events: none;
-	}
-
-	.scanlines {
-		position: absolute;
-		inset: 0;
-		background: repeating-linear-gradient(
-			to bottom,
-			transparent 0px,
-			transparent 2px,
-			rgba(0, 0, 0, 0.3) 3px
-		);
-		z-index: 3;
-		pointer-events: none;
-	}
-
 	/* --- HUD Overlay --- */
 	.hud-overlay {
 		position: absolute;
@@ -271,7 +243,7 @@
 	}
 
 	.label {
-		color: #444;
+		color: var(--deck-accent);
 		font-weight: 700;
 		flex-shrink: 0;
 	}

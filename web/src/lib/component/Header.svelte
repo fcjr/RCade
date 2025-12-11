@@ -29,7 +29,6 @@
 						{:else}
 							{page.data.session.user.name?.charAt(0).toUpperCase()}
 						{/if}
-						<div class="status-dot"></div>
 					</div>
 					<div class="profile-meta">
 						<span class="username">{page.data.session.user.name}</span>
@@ -91,7 +90,7 @@
 		font-weight: 400;
 		color: #f5f5f5;
 		text-decoration: none;
-		letter-spacing: -0.03em;
+		letter-spacing: 0.03em;
 		display: flex;
 		align-items: center;
 		line-height: 0.6;
@@ -150,28 +149,6 @@
 		background: rgba(250, 204, 21, 0.1);
 		color: #facc15;
 		box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
-	}
-
-	.status-dot {
-		position: absolute;
-		bottom: -2px;
-		right: -2px;
-		width: 10px;
-		height: 10px;
-		background: #141414; /* Cutout effect */
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 2; /* Above image */
-	}
-
-	.status-dot::after {
-		content: '';
-		width: 6px;
-		height: 6px;
-		background: #4ade80; /* Green online dot */
-		border-radius: 50%;
 	}
 
 	.profile-meta {

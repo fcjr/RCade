@@ -1,1 +1,4 @@
+@import '$lib/styles/theme.css';
 @import 'tailwindcss';
+@import '$lib/styles/layout.css';
+@import '$lib/styles/cards.css';
