@@ -5,12 +5,9 @@ import { unpackTar } from "modern-tar";
 import { getMimeType } from "./mime";
 import { read, remove, write } from "./persistence";
 
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 function determineDevUrl(url: URL) {
-    if (url.pathname.startsWith("/__rcade_dev"))
-        return true;
-
     if (url.pathname.startsWith("/@fs"))
         return true;
 
