@@ -367,7 +367,7 @@ export class Game {
                     ),
                     thumbnail_url: await fileExists("rcade", `games/${this.data.id}/${version.version}/thumbnail.png`) ? await getSignedUrl(
                         S3,
-                        new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/thumbnail.png` }),
+                        new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/thumbnail.png`, ResponseContentType: 'image/png' }),
                         { expiresIn: 3600 }
                     ) : undefined,
                     expires: Date.now() + (3600 * 1000),

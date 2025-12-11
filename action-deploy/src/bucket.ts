@@ -1,6 +1,7 @@
 import * as httpm from "@actions/http-client";
 import fs from "fs";
 import { stat } from "fs/promises";
+import { Readable } from "stream";
 
 export async function uploadFileStream(
   filePath: string,
@@ -34,10 +35,17 @@ export async function uploadFromBuffer(
     maxRetries: 3,
   });
 
-  const response = await client.put(presignedUrl, buffer.toString('binary'), {
-    "Content-Type": "application/octet-stream",
-    "Content-Length": buffer.length.toString(),
-  });
+  const stream = Readable.from(buffer);
+
+  const response = await client.sendStream(
+    'PUT',
+    presignedUrl,
+    stream,
+    {
+      "Content-Type": "application/octet-stream",
+      "Content-Length": buffer.length.toString(),
+    }
+  );
 
   if (response.message.statusCode !== 200) {
     const body = await response.readBody();
