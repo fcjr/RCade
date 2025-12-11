@@ -192,7 +192,7 @@ export class Game {
 
         const upload_thumbnail_url = await getSignedUrl(
             S3,
-            new PutObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version}/thumbnail.png` }),
+            new PutObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version}/thumbnail.png`, ContentType: 'image/png' }),
             { expiresIn: 3600 }
         );
 
