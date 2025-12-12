@@ -71,7 +71,9 @@
 		<div class="footer-bottom">
 			<p>&copy; {new Date().getFullYear()} RCade Platform. Open Source (MIT).</p>
 			<p class="made-with">
-				Built with <span class="heart">♥</span> at RC
+				<a href="https://recurse.com/" target="_blank" rel="noreferrer" class="rc-link">
+					Built with <span class="heart">♥</span> at <span class="rc-text">RC</span>
+				</a>
 			</p>
 		</div>
 	</div>
@@ -229,5 +231,79 @@
 			gap: 1rem;
 			text-align: center;
 		}
+	}
+	/* --- Footer Bottom Layout --- */
+	.footer-bottom {
+		border-top: 1px solid rgba(255, 255, 255, 0.05);
+		padding-top: 2rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.85rem;
+		color: rgba(255, 255, 255, 0.4);
+		position: relative;
+		z-index: 10;
+	}
+
+	/* --- The Link Container --- */
+	.rc-link {
+		text-decoration: none;
+		color: inherit;
+		transition: all 0.3s ease; /* Slower, smoother transition */
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	/* On hover, brighten the text gently */
+	.rc-link:hover {
+		color: #fff;
+		text-decoration: underline;
+	}
+
+	/* --- The Heart --- */
+	.heart {
+		color: #ef4444;
+		display: inline-block;
+		/* A slow, resting heartbeat */
+		animation: heartbeat 2s ease-in-out infinite;
+		transition: all 0.3s ease;
+	}
+
+	@keyframes heartbeat {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.1);
+		}
+	}
+
+	/* Easter Egg 1: Heart blooms and glows (no speed change!) */
+	.rc-link:hover .heart {
+		transform: scale(1.25); /* Grows bigger */
+		filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6)); /* Adds a warm glow */
+		animation: none; /* Stops beating to hold the "full" shape, or keep it if you prefer */
+	}
+
+	/* --- The "RC" Text --- */
+	.rc-text {
+		display: inline-block;
+		transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy transition */
+	}
+
+	/* Easter Egg 2: "RC" turns into a Golden Arcade Token */
+	.rc-link:hover .rc-text {
+		font-family: 'Jersey 10', sans-serif; /* Your brand font */
+		font-size: 1.4rem; /* Get slightly larger */
+		line-height: 0.8; /* Fix alignment for the tall font */
+		color: #facc15; /* Gold */
+
+		/* A soft, magical gold aura instead of a glitch */
+		text-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+
+		/* Slight lift like a floating game item */
+		transform: translateY(-3px) rotate(-3deg);
 	}
 </style>
