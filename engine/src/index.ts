@@ -7,33 +7,11 @@ export type RCadeWebEngineConfig = {
     cancellationToken?: AbortSignal,
 }
 
-const INIT_SCRIPT = `(async () => {
-    // Initialize communication port with service worker
-    const registration = await navigator.serviceWorker.ready;
-    const sw = registration.active;
-    const messageChannel = new MessageChannel();
-    const hello = new Promise((resolve) => {
-        const listener = (event) => {
-            if (event.data && event.data.type === "PORT_INIT") {
-                messageChannel.port1.removeEventListener("message", listener);
-                resolve(event.data.content);
-            }
-        };
-
-        messageChannel.port1.addEventListener("message", listener);
-        messageChannel.port1.start();
-    });
-
-    sw.postMessage({ type: "INIT_PORT" }, [messageChannel.port2]);
-
-    const content = await hello;
-
-    window.parent.postMessage({ type: "SW_PORT_READY", content }, "*", [messageChannel.port1]);
-})()`;
-
 export class RCadeWebEngine {
     static async move(iframe: HTMLIFrameElement, resolved_url: string) {
         iframe.src = resolved_url;
+
+        console.log("Moving iframe to", resolved_url);
 
         await new Promise((resolve, reject) => {
             const onLoad = () => {
@@ -43,7 +21,7 @@ export class RCadeWebEngine {
             iframe.addEventListener("load", onLoad);
         });
 
-        const run: (code: string) => any = (iframe.contentWindow as any).eval;
+        console.log("Iframe moved to", resolved_url);
 
         const hello = new Promise((resolve) => {
             const listener = (event: MessageEvent) => {
@@ -55,9 +33,11 @@ export class RCadeWebEngine {
             window.addEventListener("message", listener);
         });
 
-        run(INIT_SCRIPT);
+        console.log("Waiting for SW port...");
 
         const { message, port } = await hello as any;
+
+        console.log("SW port acquired");
 
         port.start();
 
@@ -113,25 +93,29 @@ export class RCadeWebEngine {
         }
 
         port.addEventListener("message", (event) => {
+            console.log("RCadeWebEngine received port message:", event.data);
+
             if (event.data && event.data.type === "DISPOSE_PORT") {
                 iframe.src = "/__rcade_blank";
-                this.eval(`
-                    document.body.innerHTML = "<h1>Service Worker Disposed</h1><p>The service worker has disposed the communication port. Please refresh the page to try again.</p>";
-                    document.body.style.display = "flex";
-                    document.body.style.flexDirection = "column";
-                    document.body.style.justifyContent = "center";
-                    document.body.style.alignItems = "center";
-                    document.body.style.height = "100vh";
-                    document.body.style.backgroundColor = "#f8d7da";
-                    document.body.style.color = "#721c24";
-                    document.body.style.fontFamily = "Arial, sans-serif";
-                    document.body.style.textAlign = "center";
-                    document.body.style.padding = "20px";
-                `)
+                // this.eval(`
+                //     document.body.innerHTML = "<h1>Service Worker Disposed</h1><p>The service worker has disposed the communication port. Please refresh the page to try again.</p>";
+                //     document.body.style.display = "flex";
+                //     document.body.style.flexDirection = "column";
+                //     document.body.style.justifyContent = "center";
+                //     document.body.style.alignItems = "center";
+                //     document.body.style.height = "100vh";
+                //     document.body.style.backgroundColor = "#f8d7da";
+                //     document.body.style.color = "#721c24";
+                //     document.body.style.fontFamily = "Arial, sans-serif";
+                //     document.body.style.textAlign = "center";
+                //     document.body.style.padding = "20px";
+                // `)
             }
         });
 
         window.addEventListener("message", (event) => {
+            console.log("RCadeWebEngine received window message:", event.data);
+
             if (event.data && event.data.type === "acquire_plugin_channel") {
                 const nonce = event.data.nonce;
                 const channel = event.data.channel;
@@ -175,11 +159,6 @@ export class RCadeWebEngine {
     }
 
     private state: "idle" | "moving" | "loaded" | "error" = "idle";
-
-    private eval(code: string) {
-        const run: (code: string) => any = (this.iframe.contentWindow as any).eval;
-        return run(code);
-    }
 
     private dispose() {
         this.port.postMessage({ type: "DISPOSE_PORT" });

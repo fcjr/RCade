@@ -21,20 +21,63 @@
 	}
 
 	let gameContents: HTMLDivElement;
+	let gameContainer: HTMLDivElement;
 	let plugin: InputClassicEmulator = $state(new InputClassicEmulator());
 
 	let playing = $state(false);
+
+	// Function to scale game-contents to fit game container
+	function scaleGameContents() {
+		if (!gameContents || !gameContainer) return;
+
+		const containerWidth = gameContainer.offsetWidth;
+		const containerHeight = gameContainer.offsetHeight;
+		const contentWidth = gameContents.offsetWidth;
+		const contentHeight = gameContents.offsetHeight;
+
+		if (contentWidth === 0 || contentHeight === 0) return;
+
+		// Calculate scale to fill container (use minimum to fit entirely)
+		const scaleX = containerWidth / contentWidth;
+		const scaleY = containerHeight / contentHeight;
+		const scale = Math.min(scaleX, scaleY);
+
+		gameContents.style.transform = `scale(${scale})`;
+	}
+
+	// Set up ResizeObserver to handle dynamic resizing
+	$effect(() => {
+		if (!gameContainer) return;
+
+		const resizeObserver = new ResizeObserver(() => {
+			scaleGameContents();
+		});
+
+		resizeObserver.observe(gameContainer);
+
+		// Also observe game-contents in case it changes size
+		if (gameContents) {
+			resizeObserver.observe(gameContents);
+		}
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
 
 	async function play() {
 		playing = true;
 
 		const engine = await RCadeWebEngine.initialize(gameContents, {
-			appUrl: 'http://localhost:5174/__rcade_blank'
+			appUrl: 'http://localhost:8787/__rcade_blank'
 		});
 
 		engine.register(plugin);
 
 		await engine.load(data.game.id(), data.version.version());
+
+		// Scale after content is loaded
+		setTimeout(scaleGameContents, 100);
 	}
 </script>
 
@@ -54,7 +97,7 @@
 			<DeckUnit serialNo="DISPLAY_UNIT_PRIMARY" class="full-size">
 				<div class="bezel-housing">
 					<div class="monitor-frame large">
-						<div class="game">
+						<div class="game" bind:this={gameContainer}>
 							{#if !playing}
 								<div class="crt-surface" style={getCoverArt(data.version)}>
 									<div class="screen-glare"></div>
@@ -276,6 +319,7 @@
 		aspect-ratio: 336 / 262;
 		display: grid;
 		place-items: center;
+		overflow: hidden;
 	}
 	.game > * {
 		grid-area: 1 / 1;
@@ -287,6 +331,10 @@
 		border-radius: 2px;
 		overflow: hidden;
 		image-rendering: pixelated;
+	}
+	.game-contents {
+		transform-origin: center center;
+		transition: transform 0.2s ease-out;
 	}
 	.bezel-label {
 		font-size: 0.55rem;

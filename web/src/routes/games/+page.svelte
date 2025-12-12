@@ -22,7 +22,7 @@
 	<section class="library-header" in:fly={{ y: 20, duration: 600 }}>
 		<div class="marquee-board">
 			<div class="led-grid"></div>
-			<h1>ARCADE LIBRARY</h1>
+			<h1>@RCADE LIBRARY</h1>
 		</div>
 
 		<div class="controls">

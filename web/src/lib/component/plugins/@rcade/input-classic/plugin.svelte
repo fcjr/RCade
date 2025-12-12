@@ -100,6 +100,10 @@
 
 			// if there's a channel, send { type: "system" | "button", player: number, button: "ONE_PLAYER" | "A" | "UP" | etc.., pressed: boolean }
 			if (this.currentChannel) {
+				console.log(
+					`InputClassicEmulator sending button state: player=${player}, button=${button}, pressed=${pressed}`
+				);
+
 				this.currentChannel.postMessage({
 					type: player === 'system' ? 'system' : 'button',
 					player: player === 'system' ? 0 : player === 'p1' ? 1 : 2,
@@ -240,6 +244,8 @@
 		console.log(`Player ${player.toUpperCase()} ${state} ${action}`);
 
 		stateVar.v = state === 'PRESS';
+
+		provider.updateButtonState(player, action, state === 'PRESS');
 	}
 
 	function handleSystemPress(action: 'ONE_PLAYER' | 'TWO_PLAYER', state: 'PRESS' | 'RELEASE') {
@@ -251,6 +257,8 @@
 		console.log(`System ${state} ${action}`);
 
 		stateVar.v = state === 'PRESS';
+
+		provider.updateButtonState('system', action, state === 'PRESS');
 	}
 
 	function handleKeyPress(e: KeyboardEvent, state: 'PRESS' | 'RELEASE') {
@@ -379,16 +387,16 @@
 
 					<div class="actions-group">
 						<div class="btn-wrapper">
-							<button class="btn-input action b" class:simulated-active={STATE_P1_B.v}
-								>{showKeybinds ? formatKeyDisplay(bindings.p1.b) : 'B'}</button
-							>
-							{#if showKeybinds}<span class="chassis-label bottom">SEC</span>{/if}
-						</div>
-						<div class="btn-wrapper">
 							<button class="btn-input action a" class:simulated-active={STATE_P1_A.v}
 								>{showKeybinds ? formatKeyDisplay(bindings.p1.a) : 'A'}</button
 							>
 							{#if showKeybinds}<span class="chassis-label bottom">PRI</span>{/if}
+						</div>
+						<div class="btn-wrapper">
+							<button class="btn-input action b" class:simulated-active={STATE_P1_B.v}
+								>{showKeybinds ? formatKeyDisplay(bindings.p1.b) : 'B'}</button
+							>
+							{#if showKeybinds}<span class="chassis-label bottom">SEC</span>{/if}
 						</div>
 					</div>
 				</div>
@@ -448,16 +456,16 @@
 
 						<div class="actions-group">
 							<div class="btn-wrapper">
-								<button class="btn-input action b" class:simulated-active={STATE_P2_B.v}
-									>{showKeybinds ? formatKeyDisplay(bindings.p2.b) : 'B'}</button
-								>
-								{#if showKeybinds}<span class="chassis-label bottom">SEC</span>{/if}
-							</div>
-							<div class="btn-wrapper">
 								<button class="btn-input action a" class:simulated-active={STATE_P2_A.v}
 									>{showKeybinds ? formatKeyDisplay(bindings.p2.a) : 'A'}</button
 								>
 								{#if showKeybinds}<span class="chassis-label bottom">PRI</span>{/if}
+							</div>
+							<div class="btn-wrapper">
+								<button class="btn-input action b" class:simulated-active={STATE_P2_B.v}
+									>{showKeybinds ? formatKeyDisplay(bindings.p2.b) : 'B'}</button
+								>
+								{#if showKeybinds}<span class="chassis-label bottom">SEC</span>{/if}
 							</div>
 						</div>
 					</div>
