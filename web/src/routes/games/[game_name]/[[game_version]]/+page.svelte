@@ -24,7 +24,12 @@
 	let gameContainer: HTMLDivElement;
 	let plugin: InputClassicEmulator = $state(new InputClassicEmulator());
 
-	let playing = $state(false);
+	let current_state:
+		| { kind: 'idle' }
+		| { kind: 'initializing' }
+		| { kind: 'downloading'; state: string; progress: number; size: number }
+		| { kind: 'playing' }
+		| { kind: 'error'; error: string } = $state({ kind: 'idle' });
 
 	// Function to scale game-contents to fit game container
 	function scaleGameContents() {
@@ -66,11 +71,9 @@
 	});
 
 	async function play() {
-		playing = true;
+		current_state = { kind: 'initializing' };
 
-		const engine = await RCadeWebEngine.initialize(gameContents, {
-			appUrl: 'http://localhost:8787/__rcade_blank'
-		});
+		const engine = await RCadeWebEngine.initialize(gameContents);
 
 		engine.register(plugin);
 
@@ -98,7 +101,7 @@
 				<div class="bezel-housing">
 					<div class="monitor-frame large">
 						<div class="game" bind:this={gameContainer}>
-							{#if !playing}
+							{#if current_state.kind === 'idle'}
 								<div class="crt-surface" style={getCoverArt(data.version)}>
 									<div class="screen-glare"></div>
 									<div class="overlay-ui">
@@ -108,6 +111,7 @@
 									</div>
 								</div>
 							{/if}
+							<div class="game-overlay"></div>
 							<div class="game-contents" bind:this={gameContents}></div>
 						</div>
 

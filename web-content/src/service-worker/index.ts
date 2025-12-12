@@ -33,7 +33,7 @@ function determineDevUrl(url: URL) {
 
 let g: ServiceWorkerGlobalScope = self as unknown as ServiceWorkerGlobalScope;
 
-const client = Client.new().withBaseUrl("http://localhost:5174/api/v1");
+const client = Client.new();
 let currently_on_blank = false;
 
 g.addEventListener("fetch", (event: FetchEvent) => {

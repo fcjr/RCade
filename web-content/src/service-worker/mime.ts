@@ -23,13 +23,11 @@ const mimeTypes = {
     'mp3': 'audio/mpeg',
     'wav': 'audio/wav',
     'ogg': 'audio/ogg',
-    'webm': 'audio/webm',
     'aac': 'audio/aac',
 
     // Video
     'mp4': 'video/mp4',
     'mpeg': 'video/mpeg',
-    'webm': 'video/webm',
     'ogv': 'video/ogg',
     'avi': 'video/x-msvideo',
 
