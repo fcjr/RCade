@@ -1,0 +1,29 @@
+{
+    "$schema": "../../web/static/manifest.schema.json",
+    "kind": "plugin",
+    "name": "@rcade/sleep",
+    "description": "Screensaver management plugin",
+    "visibility": "public",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "display_name": "Aubrey Taylor"
+        }
+    ],
+    "libraries": [
+        {
+            "language": "javascript",
+            "package": {
+                "name": "@rcade/plugin-sleep",
+                "versions": "0.x.x"
+            }
+        },
+        {
+            "language": "rust",
+            "package": {
+                "name": "rcade-plugin-sleep",
+                "versions": "0.x.x"
+            }
+        }
+    ]
+}

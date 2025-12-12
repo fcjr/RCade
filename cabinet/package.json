@@ -22,6 +22,8 @@
     "@rcade/api": "workspace:*",
     "@rcade/input-classic": "workspace:*",
     "@rcade/input-spinners": "workspace:*",
+    "@rcade/sleep": "workspace:*",
+    "@rcade/plugin-sleep": "workspace:*",
     "@rcade/plugin-menu-backend": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
     "hono": "^4.6.14",

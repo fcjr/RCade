@@ -5,7 +5,7 @@
   import Screensaver from "./components/Screensaver.svelte";
 
   const route = $derived(getRoute());
-  const isDev = window.rcade.getArgs().isDev;
+  const { isDev, forceScreensaver } = window.rcade.getArgs();
 
   // Hide cursor in production mode
   $effect(() => {
@@ -18,7 +18,7 @@
   });
 </script>
 
-{#if !isDev}
+{#if !isDev || forceScreensaver}
   <Screensaver />
 {/if}
 

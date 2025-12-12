@@ -2,6 +2,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import type { RcadeAPI, GameInfo, Route } from '../shared/types';
+import type { ScreensaverConfig } from '@rcade/plugin-sleep';
 
 const args = JSON.parse(process.env.STARTUP_CONFIG || '{}');
 
@@ -30,7 +31,15 @@ const rcadeAPI: RcadeAPI = {
   getGames: () => ipcRenderer.invoke('get-games'),
   getMenuGame: () => ipcRenderer.invoke('get-menu-game'),
   loadGame: async (game: GameInfo) => await ipcRenderer.invoke('load-game', game),
-  unloadGame: (gameId: string | undefined, name: string, version: string | undefined) => ipcRenderer.invoke('unload-game', gameId, name, version),
+  unloadGame: (gameId: string | undefined, name: string, version: string | undefined) => {
+    ipcRenderer.emit('unload-game');
+    return ipcRenderer.invoke('unload-game', gameId, name, version)
+  },
+  onUnloadGame: (callback: (config: ScreensaverConfig) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, config: ScreensaverConfig) => callback(config);
+    ipcRenderer.on('unload-game', listener);
+    return () => ipcRenderer.removeListener('unload-game', listener);
+  },
   onMenuKey: (callback: () => void) => {
     const listener = () => callback();
     ipcRenderer.on('menu-key-pressed', listener);
@@ -41,6 +50,13 @@ const rcadeAPI: RcadeAPI = {
     ipcRenderer.on('input-activity', listener);
     return () => ipcRenderer.removeListener('input-activity', listener);
   },
+  onScreensaverConfigChanged: (callback: (config: ScreensaverConfig) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, config: ScreensaverConfig) => callback(config);
+    ipcRenderer.on('screensaver-config-changed', listener);
+    return () => ipcRenderer.removeListener('screensaver-config-changed', listener);
+  },
+  screensaverStarted: () => ipcRenderer.send("screensaver-started"),
+  screensaverStopped: () => ipcRenderer.send("screensaver-stopped"),
   acquirePlugin: async (name: string, version: string): Promise<{ nonce: string, name: string, version: string }> => {
     const { nonce } = await ipcRenderer.invoke("get-plugin-port", name, version);
 

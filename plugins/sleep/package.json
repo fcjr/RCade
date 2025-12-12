@@ -1,0 +1,14 @@
+{
+  "name": "@rcade/sleep",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@rcade/sdk-plugin": "^0.1.0"
+  }
+}

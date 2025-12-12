@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["plugins/input-classic/clients/rust", "plugins/input-spinners/clients/rust", "sdk/frontend/rust", "firmware/input-spinners-controller"]
+members = ["plugins/input-classic/clients/rust", "plugins/input-spinners/clients/rust", "plugins/sleep/clients/rust", "sdk/frontend/rust", "firmware/input-spinners-controller"]
 
 [profile.release]
 debug = 2
