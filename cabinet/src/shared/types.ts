@@ -8,6 +8,7 @@ export interface PackageVersion {
 
 export interface CliOptions {
   manifest: GameManifest | null;
+  menuManifest: GameManifest | null;
   noExit: boolean;
   dev: boolean;
   devtools: boolean | undefined;
@@ -45,6 +46,7 @@ export interface LoadGameResult {
 export interface RcadeAPI {
   getArgs: () => CliOptions & { isDev: boolean };
   getGames: () => Promise<GameInfo[]>;
+  getMenuGame: () => Promise<GameInfo>;
   loadGame: (game: GameInfo) => Promise<LoadGameResult>;
   unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined) => Promise<void>;
   onMenuKey: (callback: () => void) => () => void;

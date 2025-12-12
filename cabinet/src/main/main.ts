@@ -413,7 +413,8 @@ app.whenReady().then(async () => {
         authors: game.latest().authors().map(a => ({ display_name: a.display_name })),
         dependencies: game.latest().dependencies(),
         permissions: game.latest().permissions(),
-      }));
+      }))
+        .filter((game) => game.name !== 'menu');
 
       // cache the game list for offline use
       await saveGamesListCache(gameInfos);
@@ -439,6 +440,41 @@ app.whenReady().then(async () => {
       }
       throw error;
     }
+  });
+
+  ipcMain.handle('get-menu-game', async (): Promise<GameInfo> => {
+    if (args.menuManifest) {
+      return {
+        id: undefined,
+        name: args.menuManifest.name,
+        displayName: args.menuManifest.display_name,
+        latestVersion: undefined,
+        authors: Array.isArray(args.menuManifest.authors)
+          ? args.menuManifest.authors.map(a => ({ display_name: a.display_name }))
+          : [{ display_name: args.menuManifest.authors.display_name }],
+        dependencies: args.menuManifest.dependencies ?? [],
+        permissions: args.menuManifest.permissions ?? [],
+      };
+    }
+
+    const games = await apiClient.getAllGames();
+
+    const gameInfos = games.map((game: Game) => ({
+      id: game.id(),
+      name: game.name(),
+      displayName: game.latest().displayName(),
+      latestVersion: game.latest().version(),
+      contentUrl: game.latest().contentUrl(),
+      authors: game.latest().authors().map(a => ({ display_name: a.display_name })),
+      dependencies: game.latest().dependencies(),
+      permissions: game.latest().permissions(),
+    })).find((game) => game.name === 'menu');
+
+    if (!gameInfos) {
+      throw new Error('Menu game not found');
+    }
+
+    return gameInfos;
   });
 
   ipcMain.handle('load-game', async (event, game: GameInfo): Promise<Omit<LoadGameResult, "pluginPorts">> => {

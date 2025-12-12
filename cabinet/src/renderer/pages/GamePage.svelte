@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import type { GameInfo } from "../../shared/types";
-  import { navigateToCarousel } from "../router.svelte";
+  import { navigateToMenu } from "../router.svelte";
 
   interface Props {
     game: GameInfo;
@@ -35,7 +35,7 @@
     if (window.rcade) {
       await window.rcade.unloadGame(game.id, game.name, game.latestVersion);
     }
-    navigateToCarousel();
+    navigateToMenu();
   }
 
   let unsubscribeMenuKey: (() => void) | undefined;
@@ -169,7 +169,7 @@
       src={gameUrl}
       title={game.name}
       sandbox="allow-scripts allow-same-origin"
-      allow={game.permissions.includes('camera') ? 'camera' : ''}
+      allow={game.permissions.includes("camera") ? "camera" : ""}
     ></iframe>
   </div>
 {/if}

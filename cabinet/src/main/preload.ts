@@ -28,6 +28,7 @@ ipcRenderer.on('plugin-port-ready', (event: Electron.IpcRendererEvent, data: { n
 const rcadeAPI: RcadeAPI = {
   getArgs: () => args,
   getGames: () => ipcRenderer.invoke('get-games'),
+  getMenuGame: () => ipcRenderer.invoke('get-menu-game'),
   loadGame: async (game: GameInfo) => await ipcRenderer.invoke('load-game', game),
   unloadGame: (gameId: string | undefined, name: string, version: string | undefined) => ipcRenderer.invoke('unload-game', gameId, name, version),
   onMenuKey: (callback: () => void) => {
