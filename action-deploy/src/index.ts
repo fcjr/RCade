@@ -136,6 +136,8 @@ export async function run(): Promise<void> {
     core.info(`✅ Uploaded artifact`);
     core.endGroup();
 
+    let hasThumbnail: boolean = false;
+
     if (manifest.thumbnail) {
       core.startGroup("🖼️ Uploading Thumbnail");
       let data: Buffer;
@@ -160,10 +162,12 @@ export async function run(): Promise<void> {
 
       core.info(`✅ Uploaded thumbnail`);
       core.endGroup();
+
+      hasThumbnail = true;
     }
 
     core.startGroup(`📢 Publishing Version ${intent.version}`);
-    await client.publishVersion(manifest.name, intent.version);
+    await client.publishVersion(manifest.name, intent.version, { hasThumbnail });
     core.info(`✅ Published version ${intent.version}`);
     core.endGroup();
 
