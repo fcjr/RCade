@@ -13,6 +13,8 @@
 </script>
 
 <div class="deck-unit" in:fly={{ y: 40, duration: 600, delay: index * 100 }}>
+	<a href="/games/{game.name()}" class="card-overlay" aria-label="Play {latest.displayName()}"></a>
+
 	<div class="mount-holes">
 		<div class="screw"></div>
 		<div class="serial-no">{game.name()}@{latest.version()}</div>
@@ -29,6 +31,12 @@
 						<span>REMIX</span>
 					</div>
 				{/if}
+
+				<div class="play-overlay">
+					<span class="play-cmd">
+						<span class="blink">_</span>PLAY
+					</span>
+				</div>
 			</div>
 			<div class="screen-label">DISPLAY 336x262</div>
 		</div>
@@ -50,10 +58,10 @@
 					<span class="cell-value">
 						{#each latest.authors() as author, i (author)}
 							{@const display = author.display_name.split(' ')[0]}
-
 							<span title={author.display_name} class="name">
 								{#if author.recurse_id != undefined}
 									<a
+										class="z-index-top"
 										href="https://www.recurse.com/directory/{author.recurse_id}"
 										target="_blank"
 										rel="noopener noreferrer"
@@ -96,8 +104,12 @@
 	</div>
 
 	<div class="unit-footer">
+		<div class="status-light"></div>
+		<div class="status-text">
+			<span class="text-idle">SYSTEM STANDBY</span>
+			<span class="text-hover">CLICK TO START >></span>
+		</div>
 		<div class="grip-texture"></div>
-		<a class="eject-btn" href="/games/{game.name()}">PLAY</a>
 	</div>
 </div>
 
@@ -109,7 +121,6 @@
 		--deck-text: #aeb0b3;
 	}
 
-	/* --- The Cyber-Deck Unit --- */
 	.deck-unit {
 		background-color: var(--deck-bg);
 		border-radius: 4px;
@@ -119,12 +130,35 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		transition: transform 0.2s;
+		transition: all 0.2s ease-in-out;
 		font-family: 'Chakra Petch', sans-serif;
+		position: relative;
+		cursor: pointer;
+		border: 1px solid transparent;
 	}
 
+	/* Hover State: Highlight the whole unit */
 	.deck-unit:hover {
 		transform: translateY(-4px);
+		border-color: rgba(230, 126, 34, 0.3);
+		box-shadow:
+			0 14px 28px rgba(0, 0, 0, 0.6),
+			0 0 15px rgba(230, 126, 34, 0.1);
+	}
+
+	.card-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 1;
+		text-decoration: none;
+	}
+
+	.z-index-top {
+		position: relative;
+		z-index: 2;
 	}
 
 	.mount-holes {
@@ -197,6 +231,50 @@
 		border-radius: 2px;
 		filter: brightness(0.9) contrast(1.1);
 		image-rendering: pixelated;
+	}
+
+	/* --- Play Overlay Animation --- */
+	.play-overlay {
+		position: absolute;
+		inset: 0;
+		/* Slightly darker background for better text contrast */
+		background: rgba(0, 0, 0, 0.6);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		transition: opacity 0.2s ease;
+		z-index: 20;
+		backdrop-filter: blur(1px);
+	}
+
+	.deck-unit:hover .play-overlay {
+		opacity: 1;
+	}
+
+	.play-cmd {
+		color: var(--deck-accent);
+		font-family: 'VT323', monospace;
+		font-size: 2.2rem; /* Slightly larger */
+		font-weight: 700;
+		letter-spacing: 3px; /* Increased spacing for readability */
+
+		/* Layered shadow for readable glow:
+           1. Tight dark shadow defines edges.
+           2. Wide, softer accent shadow creates atmosphere. */
+		text-shadow:
+			1px 1px 2px rgba(0, 0, 0, 0.8),
+			0 0 20px var(--deck-accent);
+	}
+
+	.blink {
+		animation: blinker 1s step-end infinite;
+	}
+
+	@keyframes blinker {
+		50% {
+			opacity: 0;
+		}
 	}
 
 	.screen-glare {
@@ -305,7 +383,6 @@
 		overflow: hidden;
 	}
 
-	/* --- New Visibility Badges --- */
 	.vis-badge {
 		display: flex;
 		align-items: center;
@@ -315,30 +392,22 @@
 		font-weight: 700;
 		padding: 2px 0;
 	}
-
-	/* Public: Green/Blue Global vibe */
 	.vis-badge.vis-public {
 		color: #2ecc71;
 		text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
 	}
-
-	/* Internal: Amber/Warning vibe */
 	.vis-badge.vis-internal {
 		color: #f1c40f;
 		text-shadow: 0 0 5px rgba(241, 196, 15, 0.3);
 	}
-
-	/* Private: Red/Offline vibe */
 	.vis-badge.vis-private {
 		color: #e74c3c;
 		text-shadow: 0 0 5px rgba(231, 76, 60, 0.3);
 	}
-
 	.vis-icon {
 		font-size: 0.6rem;
 	}
 
-	/* --- New I/O Tags --- */
 	.io-badges {
 		display: flex;
 		gap: 4px;
@@ -351,43 +420,73 @@
 		padding: 3px 6px;
 		border: 1px solid #444;
 		border-radius: 2px;
-		/* Ensure font is condensed to fit more text */
 		font-family: 'Roboto Mono', monospace;
 		letter-spacing: -0.5px;
 	}
 
+	/* --- Footer Status Indicators --- */
 	.unit-footer {
 		background: #15171a;
-		padding: 10px 1rem;
+		padding: 8px 12px;
 		border-top: 1px solid #000;
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		gap: 10px;
+		min-height: 2.5rem;
+		color: #555;
 	}
 
-	.grip-texture {
-		width: 40px;
-		height: 12px;
-		background-image: linear-gradient(90deg, #333 1px, transparent 1px);
-		background-size: 4px 100%;
-	}
-
-	.eject-btn {
-		background: transparent;
-		border: 1px solid var(--deck-accent);
-		color: var(--deck-accent);
-		font-family: 'Chakra Petch', sans-serif;
-		font-weight: 700;
-		font-size: 0.75rem;
-		padding: 4px 12px;
-		cursor: pointer;
+	.status-light {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: #444;
+		box-shadow: 0 0 0 1px #222;
 		transition: all 0.2s;
 	}
 
-	.eject-btn:hover {
+	/* Light up green on hover */
+	.deck-unit:hover .status-light {
 		background: var(--deck-accent);
-		color: #000;
-		box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+		box-shadow: 0 0 5px var(--deck-accent);
+	}
+
+	.status-text {
+		font-family: 'Roboto Mono', monospace;
+		font-size: 0.65rem;
+		font-weight: 700;
+		flex-grow: 1;
+		position: relative;
+		height: 1em; /* fix height prevents jump */
+	}
+
+	.text-idle,
+	.text-hover {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transition: opacity 0.2s;
+	}
+
+	.text-hover {
+		opacity: 0;
+		color: var(--deck-accent);
+		letter-spacing: 1px;
+	}
+
+	.deck-unit:hover .text-idle {
+		opacity: 0;
+	}
+	.deck-unit:hover .text-hover {
+		opacity: 1;
+	}
+
+	.grip-texture {
+		width: 30px;
+		height: 12px;
+		background-image: linear-gradient(90deg, #333 1px, transparent 1px);
+		background-size: 3px 100%;
+		opacity: 0.5;
 	}
 
 	.name {
