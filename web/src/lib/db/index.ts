@@ -11,7 +11,8 @@ export async function getDb(): Promise<DrizzleD1Database<typeof schema>> {
 	if (!_db) {
 		if (!env.DB) {
 			if (DBG_ENV == undefined) {
-				const { getPlatformProxy } = await import('wrangler');
+				// wrangler
+				const { getPlatformProxy } = await import(/* @vite-ignore */ atob('d3JhbmdsZXI='));
 				DBG_ENV = await getPlatformProxy({ persist: { path: '.wrangler/state/v3' } });
 			}
 

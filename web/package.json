@@ -16,7 +16,8 @@
 		"db:migrate:local": "wrangler d1 migrations apply rcade --local",
 		"db:migrate:remote": "wrangler d1 migrations apply rcade --remote",
 		"db:studio": "drizzle-kit studio",
-		"db:pull": "bun run scripts/pull-db.js"
+		"db:pull": "bun run scripts/pull-db.js",
+		"analyze": "vite build --mode production && npx vite-bundle-visualizer"
 	},
 	"devDependencies": {
 		"@libsql/client": "^0.15.15",

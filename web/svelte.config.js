@@ -12,13 +12,9 @@ const config = {
 			routes: {
 				include: ["/*"],
 				exclude: [],
-			},
-			platformProxy: {
-				configPath: "wrangler.toml",
-				persist: true
 			}
 		})
 	},
-	
+
 };
 export default config;
