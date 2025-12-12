@@ -7,21 +7,37 @@ export type RCadeWebEngineConfig = {
     cancellationToken?: AbortSignal,
 }
 
+export type ProgressReport = {
+    state: "starting"
+} | {
+    state: "fetching"
+} | {
+    state: "downloading",
+    progress: number,
+    total?: number
+} | {
+    state: "opening",
+} | {
+    state: "clearing_cache",
+    current: string,
+    current_index: number,
+    total: number,
+} | {
+    state: "unpacking",
+} | {
+    state: "caching",
+    current: string,
+    current_index: number,
+    total: number,
+} | {
+    state: "finishing",
+}
+
 export class RCadeWebEngine {
     static async move(iframe: HTMLIFrameElement, resolved_url: string) {
         iframe.src = resolved_url;
 
         console.log("Moving iframe to", resolved_url);
-
-        await new Promise((resolve, reject) => {
-            const onLoad = () => {
-                iframe.removeEventListener("load", onLoad);
-                resolve(null);
-            };
-            iframe.addEventListener("load", onLoad);
-        });
-
-        console.log("Iframe moved to", resolved_url);
 
         const hello = new Promise((resolve) => {
             const listener = (event: MessageEvent) => {
@@ -32,6 +48,16 @@ export class RCadeWebEngine {
             };
             window.addEventListener("message", listener);
         });
+
+        await new Promise((resolve, reject) => {
+            const onLoad = () => {
+                iframe.removeEventListener("load", onLoad);
+                resolve(null);
+            };
+            iframe.addEventListener("load", onLoad);
+        });
+
+        console.log("Iframe moved to", resolved_url);
 
         console.log("Waiting for SW port...");
 
@@ -96,7 +122,7 @@ export class RCadeWebEngine {
             console.log("RCadeWebEngine received port message:", event.data);
 
             if (event.data && event.data.type === "DISPOSE_PORT") {
-                iframe.src = "/__rcade_blank";
+                // iframe.src = 
                 // this.eval(`
                 //     document.body.innerHTML = "<h1>Service Worker Disposed</h1><p>The service worker has disposed the communication port. Please refresh the page to try again.</p>";
                 //     document.body.style.display = "flex";
@@ -210,15 +236,23 @@ export class RCadeWebEngine {
         this.plugins.delete(name);
     }
 
-    public async load(gameId: string, version: string | "latest" = "latest") {
+    public async load(gameId: string, version: string | "latest" = "latest", progressHandler?: (progress: ProgressReport) => void) {
         if (this.state !== "idle") {
             throw new Error(`Cannot load game while in state: ${this.state}`);
         }
+
+        this.port.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "GAME_LOAD_PROGRESS") {
+                progressHandler?.(event.data.content);
+            }
+        });
 
         this.state = "moving";
         this.port.postMessage({ type: "LOAD_GAME", content: { gameId, version } });
 
         const response = await this.waitFor("GAME_LOADED", "GAME_LOAD_FAILED");
+
+        progressHandler?.({ state: "finishing" });
 
         await this.moveTo("/index.html");
         this.state = "loaded";

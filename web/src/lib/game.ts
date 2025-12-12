@@ -342,6 +342,10 @@ export class Game {
     }
 
     public async intoResponse(auth: { for: "recurser", rc_id: string } | { for: "public" } | { for: "cabinet" }, config: { withR2Key: boolean } = { withR2Key: false }): Promise<object | undefined> {
+        if (this.data.admin_lock_reason != undefined && auth.for === "public") {
+            return undefined;
+        }
+
         const versions = (await Promise.all(this.data.versions.map(async version => {
             if (version.status !== "published") {
                 return undefined;
@@ -383,6 +387,7 @@ export class Game {
                 dependencies: version.dependencies.map(v => ({ name: v.dependencyName, version: v.dependencyVersion })),
                 permissions: version.permissions ?? [],
                 categories: version.categories.map(v => v.category.name),
+                createdAt: version.createdAt?.toISOString(),
                 remixOf: version.remixOf == null ? undefined : {
                     id: version.remixOf.game.id,
                     name: version.remixOf.game.name,
@@ -415,6 +420,7 @@ export class Game {
         return {
             id: this.data.id,
             name: this.data.name,
+            admin_lock_reason: this.data.admin_lock_reason,
             git: {
                 ssh: `git@github.com:${this.data.github_repo}.git`,
                 https: `https://github.com/${this.data.github_repo}`,

@@ -1,0 +1,453 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "375c4f22-5831-42e4-a217-6a393bebb65d",
+  "prevId": "73d1b69a-fe09-4d60-bd69-341ba909bd24",
+  "tables": {
+    "categories": {
+      "name": "categories",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "categories_name_unique": {
+          "name": "categories_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "game_authors": {
+      "name": "game_authors",
+      "columns": {
+        "game_id": {
+          "name": "game_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "game_version": {
+          "name": "game_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recurse_id": {
+          "name": "recurse_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "game_authors_game_id_version_idx": {
+          "name": "game_authors_game_id_version_idx",
+          "columns": [
+            "game_id",
+            "game_version"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "game_authors_game_id_game_version_game_versions_game_id_version_fk": {
+          "name": "game_authors_game_id_game_version_game_versions_game_id_version_fk",
+          "tableFrom": "game_authors",
+          "tableTo": "game_versions",
+          "columnsFrom": [
+            "game_id",
+            "game_version"
+          ],
+          "columnsTo": [
+            "game_id",
+            "version"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "game_dependencies": {
+      "name": "game_dependencies",
+      "columns": {
+        "game_id": {
+          "name": "game_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "game_version": {
+          "name": "game_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dependency_name": {
+          "name": "dependency_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "dependency_version": {
+          "name": "dependency_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "game_dependencies_game_id_version_idx": {
+          "name": "game_dependencies_game_id_version_idx",
+          "columns": [
+            "game_id",
+            "game_version"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "game_dependencies_game_id_game_version_game_versions_game_id_version_fk": {
+          "name": "game_dependencies_game_id_game_version_game_versions_game_id_version_fk",
+          "tableFrom": "game_dependencies",
+          "tableTo": "game_versions",
+          "columnsFrom": [
+            "game_id",
+            "game_version"
+          ],
+          "columnsTo": [
+            "game_id",
+            "version"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "game_version_categories": {
+      "name": "game_version_categories",
+      "columns": {
+        "game_id": {
+          "name": "game_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "game_version": {
+          "name": "game_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "game_version_categories_game_id_version_idx": {
+          "name": "game_version_categories_game_id_version_idx",
+          "columns": [
+            "game_id",
+            "game_version"
+          ],
+          "isUnique": false
+        },
+        "game_version_categories_category_id_idx": {
+          "name": "game_version_categories_category_id_idx",
+          "columns": [
+            "category_id"
+          ],
+          "isUnique": false
+        },
+        "game_version_categories_game_id_game_version_category_id_unique": {
+          "name": "game_version_categories_game_id_game_version_category_id_unique",
+          "columns": [
+            "game_id",
+            "game_version",
+            "category_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "game_version_categories_category_id_categories_id_fk": {
+          "name": "game_version_categories_category_id_categories_id_fk",
+          "tableFrom": "game_version_categories",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "game_version_categories_game_id_game_version_game_versions_game_id_version_fk": {
+          "name": "game_version_categories_game_id_game_version_game_versions_game_id_version_fk",
+          "tableFrom": "game_version_categories",
+          "tableTo": "game_versions",
+          "columnsFrom": [
+            "game_id",
+            "game_version"
+          ],
+          "columnsTo": [
+            "game_id",
+            "version"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "game_versions": {
+      "name": "game_versions",
+      "columns": {
+        "game_id": {
+          "name": "game_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "visibility": {
+          "name": "visibility",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "permissions": {
+          "name": "permissions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "has_thumbnail": {
+          "name": "has_thumbnail",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "remix_of_game_id": {
+          "name": "remix_of_game_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "remix_of_version": {
+          "name": "remix_of_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "game_versions_game_id_idx": {
+          "name": "game_versions_game_id_idx",
+          "columns": [
+            "game_id"
+          ],
+          "isUnique": false
+        },
+        "game_versions_game_id_version_unique": {
+          "name": "game_versions_game_id_version_unique",
+          "columns": [
+            "game_id",
+            "version"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "game_versions_game_id_games_id_fk": {
+          "name": "game_versions_game_id_games_id_fk",
+          "tableFrom": "game_versions",
+          "tableTo": "games",
+          "columnsFrom": [
+            "game_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "game_versions_remix_of_game_id_remix_of_version_game_versions_game_id_version_fk": {
+          "name": "game_versions_remix_of_game_id_remix_of_version_game_versions_game_id_version_fk",
+          "tableFrom": "game_versions",
+          "tableTo": "game_versions",
+          "columnsFrom": [
+            "remix_of_game_id",
+            "remix_of_version"
+          ],
+          "columnsTo": [
+            "game_id",
+            "version"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "games": {
+      "name": "games",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "github_author": {
+          "name": "github_author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "github_repo": {
+          "name": "github_repo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_rc_id": {
+          "name": "owner_rc_id",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "admin_disable_reason": {
+          "name": "admin_disable_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "games_name_idx": {
+          "name": "games_name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

@@ -26,6 +26,10 @@ export class Game {
         return this._versions;
     }
 
+    public lockReason(): string | undefined {
+        return this.apiResponse.admin_lock_reason;
+    }
+
     public latest(): GameVersion {
         const latest = semver.sort(this._versions.map(v => v.version())).pop()!;
 

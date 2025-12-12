@@ -7,7 +7,9 @@
 
 	const latest = game.latest();
 	const plugins = getCapabilities(latest.dependencies());
-	const visConfig = getVisConfig(latest.visibility());
+	const visConfig = game.lockReason()
+		? { label: 'HUB', class: 'vis-internal', icon: '⚠️' }
+		: getVisConfig(latest.visibility());
 </script>
 
 <div class="deck-unit" in:fly={{ y: 40, duration: 600, delay: index * 100 }}>

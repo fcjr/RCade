@@ -6,7 +6,8 @@
 	import InputClassicPlugin, {
 		InputClassicEmulator
 	} from '$lib/component/plugins/@rcade/input-classic/plugin.svelte';
-	import { RCadeWebEngine } from '@rcade/engine';
+	import { RCadeWebEngine, type ProgressReport } from '@rcade/engine';
+	import type { Game, GameVersion } from '@rcade/api';
 
 	let { data }: { data: PageData } = $props();
 
@@ -27,7 +28,7 @@
 	let current_state:
 		| { kind: 'idle' }
 		| { kind: 'initializing' }
-		| { kind: 'downloading'; state: string; progress: number; size: number }
+		| { kind: 'loading'; progress: ProgressReport }
 		| { kind: 'playing' }
 		| { kind: 'error'; error: string } = $state({ kind: 'idle' });
 
@@ -70,17 +71,75 @@
 		};
 	});
 
+	$effect(() => {
+		handleUpdate(data.game, data.version);
+	});
+
+	async function handleUpdate(game: Game, version: GameVersion) {
+		if (ENGINE == undefined) return undefined;
+
+		try {
+			current_state = { kind: 'initializing' };
+
+			await ENGINE.unload();
+
+			await ENGINE.load(game.id(), version.version(), (progress) => {
+				if (current_state.kind !== 'loading' && current_state.kind !== 'initializing') return;
+
+				current_state = { kind: 'loading', progress };
+			});
+
+			current_state = { kind: 'playing' };
+		} catch (err) {
+			current_state = { kind: 'error', error: (err as Error).message };
+			return;
+		}
+	}
+
+	let ENGINE: RCadeWebEngine | undefined = undefined;
+
 	async function play() {
 		current_state = { kind: 'initializing' };
 
-		const engine = await RCadeWebEngine.initialize(gameContents);
+		try {
+			ENGINE ??= await RCadeWebEngine.initialize(gameContents);
 
-		engine.register(plugin);
+			ENGINE.register(plugin);
 
-		await engine.load(data.game.id(), data.version.version());
+			await ENGINE.load(data.game.id(), data.version.version(), (progress) => {
+				if (current_state.kind !== 'loading' && current_state.kind !== 'initializing') return;
+
+				current_state = { kind: 'loading', progress };
+			});
+
+			current_state = { kind: 'playing' };
+		} catch (err) {
+			current_state = { kind: 'error', error: (err as Error).message };
+			return;
+		}
 
 		// Scale after content is loaded
 		setTimeout(scaleGameContents, 100);
+	}
+
+	function formatRelativeDate(created: Date) {
+		const now = new Date();
+		const diffMs = +now - +created;
+		const diffSecs = Math.floor(diffMs / 1000);
+		const diffMins = Math.floor(diffSecs / 60);
+		const diffHours = Math.floor(diffMins / 60);
+		const diffDays = Math.floor(diffHours / 24);
+		const diffWeeks = Math.floor(diffDays / 7);
+		const diffMonths = Math.floor(diffDays / 30);
+		const diffYears = Math.floor(diffDays / 365);
+
+		if (diffYears > 0) return `${diffYears}Y`;
+		if (diffMonths > 0) return `${diffMonths}M`;
+		if (diffWeeks > 0) return `${diffWeeks}W`;
+		if (diffDays > 0) return `${diffDays}D`;
+		if (diffHours > 0) return `${diffHours}h`;
+		if (diffMins > 0) return `${diffMins}m`;
+		return 'now';
 	}
 </script>
 
@@ -111,7 +170,71 @@
 									</div>
 								</div>
 							{/if}
-							<div class="game-overlay"></div>
+							<div
+								class="game-overlay"
+								class:active={current_state.kind !== 'idle' && current_state.kind !== 'playing'}
+							>
+								{#if current_state.kind === 'initializing'}
+									<div class="status-indicator">
+										<div class="spinner"></div>
+										<div class="status-text">INITIALIZING RUNTIME...</div>
+									</div>
+								{:else if current_state.kind === 'loading'}
+									{@const p = current_state.progress}
+									<div class="loading-terminal">
+										<div class="terminal-header">LOADING</div>
+
+										<div class="status-text blink">
+											{#if p.state === 'starting'}
+												>> INITIALIZING ENVIRONMENT...
+											{:else if p.state === 'fetching'}
+												>> RETRIEVING PACKAGE MANIFEST...
+											{:else if p.state === 'downloading'}
+												>> STREAMING DATA BLOCKS...
+											{:else if p.state === 'opening'}
+												>> MOUNTING VFS...
+											{:else if p.state === 'clearing_cache'}
+												>> PURGING STALE DATA...
+											{:else if p.state === 'unpacking'}
+												>> DECOMPRESSING ASSETS...
+											{:else if p.state === 'caching'}
+												>> BUILDING CACHE...
+											{:else if p.state === 'finishing'}
+												>> FINALIZING LINK...
+											{/if}
+										</div>
+
+										{#if p.state === 'downloading' || p.state === 'caching' || p.state === 'clearing_cache'}
+											{@const percent =
+												p.state === 'downloading' && p.total
+													? p.progress
+													: p.state === 'caching' || p.state === 'clearing_cache'
+														? (p.current_index / p.total) * 100
+														: 0}
+											<div class="progress-track">
+												<div class="progress-fill" style="width: {percent}%"></div>
+											</div>
+											<div class="progress-numbers">
+												{#if p.state === 'downloading' && p.total}
+													{(((p.progress / 100) * p.total) / 1024 / 1024).toFixed(1)}MB / {(
+														p.total /
+														1024 /
+														1024
+													).toFixed(1)}MB
+												{:else if p.state === 'caching' || p.state === 'clearing_cache'}
+													FILE {p.current_index} / {p.total}
+												{/if}
+											</div>
+										{/if}
+									</div>
+								{:else if current_state.kind === 'error'}
+									<div class="error-panel">
+										<div class="error-title">FATAL ERROR</div>
+										<div class="error-code">RUNTIME_EXCEPTION</div>
+										<p class="error-msg">{current_state.error}</p>
+									</div>
+								{/if}
+							</div>
 							<div class="game-contents" bind:this={gameContents}></div>
 						</div>
 
@@ -130,6 +253,18 @@
 					<span class="updated-tag">ID: {data.game.id()}</span>
 				</div>
 			</div>
+
+			{#if data.game.lockReason() != undefined}
+				<DeckUnit serialNo="ADMIN NOTE" class="info-unit">
+					<div class="panel-body">
+						{#if data.game.lockReason() == ''}
+							<p class="desc-text">An admin locked this game from public access.</p>
+						{:else}
+							<p class="desc-text">{data.game.lockReason()}</p>
+						{/if}
+					</div>
+				</DeckUnit>
+			{/if}
 
 			<DeckUnit serialNo="AUTHORS" class="info-unit">
 				<div class="panel-body table-body">
@@ -199,16 +334,20 @@
 				<div class="panel-body list-body">
 					{#each data.game.versions().reverse() as ver}
 						<a
-							href="/games/{data.game.name()}/{ver.version()}"
+							href={ver.version() === data.game.latest().version()
+								? '/games/' + data.game.name()
+								: '/games/' + data.game.name() + '/' + ver.version()}
 							class="version-row"
 							class:active={ver.version() === data.version.version()}
 						>
 							<div class="ver-info">
 								<span class="ver-id">v{ver.version()}</span>
 							</div>
-							<div class="ver-meta">
-								<span class="ver-date">TODO</span>
-							</div>
+							{#if ver.createdAt() != undefined}
+								<div class="ver-meta">
+									<span class="ver-date">{formatRelativeDate(ver.createdAt()!)}</span>
+								</div>
+							{/if}
 						</a>
 					{/each}
 				</div>
@@ -281,29 +420,6 @@
 		margin-bottom: 2rem;
 	}
 
-	/* --- Left Column: The Stage --- */
-	.deck-unit.full-size {
-		height: auto;
-		border-radius: 4px;
-		box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
-		background-color: var(--deck-bg);
-		display: flex;
-		flex-direction: column;
-	}
-
-	/* --- Controls & Monitor --- */
-	.deck-controls-strip {
-		padding: 10px 16px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		background: var(--deck-face);
-	}
-	.primary-controls,
-	.secondary-controls {
-		display: flex;
-		gap: 0.5rem;
-	}
 	.bezel-housing {
 		padding: 1rem;
 		background: var(--deck-bg);
@@ -337,6 +453,7 @@
 		image-rendering: pixelated;
 	}
 	.game-contents {
+		pointer-events: none;
 		transform-origin: center center;
 		transition: transform 0.2s ease-out;
 	}
@@ -347,48 +464,6 @@
 		font-family: 'Orbitron', sans-serif;
 		text-align: center;
 		margin-top: 12px;
-	}
-	.ctrl-btn {
-		border: none;
-		font-family: 'Chakra Petch', sans-serif;
-		font-weight: 700;
-		padding: 4px 12px;
-		cursor: pointer;
-		border-radius: 2px;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 0.8rem;
-		transition: all 0.2s;
-	}
-	.ctrl-btn.execute {
-		background: rgba(46, 204, 113, 0.1);
-		border: 1px solid var(--deck-success);
-		color: var(--deck-success);
-	}
-	.ctrl-btn.execute:hover {
-		background: var(--deck-success);
-		color: #000;
-		box-shadow: 0 0 10px var(--deck-success);
-	}
-	.ctrl-btn.halt {
-		background: rgba(231, 76, 60, 0.1);
-		border: 1px solid var(--deck-danger);
-		color: var(--deck-danger);
-	}
-	.ctrl-btn.halt:hover {
-		background: var(--deck-danger);
-		color: #fff;
-		box-shadow: 0 0 10px var(--deck-danger);
-	}
-	.ctrl-btn.icon-only {
-		background: transparent;
-		color: #666;
-		padding: 4px;
-		font-size: 1rem;
-	}
-	.ctrl-btn.icon-only:hover {
-		color: #fff;
 	}
 	.overlay-ui {
 		position: absolute;
@@ -421,12 +496,6 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
-	}
-	.blink {
-		animation: blinker 1.5s linear infinite;
-		color: #fff;
-		font-size: 0.8rem;
-		letter-spacing: 2px;
 	}
 	@keyframes blinker {
 		50% {
@@ -463,15 +532,6 @@
 	}
 	.updated-tag {
 		color: #666;
-	}
-
-	.info-unit .panel-body {
-		background: var(--deck-face);
-		border-left: 2px solid rgba(255, 255, 255, 0.05);
-	}
-
-	.info-unit .panel-body:not(.list-body):not(.table-body) {
-		padding: 1rem;
 	}
 
 	.list-body {
@@ -515,13 +575,6 @@
 	.version-row.active .ver-id {
 		color: var(--deck-success);
 	}
-	.ver-label {
-		font-size: 0.7rem;
-		padding: 2px 6px;
-		background: #111;
-		border-radius: 4px;
-		color: #666;
-	}
 	.ver-meta {
 		display: flex;
 		align-items: center;
@@ -530,12 +583,6 @@
 	.ver-date {
 		font-size: 0.75rem;
 		color: #555;
-	}
-	.ver-indicator {
-		font-size: 0.6rem;
-		color: var(--deck-success);
-		font-weight: 700;
-		letter-spacing: 1px;
 	}
 	.table-body {
 		padding: 0 !important;
@@ -645,6 +692,148 @@
 		background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
 		z-index: 10;
 		pointer-events: none;
+	}
+
+	/* --- Game Overlay & Loading States --- */
+	.game-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(15, 15, 15, 0.95);
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.3s ease;
+		backdrop-filter: blur(4px);
+	}
+
+	.game-overlay.active {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	/* Initializing Spinner */
+	.status-indicator {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		color: var(--deck-text);
+		font-family: 'Orbitron', sans-serif;
+	}
+
+	.spinner {
+		width: 40px;
+		height: 40px;
+		border: 3px solid rgba(255, 255, 255, 0.1);
+		border-top-color: var(--deck-accent);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* Loading Terminal */
+	.loading-terminal {
+		width: 80%;
+		max-width: 300px;
+		font-family: 'Roboto Mono', monospace;
+		color: var(--deck-accent);
+	}
+
+	.terminal-header {
+		font-size: 0.7rem;
+		color: #666;
+		border-bottom: 1px solid #333;
+		margin-bottom: 0.5rem;
+		padding-bottom: 0.25rem;
+	}
+
+	.status-text {
+		font-size: 0.9rem;
+		margin-bottom: 1rem;
+		min-height: 1.2em;
+	}
+
+	.blink {
+		animation: blinker 1s linear infinite;
+	}
+
+	.progress-track {
+		height: 6px;
+		background: #111;
+		border: 1px solid #444;
+		margin-bottom: 0.5rem;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.progress-fill {
+		height: 100%;
+		background: var(--deck-accent);
+		width: 0%;
+		transition: width 0.1s linear;
+		box-shadow: 0 0 10px var(--deck-accent);
+	}
+
+	.progress-numbers {
+		font-size: 0.7rem;
+		color: #666;
+		text-align: right;
+	}
+
+	/* Error State */
+	.error-panel {
+		border: 1px solid var(--deck-danger);
+		background: rgba(231, 76, 60, 0.1);
+		padding: 2rem;
+		text-align: center;
+		max-width: 90%;
+	}
+
+	.error-title {
+		color: var(--deck-danger);
+		font-weight: 700;
+		font-size: 1.5rem;
+		margin-bottom: 0.5rem;
+		font-family: 'Orbitron', sans-serif;
+	}
+
+	.error-code {
+		font-family: 'Roboto Mono', monospace;
+		font-size: 0.8rem;
+		color: #fff;
+		background: var(--deck-danger);
+		display: inline-block;
+		padding: 2px 6px;
+		margin-bottom: 1rem;
+	}
+
+	.error-msg {
+		color: #ccc;
+		font-size: 0.9rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.retry-btn {
+		background: transparent;
+		border: 1px solid var(--deck-text);
+		color: var(--deck-text);
+		padding: 0.5rem 1rem;
+		cursor: pointer;
+		font-family: 'Orbitron', sans-serif;
+		transition: all 0.2s;
+	}
+
+	.retry-btn:hover {
+		background: var(--deck-text);
+		color: #000;
 	}
 
 	@media (max-width: 768px) {

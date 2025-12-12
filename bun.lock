@@ -288,6 +288,7 @@
       "dependencies": {
         "@rcade/api": "workspace:*",
         "@rcade/engine": "workspace:*",
+        "acorn": "^8.15.0",
         "cheerio": "^1.1.2",
         "modern-tar": "^0.7.2",
       },

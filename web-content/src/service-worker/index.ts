@@ -6,8 +6,30 @@ import { getMimeType } from "./mime";
 import { read, remove, write } from "./persistence";
 import * as cheerio from "cheerio";
 import { inject } from "../lib/inject";
+import * as acorn from 'acorn';
 
 const DEV_MODE = false;
+
+function getFunctionBody(fn: (...vals: any[]) => any) {
+    const code = fn.toString();
+
+    // Parse the function
+    const ast = acorn.parse(code, { ecmaVersion: 2020 });
+
+    // The function will be the first node in the program body
+    const functionNode = ast.body[0];
+
+    if (functionNode.type === 'FunctionDeclaration') {
+        // Extract just the body content (between the braces)
+        const bodyStart = functionNode.body.start;
+        const bodyEnd = functionNode.body.end;
+
+        // Get the content, removing the outer braces
+        return code.slice(bodyStart + 1, bodyEnd - 1).trim();
+    }
+
+    throw new Error('Not a function declaration');
+}
 
 function determineDevUrl(url: URL) {
     if (url.pathname.startsWith("/@fs"))
@@ -75,7 +97,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
                 const $ = cheerio.load(await response.text());
                 $('head').prepend(`
                     <script>
-                        ${inject.toString()}
+                        (function() { ${getFunctionBody(inject)} })();
                     </script>
                 `)
                 return new Response($.html(), {
@@ -163,7 +185,38 @@ function resolveAbsolutePath(relativePath: string, basePath: string, game_id: st
     return absoluteUrl;
 }
 
+type ProgressReport = {
+    state: "starting"
+} | {
+    state: "fetching"
+} | {
+    state: "downloading",
+    progress: number,
+    total?: number
+} | {
+    state: "opening",
+} | {
+    state: "clearing_cache",
+    current: string,
+    current_index: number,
+    total: number,
+} | {
+    state: "unpacking",
+} | {
+    state: "caching",
+    current: string,
+    current_index: number,
+    total: number,
+}
+
+function announceProgress(progress: ProgressReport) {
+    if (CURRENT_PORT !== undefined)
+        CURRENT_PORT.postMessage({ type: "GAME_LOAD_PROGRESS", content: progress });
+}
+
 export async function loadGame(game_id: string, version: string | "latest") {
+    announceProgress({ state: "starting" });
+
     const game = await client.getGame(game_id);
     let ver;
 
@@ -181,21 +234,55 @@ export async function loadGame(game_id: string, version: string | "latest") {
     if (contentUrl === undefined)
         throw new Error("No content URL for this version");
 
+    announceProgress({ state: "fetching" });
+
     const content = await fetch(contentUrl);
-    const contentBlob = await content.blob();
+    const contentLength = content.headers.get('content-length');
+    const total = contentLength ? parseInt(contentLength, 10) : undefined;
+
+    let loaded = 0;
+    const reader = content.body!.getReader();
+    const chunks: Uint8Array<ArrayBuffer>[] = [];
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        loaded += value.length;
+
+        // Report progress
+        const progress = total ? (loaded / total) * 100 : 0;
+        announceProgress({ state: "downloading", progress, total });
+    }
+
+    const contentBlob = new Blob(chunks);
 
     // response is a .tar.gz
 
+    announceProgress({ state: "opening" });
     const cache = await caches.open(`${game_id}/${ver.version()}`);
     const ds = new DecompressionStream('gzip');
     const decompressedStream = contentBlob.stream().pipeThrough(ds);
 
-    for (const key of await cache.keys()) {
-        console.log(`Clearing`, key.url);
+    const cache_keys = await cache.keys();
+
+    for (const key of cache_keys) {
+        announceProgress({
+            state: "clearing_cache",
+            current: key.url,
+            current_index: cache_keys.indexOf(key) + 1,
+            total: cache_keys.length,
+        })
         await cache.delete(key);
     }
 
-    for (const entry of await unpackTar(decompressedStream)) {
+    announceProgress({ state: "unpacking" });
+    const entries = await unpackTar(decompressedStream);
+
+    const file_count = entries.filter(entry => entry.header.type === "file").length;
+
+    for (const entry of entries) {
         if (entry.header.type === "file") {
             const response = new Response((entry.data?.buffer as ArrayBuffer) ?? new ArrayBuffer(0));
 
@@ -203,7 +290,12 @@ export async function loadGame(game_id: string, version: string | "latest") {
 
             const path = resolveAbsolutePath(entry.header.name, "/", game_id, ver.version());
 
-            console.log(`Caching`, path.toString());
+            announceProgress({
+                state: "caching",
+                current: path.toString(),
+                current_index: entries.indexOf(entry) + 1,
+                total: file_count,
+            });
             await cache.put(path, response);
         }
     }

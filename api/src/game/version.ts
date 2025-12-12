@@ -61,4 +61,12 @@ export class GameVersion {
     public permissions(): Permission[] {
         return this.apiResponse.permissions ?? [];
     }
+
+    public createdAt(): Date | undefined {
+        if (this.apiResponse.createdAt == undefined) {
+            return undefined;
+        }
+
+        return new Date(this.apiResponse.createdAt)
+    }
 }

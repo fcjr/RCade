@@ -17,6 +17,7 @@ export const games = sqliteTable('games', {
     github_author: text("github_author").notNull(),
     github_repo: text("github_repo").notNull(),
     owner_rc_id: numeric("owner_rc_id").notNull(),
+    admin_lock_reason: text("admin_lock_reason"),
 }, (t) => [
     index("games_name_idx").on(t.name),
 ]);
@@ -30,6 +31,7 @@ export const gameVersions = sqliteTable('game_versions', {
     status: text("status", { enum: ["pending", "published"] }).notNull(),
     permissions: text("permissions", { mode: "json" }).$type<string[]>(),
     hasThumbnail: integer("has_thumbnail").notNull().$default(() => 0),
+    createdAt: integer('created_at', { mode: 'timestamp' }),
 
     remixOfGameId: text("remix_of_game_id"),
     remixOfVersion: text("remix_of_version"),
