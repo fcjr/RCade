@@ -45,7 +45,7 @@ export class RCadeWebEngine {
     }
 
     static async initialize(element: HTMLElement, config: Partial<RCadeWebEngineConfig> = {}) {
-        const appUrl = new URL(config.appUrl ?? "https://rcade-usercontent.recurse.com");
+        const appUrl = new URL(config.appUrl ?? "https://usercontent.rcade.dev");
 
         appUrl.pathname = "/__rcade_blank";
 
