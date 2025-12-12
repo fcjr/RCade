@@ -51,6 +51,10 @@ export function parseCliArgs(): CliOptions {
                 type: 'boolean',
                 default: false
             },
+            'force-screensaver': {
+                type: "boolean",
+                default: false,
+            },
             'scale': {
                 type: 'string'
             },
@@ -102,6 +106,7 @@ export function parseCliArgs(): CliOptions {
         noExit: values['no-exit'] ?? false,
         dev: values['dev'] ?? false,
         devtools: values['devtools'],
+        forceScreensaver: values['force-screensaver'],
         scale,
         overrides,
         menuManifest

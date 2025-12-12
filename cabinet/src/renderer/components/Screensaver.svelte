@@ -1,10 +1,17 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import octopusImg from "/octopus.png";
+  import type { ScreensaverConfig } from "@rcade/plugin-sleep";
 
-  const IDLE_TIMEOUT_MS = 30_000;
+  const IDLE_TIMEOUT_MS = 3_000;
   const LOGO_SIZE = 60;
   const SPEED = 0.05;
+  const DEFAULT_CONFIG: Required<ScreensaverConfig> = {
+    transparent: false,
+    visible: true
+  }
+
+  let config: Required<ScreensaverConfig> = $state(DEFAULT_CONFIG);
 
   let isIdle = $state(false);
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -75,13 +82,30 @@
     animationFrame = requestAnimationFrame(animateLogo);
   }
 
+  $effect(() => {
+    if (isIdle) window.rcade.screensaverStarted();
+    else window.rcade.screensaverStopped();
+  });
+
+  function screensaverConfigChanged(newConfig: ScreensaverConfig) {
+    config = Object.assign(config, newConfig);
+  }
+
+  function unloadedGame() {
+    config = Object.create(DEFAULT_CONFIG);
+  }
+
   let unsubscribeInputActivity: (() => void) | undefined;
+  let unsubscribeScreensaverConfigChanged: (() => void) | undefined;
+  let unsubscribeUnloadGame: (() => void) | undefined; 
 
   onMount(() => {
     window.addEventListener('keydown', resetIdleTimer, true);
     window.addEventListener('keyup', resetIdleTimer, true);
     // Also listen for input activity from main process (captures iframe key events)
     unsubscribeInputActivity = window.rcade.onInputActivity(resetIdleTimer);
+    unsubscribeScreensaverConfigChanged = window.rcade.onScreensaverConfigChanged(screensaverConfigChanged);
+    unsubscribeUnloadGame = window.rcade.onUnloadGame(unloadedGame)
     resetIdleTimer();
   });
 
@@ -91,11 +115,13 @@
     window.removeEventListener('keydown', resetIdleTimer, true);
     window.removeEventListener('keyup', resetIdleTimer, true);
     unsubscribeInputActivity?.();
+    unsubscribeScreensaverConfigChanged?.();
+    unsubscribeUnloadGame?.();
   });
 </script>
 
-{#if isIdle}
-  <div class="screensaver">
+{#if isIdle && config.visible}
+  <div class="screensaver {config.transparent ? '' : 'black-bg'}">
     <img
       class="logo"
       src={octopusImg}
@@ -112,8 +138,11 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: #000;
     z-index: 9999;
+  }
+
+  .black-bg {
+    background: #000
   }
 
   .logo {
