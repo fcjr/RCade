@@ -3,18 +3,69 @@
 	import GameCard from '$lib/component/GameCard.svelte';
 	import SearchControls from '$lib/component/sections/SearchControls.svelte';
 	import type { PageData } from './$types';
+	import type { Game } from '@rcade/api';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
-	let searchQuery = $state('');
-	let activeFilter = $state('ALL');
+	let searchQuery = $derived(page.url.searchParams.get('q') ?? '');
+	let activeFilters: string[] = $derived(page.url.searchParams.getAll('c'));
 
 	function handleSearch(value: string) {
-		searchQuery = value;
+		console.log('Search Value:', value);
+
+		if (value) {
+			page.url.searchParams.set('q', value);
+		} else {
+			page.url.searchParams.delete('q');
+		}
+
+		goto(page.url, { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
-	function handleFilter(filter: string) {
-		activeFilter = filter;
+	function handleFilter(filters: string[]) {
+		console.log('Filter Values:', filters);
+
+		if (filters.length > 0) {
+			page.url.searchParams.delete('c');
+			filters.forEach((filter) => {
+				page.url.searchParams.append('c', filter);
+			});
+		} else {
+			page.url.searchParams.delete('c');
+		}
+
+		goto(page.url, { replaceState: true, noScroll: true, keepFocus: true });
+	}
+
+	const filters = $derived.by(() => {
+		return data.games
+			.map((game) => game.latest())
+			.map((version) => version.categories())
+			.flat()
+			.map((category) => category.name)
+			.filter((value, index, self) => self.indexOf(value) === index)
+			.sort();
+	});
+
+	function matchesFilter(game: Game, query: string, filter: string[]) {
+		const latest = game.latest();
+
+		const nameMatch = (latest.displayName() ?? game.name())
+			.toLowerCase()
+			.includes(query.toLowerCase());
+
+		const categoryMatch =
+			filter.length === 0 ||
+			filter.every((f) =>
+				latest
+					.categories()
+					.map((c) => c.name)
+					.includes(f)
+			);
+
+		return nameMatch && categoryMatch;
 	}
 </script>
 
@@ -27,10 +78,11 @@
 
 		<div class="controls">
 			<SearchControls
-				searchValue={searchQuery}
-				{activeFilter}
+				bind:searchValue={searchQuery}
 				onSearch={handleSearch}
 				onFilter={handleFilter}
+				{filters}
+				{activeFilters}
 			/>
 		</div>
 	</section>
@@ -38,7 +90,11 @@
 	<div class="container">
 		<section class="games-grid">
 			{#each data.games as game, i (game.id())}
-				<GameCard {game} index={i} />
+				{#if matchesFilter(game, searchQuery, activeFilters)}
+					<div in:fly={{ y: 20, duration: 400, delay: i * 50 }}>
+						<GameCard {game} index={i} />
+					</div>
+				{/if}
 			{/each}
 		</section>
 	</div>

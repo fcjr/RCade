@@ -7,7 +7,13 @@
 		children: any;
 	}
 
-	let { active = false, disabled = false, class: className = '', onclick }: Props = $props();
+	let {
+		active = false,
+		disabled = false,
+		class: className = '',
+		onclick,
+		children
+	}: Props = $props();
 </script>
 
 <button
@@ -15,7 +21,7 @@
 	{disabled}
 	{onclick}
 >
-	<slot></slot>
+	{@render children()}
 </button>
 
 <style>

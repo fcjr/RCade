@@ -69,4 +69,8 @@ export class GameVersion {
 
         return new Date(this.apiResponse.createdAt)
     }
+
+    public categories(): { name: string, id: string, description: string }[] {
+        return this.apiResponse.categories ?? [];
+    }
 }

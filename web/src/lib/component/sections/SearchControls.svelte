@@ -1,36 +1,59 @@
 <script lang="ts">
 	import SearchInput from '../common/SearchInput.svelte';
 	import FilterPill from '../common/FilterPill.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	interface Props {
 		searchValue?: string;
-		activeFilter?: string;
 		onSearch?: (value: string) => void;
-		onFilter?: (filter: string) => void;
+		onFilter?: (filters: string[]) => void;
 		class?: string;
+		filters?: string[];
+		activeFilters?: string[];
 	}
 
 	let {
-		searchValue = '',
-		activeFilter = 'ALL',
+		searchValue = $bindable(''),
 		onSearch,
 		onFilter,
-		class: className = ''
+		class: className = '',
+		filters = $bindable([]),
+		activeFilters = $bindable([])
 	}: Props = $props();
-
-	const filters = ['ALL', 'ACTION', 'PUZZLE', 'TOOLS'];
 </script>
 
 <div class={`search-controls ${className}`}>
-	<SearchInput value={searchValue} placeholder="Search games..." onchange={onSearch} />
+	<SearchInput
+		bind:value={searchValue}
+		placeholder="Search games..."
+		onchange={onSearch}
+		oninput={onSearch}
+	/>
 
-	<div class="filter-pills">
-		{#each filters as filter}
-			<FilterPill active={filter === activeFilter} onclick={() => onFilter?.(filter)}>
-				{filter}
-			</FilterPill>
-		{/each}
-	</div>
+	{#if filters.length > 0}
+		<div class="filter-pills">
+			{#each filters as filter}
+				<FilterPill
+					active={activeFilters.includes(filter)}
+					onclick={() => {
+						if (!onFilter) return;
+
+						const filterSet = new SvelteSet(activeFilters);
+
+						if (filterSet.has(filter)) {
+							filterSet.delete(filter);
+						} else {
+							filterSet.add(filter);
+						}
+
+						onFilter(Array.from(filterSet));
+					}}
+				>
+					{filter}
+				</FilterPill>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>

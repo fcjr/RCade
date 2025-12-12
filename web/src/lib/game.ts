@@ -352,7 +352,7 @@ export class Game {
             }
 
             if (version.visibility !== "public") {
-                if (auth.for === "public" || (auth.for == "recurser" && auth.rc_id !== this.data.owner_rc_id))
+                if (auth.for === "public" || (version.visibility === "private" && auth.for === "recurser" && auth.rc_id !== this.data.owner_rc_id))
                     return undefined;
             }
 
@@ -386,8 +386,8 @@ export class Game {
                 authors: version.authors.map(v => ({ display_name: v.display_name, recurse_id: v.recurse_id })),
                 dependencies: version.dependencies.map(v => ({ name: v.dependencyName, version: v.dependencyVersion })),
                 permissions: version.permissions ?? [],
-                categories: version.categories.map(v => v.category.name),
-                createdAt: version.createdAt?.toISOString(),
+                categories: version.categories.map(v => v.category),
+                createdAt: version.createdAt == undefined ? undefined : isNaN(+version.createdAt) ? undefined : version.createdAt.toISOString(),
                 remixOf: version.remixOf == null ? undefined : {
                     id: version.remixOf.game.id,
                     name: version.remixOf.game.name,

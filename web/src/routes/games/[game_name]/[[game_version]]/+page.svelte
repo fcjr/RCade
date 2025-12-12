@@ -261,7 +261,7 @@
 							<span class="status-light {data.version.visibility()}"></span>
 						</span>
 						<div class="chip-value">
-							{data.version.visibility().toUpperCase()}
+							{data.version.visibility()?.toUpperCase()}
 						</div>
 					</div>
 
@@ -341,6 +341,21 @@
 						</a>
 					</div>
 				</div>
+
+				{#if data.version.categories && data.version.categories().length > 0}
+					<div class="category-strip">
+						{#each data.version.categories() as category}
+							<a
+								href="/games?c={encodeURIComponent(category.name)}"
+								class="category-tag"
+								title={category.description}
+							>
+								<span class="tag-hash">#</span>
+								{category.name}
+							</a>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			{#if data.game.lockReason() != undefined}
@@ -730,6 +745,45 @@
 	.repo-btn.community:hover {
 		border-color: var(--deck-accent);
 		color: var(--deck-accent);
+	}
+
+	/* Categories */
+	.category-strip {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin-top: 12px;
+	}
+
+	.category-tag {
+		display: inline-flex;
+		align-items: center;
+		padding: 4px 10px;
+		background: rgba(0, 0, 0, 0.2);
+		border: 1px solid #333;
+		border-radius: 4px;
+		color: #888;
+		font-family: 'Roboto Mono', monospace;
+		font-size: 0.7rem;
+		text-decoration: none;
+		transition: all 0.2s ease;
+		text-transform: uppercase;
+		font-weight: 500;
+	}
+
+	.category-tag:hover {
+		color: #fff;
+		border-color: var(--deck-accent);
+		background: rgba(230, 126, 34, 0.05);
+	}
+
+	.tag-hash {
+		color: var(--deck-accent);
+		margin-right: 4px;
+		opacity: 0.7;
+	}
+	.category-tag:hover .tag-hash {
+		opacity: 1;
 	}
 
 	.updated-tag {
