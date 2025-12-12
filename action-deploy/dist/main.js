@@ -48049,8 +48049,8 @@ class RCadeDeployClient {
     core3.setSecret(deploymentIntent.upload_thumbnail_url);
     return deploymentIntent;
   }
-  async publishVersion(name2, version3) {
-    const res = await this.httpClient.post(`${RECURSE_BASE_URL}/deployments/${name2}/${version3}/publish`, "");
+  async publishVersion(name2, version3, options = {}) {
+    const res = await this.httpClient.post(`${RECURSE_BASE_URL}/deployments/${name2}/${version3}/publish`, JSON.stringify({ has_thumbnail: options.hasThumbnail ?? false }));
     const body = await res.readBody();
     if (res.message.statusCode !== 200) {
       throw new Error(`Failed to publish version: ${res.message.statusCode} ${res.message.statusMessage} - ${body}`);

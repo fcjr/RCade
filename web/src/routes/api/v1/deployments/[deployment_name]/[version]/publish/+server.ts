@@ -5,6 +5,9 @@ import { invalidateGamesCache } from "$lib/cache";
 import type { RequestHandler } from "@sveltejs/kit";
 import { ZodError } from "zod";
 import * as jose from "jose";
+import { gameVersions } from "$lib/db/schema";
+import { getDb } from "$lib/db";
+import { and, eq } from "drizzle-orm";
 
 const VALIDATOR = new GithubOIDCValidator();
 
@@ -57,6 +60,16 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
         throw error;
     }
 
+    let body;
+
+    try {
+        body = await request.json();
+    } catch (error) {
+        console.warn('Failed to parse request body as JSON, defaulting to empty object:', error);
+        body = {};
+    }
+
+
     const game = await Game.byName(deploymentName);
 
     if (!game) {
@@ -71,6 +84,10 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 
     if (!gameVersion) {
         return jsonResponse({ error: 'Version not found' }, 404);
+    }
+
+    if (body.has_thumbnail) {
+        await game.markVersionHasThumbnail(version);
     }
 
     try {

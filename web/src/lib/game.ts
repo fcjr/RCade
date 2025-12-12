@@ -454,4 +454,14 @@ export class Game {
 
         return result.length > 0;
     }
+
+    public async markVersionHasThumbnail(version: string): Promise<void> {
+        await (await getDb()).update(gameVersions)
+            .set({ hasThumbnail: 1 })
+            .where(and(
+                eq(gameVersions.gameId, this.data.id),
+                eq(gameVersions.version, version)
+            ))
+            .run();
+    }
 }
