@@ -49117,6 +49117,7 @@ async function run() {
     await uploadFileStream(outputPath, intent.upload_url);
     core5.info(`✅ Uploaded artifact`);
     core5.endGroup();
+    let hasThumbnail = false;
     if (manifest.thumbnail) {
       core5.startGroup("\uD83D\uDDBC️ Uploading Thumbnail");
       let data;
@@ -49136,9 +49137,10 @@ async function run() {
       await uploadFromBuffer(data, intent.upload_thumbnail_url);
       core5.info(`✅ Uploaded thumbnail`);
       core5.endGroup();
+      hasThumbnail = true;
     }
     core5.startGroup(`\uD83D\uDCE2 Publishing Version ${intent.version}`);
-    await client.publishVersion(manifest.name, intent.version);
+    await client.publishVersion(manifest.name, intent.version, { hasThumbnail });
     core5.info(`✅ Published version ${intent.version}`);
     core5.endGroup();
     core5.startGroup(`✨ Deployment complete! ✨`);
