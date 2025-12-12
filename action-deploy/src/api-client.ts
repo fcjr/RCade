@@ -24,6 +24,10 @@ const PublishResponse = z.object({
 
 type PublishResponse = z.infer<typeof PublishResponse>;
 
+type PublishOptions = {
+  hasThumbnail?: boolean;
+};
+
 export class RCadeDeployClient {
   private httpClient: HttpClient;
 
@@ -53,10 +57,10 @@ export class RCadeDeployClient {
     return deploymentIntent;
   }
 
-  async publishVersion(name: string, version: string): Promise<PublishResponse> {
+  async publishVersion(name: string, version: string, options: PublishOptions = {}): Promise<PublishResponse> {
     const res = await this.httpClient.post(
       `${RECURSE_BASE_URL}/deployments/${name}/${version}/publish`,
-      ""
+      JSON.stringify({ has_thumbnail: options.hasThumbnail ?? false })
     );
     const body = await res.readBody();
     if (res.message.statusCode !== 200) {
