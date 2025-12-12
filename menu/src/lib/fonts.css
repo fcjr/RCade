@@ -1,0 +1,39 @@
+/* DM Sans - Variable Font */
+@font-face {
+    font-family: 'DM Sans';
+    src: url('/Font/DM_Sans/DMSans-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-stretch: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'DM Sans';
+    src: url('/Font/DM_Sans/DMSans-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-stretch: normal;
+    font-style: italic;
+}
+
+/* JetBrains Mono - Variable Font */
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/Font/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/Font/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+}
+
+/* Syne - Variable Font */
+@font-face {
+    font-family: 'Syne';
+    src: url('/Font/Syne/Syne-VariableFont_wght.ttf') format('truetype');
+    font-weight: 400 800;
+    font-style: normal;
+}

@@ -4,9 +4,36 @@ import { GameManifest } from '@rcade/api';
 import { readFileSync } from 'node:fs';
 import { app } from 'electron';
 
+function splitArgs(argsString: string): string[] {
+    const args: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < argsString.length; i++) {
+        const char = argsString[i];
+
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ' ' && !inQuotes) {
+            if (current) {
+                args.push(current);
+                current = '';
+            }
+        } else {
+            current += char;
+        }
+    }
+
+    if (current) {
+        args.push(current);
+    }
+
+    return args;
+}
+
 export function parseCliArgs(): CliOptions {
     const args = process.env.RCADE_CABINET_ARGS
-        ? process.env.RCADE_CABINET_ARGS.split(' ')
+        ? splitArgs(process.env.RCADE_CABINET_ARGS)
         : app.isPackaged ? process.argv.slice(1) : process.argv.slice(3);
 
     const { values, positionals } = parseArgs({
@@ -29,6 +56,9 @@ export function parseCliArgs(): CliOptions {
             },
             'devtools': {
                 type: 'boolean'
+            },
+            'menu': {
+                type: 'string'
             }
         },
         allowPositionals: true,
@@ -40,6 +70,11 @@ export function parseCliArgs(): CliOptions {
 
     // Parse the first positional as a path
     const path = positionals.length > 0 ? positionals[0] : null;
+
+    // Parse menu manifest
+    const menuManifest = values['menu']
+        ? GameManifest.parse(JSON.parse(readFileSync(values['menu'], "utf-8")))
+        : null;
 
     // Parse overrides
     const overrides = new Map<string, string>();
@@ -68,6 +103,7 @@ export function parseCliArgs(): CliOptions {
         dev: values['dev'] ?? false,
         devtools: values['devtools'],
         scale,
-        overrides
+        overrides,
+        menuManifest
     };
 }

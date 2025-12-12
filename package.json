@@ -17,11 +17,13 @@
     "plugins/input-spinners",
     "vite-plugins",
     "web-content",
-    "engine"
+    "engine",
+    "menu"
   ],
   "scripts": {
     "dev:web": "bun run --cwd web dev",
     "dev:client": "bun run --cwd client dev",
+    "dev:menu": "bun run dev-menu.ts",
     "build:cli": "bun run --cwd cli build",
     "check": "bun run --cwd web check",
     "prepare": "husky"
@@ -30,6 +32,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.4",
     "husky": "^9.1.7"
   }
 }

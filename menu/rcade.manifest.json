@@ -1,0 +1,12 @@
+{
+    "name": "menu",
+    "display_name": "RCade Menu",
+    "description": "The main menu application for RCade, providing game browsing and system settings.",
+    "visibility": "public",
+    "authors": [
+        {
+            "display_name": "Rose Kodsi-Hall",
+            "recurse_id": 6834
+        }
+    ]
+}

@@ -2,11 +2,12 @@ import { type GameInfo } from '../shared/types';
 
 type Route =
   | { page: 'carousel' }
+  | { page: 'blank' }
   | { page: 'game'; game: GameInfo };
 
 const { manifest: initialManifest } = window.rcade.getArgs();
 
-let currentRoute = $state<Route>(initialManifest == null ? { page: 'carousel' } : {
+let currentRoute = $state<Route>(initialManifest == null ? { page: 'blank' } : {
   page: "game", game: {
     id: undefined,
     name: initialManifest.name,
@@ -20,6 +21,10 @@ let currentRoute = $state<Route>(initialManifest == null ? { page: 'carousel' } 
   }
 });
 
+if (currentRoute.page === 'blank') {
+  navigateToMenu();
+}
+
 let lastPlayedGame = $state<GameInfo | null>(null);
 
 export function getRoute() {
@@ -30,8 +35,25 @@ export function getLastPlayedGame() {
   return lastPlayedGame;
 }
 
-export function navigateToCarousel() {
-  currentRoute = { page: 'carousel' };
+let MENU_GAME: GameInfo | undefined = undefined;
+
+export async function navigateToMenu() {
+  currentRoute = { page: 'blank' };
+
+  try {
+    const menuGame = await window.rcade.getMenuGame();
+    MENU_GAME = menuGame;
+  } catch (error) {
+    if (MENU_GAME) {
+      console.warn("Failed to fetch menu game, using cached version:", error);
+    } else {
+      console.error("Failed to fetch menu game and no cached version available:", error);
+      currentRoute = { page: 'carousel' };
+      return;
+    }
+  }
+
+  currentRoute = { page: 'game', game: MENU_GAME };
 }
 
 export function navigateToGame(game: GameInfo) {
