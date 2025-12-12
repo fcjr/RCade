@@ -249,8 +249,97 @@
 		<section class="info-column" in:fly={{ x: 20, duration: 600, delay: 200 }}>
 			<div class="header-panel">
 				<h1 class="game-title">{data.version.displayName()}</h1>
-				<div class="meta-row">
-					<span class="updated-tag">ID: {data.game.id()}</span>
+
+				<div class="control-strip">
+					<div class="sys-chip">
+						<span class="chip-label">ID</span>
+						<span class="chip-value">{data.game.id()}</span>
+					</div>
+
+					<div class="sys-chip">
+						<span class="chip-label icon-label">
+							<span class="status-light {data.version.visibility()}"></span>
+						</span>
+						<div class="chip-value">
+							{data.version.visibility().toUpperCase()}
+						</div>
+					</div>
+
+					{#each data.version.dependencies() as dep}
+						<div class="sys-chip">
+							<span class="chip-label icon-label">
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<path
+										d="M19.428 15.561C17.81 15.561 16.5 16.871 16.5 18.489C16.5 20.107 17.81 21.417 19.428 21.417C21.046 21.417 22.356 20.107 22.356 18.489C22.356 16.871 21.046 15.561 19.428 15.561Z"
+									/>
+									<path
+										d="M15.561 4.572C15.561 2.954 16.871 1.644 18.489 1.644C20.107 1.644 21.417 2.954 21.417 4.572C21.417 6.19 20.107 7.5 18.489 7.5C16.871 7.5 15.561 6.19 15.561 4.572Z"
+									/>
+									<path
+										d="M4.572 15.561C2.954 15.561 1.644 16.871 1.644 18.489C1.644 20.107 2.954 21.417 4.572 21.417C6.19 21.417 7.5 20.107 7.5 18.489C7.5 16.871 6.19 15.561 4.572 15.561Z"
+									/>
+									<path
+										d="M7.5 4.572C7.5 6.19 6.19 7.5 4.572 7.5C2.954 7.5 1.644 6.19 1.644 4.572C1.644 2.954 2.954 1.644 4.572 1.644C6.19 1.644 7.5 2.954 7.5 4.572Z"
+									/>
+									<path d="M7.5 16.839H16.5V18.489H7.5V16.839Z" />
+									<path d="M7.5 4.572H16.5V6.222H7.5V4.572Z" />
+									<path d="M16.839 7.5H18.489V16.5H16.839V7.5Z" />
+									<path d="M4.572 7.5H6.222V16.5H4.572V7.5Z" />
+								</svg>
+							</span>
+							<span class="chip-value">{dep.name} <span class="dim-ver">@{dep.version}</span></span>
+						</div>
+					{/each}
+
+					<div class="repo-actions">
+						{#if data.game.gitHttps()}
+							<a
+								href={data.game.gitHttps()}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="repo-btn source"
+							>
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+									<path
+										d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+									/>
+								</svg>
+								<span>SOURCE</span>
+							</a>
+						{/if}
+						<a
+							href={`https://github.com/rcade-community/${data.game.name()}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="repo-btn community"
+						>
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+								<circle cx="9" cy="7" r="4"></circle>
+								<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+								<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+							</svg>
+							<span>COMMUNITY</span>
+						</a>
+					</div>
 				</div>
 			</div>
 
@@ -277,17 +366,12 @@
 								class="author-row author-row-link"
 							>
 								<div class="author-avatar">
-									{#if false}
-										<!-- <img src={author.image} alt={author.name} /> -->
-									{:else}
+									{#if false}{:else}
 										<div class="avatar-placeholder">{getInitials(author.display_name)}</div>
 									{/if}
 								</div>
 								<div class="author-details">
 									<span class="author-name">{author.display_name}</span>
-									<!-- {#if author.role}
-                                        <span class="author-role">[{author.role}]</span>
-                                    {/if} -->
 								</div>
 								<svg
 									width="16"
@@ -306,17 +390,12 @@
 						{:else}
 							<div class="author-row">
 								<div class="author-avatar">
-									{#if false}
-										<!-- <img src={author.image} alt={author.name} /> -->
-									{:else}
+									{#if false}{:else}
 										<div class="avatar-placeholder">{getInitials(author.display_name)}</div>
 									{/if}
 								</div>
 								<div class="author-details">
 									<span class="author-name">{author.display_name}</span>
-									<!-- {#if author.role}
-                                        <span class="author-role">[{author.role}]</span>
-                                    {/if} -->
 								</div>
 							</div>
 						{/if}
@@ -352,21 +431,6 @@
 					{/each}
 				</div>
 			</DeckUnit>
-
-			<div class="tags-panel">
-				{#each data.version.dependencies() as dep}
-					<span class="tech-pill">{dep.name}@{dep.version}</span>
-				{/each}
-				{#if data.version.visibility() === 'public'}
-					<span class="tech-pill vis-public">PUBLIC</span>
-				{/if}
-				{#if data.version.visibility() === 'internal'}
-					<span class="tech-pill vis-unlisted">INTERNAL</span>
-				{/if}
-				{#if data.version.visibility() === 'private'}
-					<span class="tech-pill vis-private">PRIVATE</span>
-				{/if}
-			</div>
 		</section>
 	</main>
 </div>
@@ -517,19 +581,157 @@
 	.game-title {
 		font-family: 'Syne', sans-serif;
 		font-size: 2.5rem;
-		margin: 0 0 0.5rem 0;
+		margin: 0 0 0.75rem 0;
 		color: #fff;
 		line-height: 1;
 		text-transform: uppercase;
 	}
-	.meta-row {
+
+	/* Repositories & System Chips */
+	.control-strip {
 		display: flex;
-		gap: 1rem;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem;
 		font-family: 'Roboto Mono', monospace;
 		font-size: 0.75rem;
+	}
+
+	.sys-chip {
+		display: flex;
+		align-items: center;
+		background: #111;
+		border: 1px solid #333;
+		border-radius: 4px;
+		overflow: hidden;
+		height: 24px;
+	}
+	.chip-label {
+		background: #222;
 		color: #666;
+		padding: 0 8px;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		border-right: 1px solid #333;
+		font-weight: 700;
+		font-size: 0.7rem;
+	}
+	.chip-label.icon-label {
+		padding: 0 6px;
+		color: #555;
+	}
+	.chip-value {
+		color: #999;
+		padding: 0 8px;
+		white-space: nowrap;
+		height: 100%;
+		display: flex;
 		align-items: center;
 	}
+
+	.status-light {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #555;
+		box-shadow: 0 0 5px currentColor;
+	}
+
+	.status-light.public {
+		background-color: var(--deck-success);
+		box-shadow: 0 0 8px var(--deck-success);
+		animation: pulse-green 2s infinite;
+	}
+	.status-light.internal {
+		background-color: #f39c12;
+		box-shadow: 0 0 8px #f39c12;
+		animation: pulse-orange 2s infinite;
+	}
+	.status-light.private {
+		background-color: var(--deck-danger);
+		box-shadow: 0 0 8px var(--deck-danger);
+		animation: pulse-red 2s infinite;
+	}
+
+	@keyframes pulse-green {
+		0% {
+			box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+		}
+		70% {
+			box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+		}
+		100% {
+			box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+		}
+	}
+	@keyframes pulse-orange {
+		0% {
+			box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4);
+		}
+		70% {
+			box-shadow: 0 0 0 6px rgba(243, 156, 18, 0);
+		}
+		100% {
+			box-shadow: 0 0 0 0 rgba(243, 156, 18, 0);
+		}
+	}
+	@keyframes pulse-red {
+		0% {
+			box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+		}
+		70% {
+			box-shadow: 0 0 0 6px rgba(231, 76, 60, 0);
+		}
+		100% {
+			box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+		}
+	}
+
+	.dim-ver {
+		opacity: 0.5;
+		margin-left: 4px;
+		font-size: 0.9em;
+	}
+
+	.repo-actions {
+		display: flex;
+		gap: 0.5rem;
+		/* Margin-left auto removed for left alignment */
+	}
+
+	.repo-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		text-decoration: none;
+		padding: 4px 10px;
+		border: 1px solid #333;
+		background: rgba(0, 0, 0, 0.2);
+		color: #888;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+		font-weight: 500;
+		letter-spacing: 0.5px;
+		height: 24px;
+		box-sizing: border-box;
+	}
+
+	.repo-btn:hover {
+		background: #222;
+		color: #fff;
+		border-color: #555;
+	}
+
+	.repo-btn.source:hover {
+		border-color: #fff;
+	}
+
+	.repo-btn.community:hover {
+		border-color: var(--deck-accent);
+		color: var(--deck-accent);
+	}
+
 	.updated-tag {
 		color: #666;
 	}
@@ -655,32 +857,6 @@
 		line-height: 1.5;
 		color: #aeb0b3;
 		padding: 1rem;
-	}
-	.tags-panel {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-	.tech-pill {
-		background: #111;
-		border: 1px solid #333;
-		color: #666;
-		font-family: 'Roboto Mono', monospace;
-		font-size: 0.7rem;
-		padding: 4px 8px;
-		border-radius: 100px;
-	}
-	.tech-pill.vis-public {
-		border-color: var(--deck-success);
-		color: var(--deck-success);
-	}
-	.tech-pill.vis-unlisted {
-		border-color: #f39c12;
-		color: #f39c12;
-	}
-	.tech-pill.vis-private {
-		border-color: var(--deck-danger);
-		color: var(--deck-danger);
 	}
 
 	.screen-glare {
@@ -839,6 +1015,18 @@
 	@media (max-width: 768px) {
 		.console-grid {
 			grid-template-columns: 1fr;
+		}
+		.control-strip {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+		.repo-actions {
+			margin-left: 0;
+			width: 100%;
+		}
+		.repo-btn {
+			flex: 1;
+			justify-content: center;
 		}
 	}
 </style>

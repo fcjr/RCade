@@ -35,4 +35,12 @@ export class Game {
 
         return this._versions.find(v => v.version() == latest)!;
     }
+
+    public gitHttps(): string {
+        return this.apiResponse.git.https;
+    }
+
+    public gitSsh(): string {
+        return this.apiResponse.git.ssh;
+    }
 }
