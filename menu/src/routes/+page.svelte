@@ -642,6 +642,15 @@
         inset: 0;
         z-index: 0;
         opacity: 1;
+        transition:
+            filter 0.3s var(--ease-snappy),
+            opacity 0.3s var(--ease-snappy);
+    }
+
+    .shifting-viewport.show-bottom .bg-layer,
+    .shifting-viewport.show-top .bg-layer {
+        filter: brightness(0.4);
+        opacity: 0.5;
     }
 
     .ui-layer {
@@ -653,6 +662,15 @@
         flex-direction: column;
         padding-bottom: 16px;
         box-sizing: border-box;
+        transition:
+            filter 0.3s var(--ease-snappy),
+            opacity 0.3s var(--ease-snappy);
+    }
+
+    .shifting-viewport.show-bottom .ui-layer,
+    .shifting-viewport.show-top .ui-layer {
+        filter: brightness(0.5);
+        /* opacity: 0.3; */
     }
 
     .empty-state {
@@ -694,43 +712,13 @@
     .version-drawer {
         top: 100%;
         height: var(--drawer-height);
-        background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(250, 204, 21, 0.03) 2px,
-                rgba(250, 204, 21, 0.03) 4px
-            ),
-            linear-gradient(
-                to bottom,
-                rgba(250, 204, 21, 0.08),
-                rgba(250, 204, 21, 0.05)
-            );
-        border-top: 1px solid rgba(250, 204, 21, 0.4);
-        box-shadow:
-            0 -4px 20px rgba(250, 204, 21, 0.1),
-            inset 0 1px 0 rgba(250, 204, 21, 0.2);
+        border-top: 1px solid rgba(250, 204, 21, 1);
     }
 
     .filter-drawer {
         bottom: 100%;
         height: var(--filter-drawer-height);
-        background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(250, 204, 21, 0.03) 2px,
-                rgba(250, 204, 21, 0.03) 4px
-            ),
-            linear-gradient(
-                to top,
-                rgba(250, 204, 21, 0.08),
-                rgba(250, 204, 21, 0.05)
-            );
         border-bottom: 1px solid rgba(250, 204, 21, 0.4);
-        box-shadow:
-            0 4px 20px rgba(250, 204, 21, 0.1),
-            inset 0 -1px 0 rgba(250, 204, 21, 0.2);
     }
 
     .drawer-header {
