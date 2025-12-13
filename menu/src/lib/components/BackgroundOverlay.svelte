@@ -157,7 +157,7 @@
             const elapsedTime = clock.getElapsedTime();
 
             if (screensaverActive) {
-                gridMaterial.uniforms.uOpacity.value = 0.1;
+                gridMaterial.uniforms.uOpacity.value = 0.4;
                 camera.position.x += 0.002;
             } else {
                 gridMaterial.uniforms.uOpacity.value = 0.7;
