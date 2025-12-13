@@ -92,7 +92,7 @@
                     vec2 gridDeriv = fwidth(grid);
                     vec2 gridDist = abs(fract(grid - 0.5) - 0.5);
                     vec2 pixelDist = gridDist / gridDeriv;
-                    float line = step(min(pixelDist.x, pixelDist.y), 0.51);
+                    float line = step(min(pixelDist.x, pixelDist.y), 1.00);
                     
                     float distToCamera = distance(vWorldPosition.xz, uCameraPos.xz);
                     float glowRadius = 50.0;
@@ -135,7 +135,7 @@
             blending: THREE.AdditiveBlending,
             uniforms: {
                 uTime: { value: 0 },
-                uColor: { value: new THREE.Color(0xaaaaaa) },
+                uColor: { value: new THREE.Color(0xffffff) },
                 uFadeDistance: { value: 150.0 },
                 uCameraPos: { value: new THREE.Vector3() },
             },
