@@ -3,7 +3,7 @@
   import octopusImg from "/octopus.png";
   import type { ScreensaverConfig } from "@rcade/plugin-sleep";
 
-  const IDLE_TIMEOUT_MS = 3_000;
+  const IDLE_TIMEOUT_MS = 30_000;
   const LOGO_SIZE = 60;
   const SPEED = 0.05;
   const DEFAULT_CONFIG: Required<ScreensaverConfig> = {
