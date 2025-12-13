@@ -83,24 +83,29 @@ export class PluginDetector {
     }
 
     private parsePackageJsonFile(filePath: string): DetectedPackage[] {
-        const content = fs.readFileSync(filePath, "utf-8");
-        const packageJson = JSON5.parse(content);
-        const packages: DetectedPackage[] = [];
-        const allDeps: Record<string, unknown> = {
-            ...packageJson.dependencies,
-            ...packageJson.devDependencies,
-        };
+        try {
+            const content = fs.readFileSync(filePath, "utf-8");
+            const packageJson = JSON5.parse(content);
+            const packages: DetectedPackage[] = [];
+            const allDeps: Record<string, unknown> = {
+                ...packageJson.dependencies,
+                ...packageJson.devDependencies,
+            };
 
-        for (const [name, version] of Object.entries(allDeps)) {
-            if (typeof version === "string") {
-                packages.push({
-                    language: "javascript",
-                    name,
-                    version: this.cleanVersion(version),
-                });
+            for (const [name, version] of Object.entries(allDeps)) {
+                if (typeof version === "string") {
+                    packages.push({
+                        language: "javascript",
+                        name,
+                        version: this.cleanVersion(version),
+                    });
+                }
             }
+            return packages;
+        } catch (error: any) {
+            console.error(`Error parsing package.json at ${filePath}: ${error.message}`);
+            return [];
         }
-        return packages;
     }
 
     private parseBunLockFile(filePath: string): DetectedPackage[] {
@@ -311,7 +316,7 @@ export class PluginDetector {
             for (const library of manifest.libraries) {
                 const matchingPackage = packages.find(
                     pkg => pkg.language === library.language &&
-                           pkg.name === library.package.name
+                        pkg.name === library.package.name
                 );
                 if (matchingPackage) {
                     matchedPackages.push(matchingPackage);
