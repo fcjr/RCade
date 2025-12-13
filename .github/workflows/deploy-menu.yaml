@@ -24,6 +24,7 @@ jobs:
         with:
           bun-version: latest
       - name: Install dependencies
+        working-directory: menu
         run: bun install
       - name: Build Vite project
         working-directory: menu
