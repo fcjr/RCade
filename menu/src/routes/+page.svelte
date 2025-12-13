@@ -1041,6 +1041,7 @@
         grid-template-columns: 40px 1fr;
         align-items: baseline;
         padding-top: 6px;
+        font-weight: 800;
     }
 
     .grid-row:last-child {
