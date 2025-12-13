@@ -30,4 +30,4 @@ jobs:
         run: bun run build
       - name: Deploy to RCade
         working-directory: menu
-        uses: ./action-deploy
+        uses: fcjr/rcade/action-deploy@main
