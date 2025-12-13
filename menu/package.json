@@ -4,8 +4,8 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"dev": "bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite dev",
+		"build": "bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
