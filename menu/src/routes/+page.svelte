@@ -93,6 +93,8 @@
                     updateVersionMasks,
                 );
             }
+
+            delta = 0;
         }
 
         requestAnimationFrame(frameLoop);
