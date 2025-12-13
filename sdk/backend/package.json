@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "build": "bun build index.ts --outdir dist --target node"
+  },
   "publishConfig": {
     "access": "public"
   },
