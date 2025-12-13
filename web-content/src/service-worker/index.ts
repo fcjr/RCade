@@ -1,5 +1,11 @@
 /// <reference lib="webworker" />
 
+// Polyfill ReadableStream async iterator for Safari compatibility
+// Safari doesn't support ReadableStream[Symbol.asyncIterator] which modern-tar requires
+if (typeof ReadableStream.prototype[Symbol.asyncIterator] !== "function") {
+    await import("web-streams-polyfill/polyfill");
+}
+
 import { Client } from "@rcade/api";
 import { unpackTar } from "modern-tar";
 import { getMimeType } from "./mime";
