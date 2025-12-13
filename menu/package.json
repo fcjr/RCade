@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite dev",
-		"build": "bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite build",
+		"build": "bun run --cwd ../sdk/backend build && bun run --cwd ../sdk/frontend/typescript build && bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
