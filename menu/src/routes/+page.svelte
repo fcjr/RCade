@@ -49,47 +49,49 @@
         });
     })();
 
-    function consumeDeltas() {}
-
     // run consume deltas every frame
     function frameLoop() {
         if (Math.abs(delta) >= DELTA_EPSILON) {
-            delta -= Math.sign(delta) * DELTA_EPSILON;
+            if (viewportState === "neutral") {
+                const newPage =
+                    delta > 0
+                        ? Math.min(totalPages - 1, activePage + 1)
+                        : Math.max(0, activePage - 1);
+                if (newPage !== activePage) {
+                    direction = delta > 0 ? 1 : -1;
+                    activePage = newPage;
 
-            if (viewportState === "show-bottom" && currentGame) {
-                const newIndex = activeVersionIndex + Math.sign(delta);
-                activeVersionIndex = Math.max(
-                    0,
-                    Math.min(currentGame.versions().length - 1, newIndex),
-                );
-                triggerScroll(
-                    versionsContainer,
-                    activeVersionIndex,
-                    false,
-                    updateVersionMasks,
-                );
+                    for (let i = 0; i < Math.abs(delta); i++) {
+                        moveEvents.emit("move", delta > 0); // Emit true for left
+                    }
+                }
             } else if (viewportState === "show-top") {
-                const newIndex = filterCursorIndex + Math.sign(delta);
-                filterCursorIndex = Math.max(
-                    0,
-                    Math.min(uniqueTags.length - 1, newIndex),
-                );
+                const newIndex =
+                    delta > 0
+                        ? Math.min(uniqueTags.length - 1, filterCursorIndex + 1)
+                        : Math.max(0, filterCursorIndex - 1);
+                filterCursorIndex = newIndex;
                 triggerScroll(
                     filtersContainer,
                     filterCursorIndex,
                     false,
                     updateFilterMasks,
                 );
-            } else {
-                const newPage = activePage + Math.sign(delta);
-                const clampedPage = Math.max(
-                    0,
-                    Math.min(totalPages - 1, newPage),
+            } else if (viewportState === "show-bottom" && currentGame) {
+                const newIndex =
+                    delta > 0
+                        ? Math.min(
+                              currentGame.versions().length - 1,
+                              activeVersionIndex + 1,
+                          )
+                        : Math.max(0, activeVersionIndex - 1);
+                activeVersionIndex = newIndex;
+                triggerScroll(
+                    versionsContainer,
+                    activeVersionIndex,
+                    false,
+                    updateVersionMasks,
                 );
-                if (clampedPage !== activePage) {
-                    setPage(clampedPage);
-                    moveEvents.emit("move", delta < 0); // Emit true for left
-                }
             }
         }
 
