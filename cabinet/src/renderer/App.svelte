@@ -50,7 +50,7 @@
 
   :global(body) {
     background: #0a0a14;
-    color: #fff;
+    color: #000;
     font-family:
       system-ui,
       -apple-system,

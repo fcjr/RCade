@@ -319,6 +319,7 @@ function createWindow(): void {
     fullscreen: fullscreen,
     icon: iconPath,
     show: false, // Don't show until ready for proper focus handling
+    backgroundColor: '#000',
     ...(isDev && {
       width: 336 * scaleFactor,
       height: 262 * scaleFactor,
