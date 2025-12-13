@@ -1,6 +1,7 @@
 <script lang="ts">
     import type EventEmitter from "events";
     import * as THREE from "three";
+    import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 
     let { events }: { events: EventEmitter } = $props();
 
@@ -45,6 +46,8 @@
         renderer.setSize(canvasWidth, canvasHeight);
         renderer.setPixelRatio(1);
         renderer.setClearColor(0x000000, 0);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
         // Enhanced Grid with sharper lines
@@ -109,7 +112,75 @@
         });
         const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial);
         gridMesh.rotation.x = -Math.PI / 2;
+        gridMesh.receiveShadow = true;
         scene.add(gridMesh);
+
+        // Lights for the model
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 500;
+        scene.add(ambientLight, dirLight);
+
+        // Model handling
+        let modelGroup: THREE.Object3D | null = null;
+        const objLoader = new OBJLoader();
+
+        // Try to load /model_0.obj from server root
+        objLoader.load(
+            "/model_0.obj",
+            (obj) => {
+                // Basic scaling & placement — tweak these values if your model is huge/tiny
+                const modelScale = 0.25;
+                obj.scale.set(modelScale, modelScale, modelScale);
+
+                // Place model above the grid
+                obj.position.set(0, 4, 10); // y = 2 units above the grid; adjust as needed
+                obj.rotation.set(Math.PI * 0.125, 0, 0); // Rotate to face camera
+                obj.updateMatrixWorld(true);
+
+                const axis = new THREE.Vector3(0, 1, 0);
+                const q = new THREE.Quaternion();
+
+                setInterval(() => {
+                    if (obj) {
+                        q.setFromAxisAngle(axis, 0.01);
+                        obj.quaternion.premultiply(q);
+                    }
+                }, 16);
+
+                // Ensure meshes cast/receive shadows and have a standard material if none present
+                obj.traverse((child: any) => {
+                    if (child.isMesh) {
+                        child.castShadow = false;
+                        child.receiveShadow = false;
+
+                        const wireMat = new THREE.MeshStandardMaterial({
+                            color: 0xfacc15,
+                            wireframe: true,
+                            metalness: 0.0,
+                            roughness: 0.3,
+                        });
+
+                        child.material = wireMat;
+                    }
+                });
+
+                modelGroup = obj;
+                scene.add(obj);
+            },
+            (xhr) => {
+                // progress handler (optional)
+                // console.log(`Model ${ (xhr.loaded / xhr.total) * 100 }% loaded`);
+            },
+            (err) => {
+                console.error("Failed to load /model_0.obj", err);
+            },
+        );
 
         // Camera glide animation
         let glideStartTime: number;
@@ -184,6 +255,32 @@
             if (currentAnimationId) cancelAnimationFrame(currentAnimationId);
 
             events.off("move", handleMove);
+
+            // remove and dispose model if present
+            if (modelGroup) {
+                scene.remove(modelGroup);
+                modelGroup.traverse((child: any) => {
+                    if (child.isMesh) {
+                        if (child.geometry) {
+                            child.geometry.dispose();
+                        }
+                        if (child.material) {
+                            // dispose material and any textures
+                            const mat = child.material;
+                            if (Array.isArray(mat)) {
+                                mat.forEach((m) => {
+                                    if (m.map) m.map.dispose();
+                                    m.dispose();
+                                });
+                            } else {
+                                if (mat.map) mat.map.dispose();
+                                mat.dispose();
+                            }
+                        }
+                    }
+                });
+                modelGroup = null;
+            }
 
             gridGeometry.dispose();
             gridMaterial.dispose();
