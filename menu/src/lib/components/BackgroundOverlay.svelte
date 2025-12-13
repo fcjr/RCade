@@ -1,6 +1,7 @@
 <script lang="ts">
     import type EventEmitter from "events";
     import * as THREE from "three";
+    import { SCREENSAVER } from "@rcade/plugin-sleep";
 
     let { events }: { events: EventEmitter } = $props();
 
@@ -17,6 +18,16 @@
     function lerp(start: number, end: number, t: number): number {
         return start * (1 - t) + end * t;
     }
+
+    let screensaverActive = false;
+
+    SCREENSAVER.addEventListener("started", () => {
+        screensaverActive = true;
+    });
+
+    SCREENSAVER.addEventListener("stopped", () => {
+        screensaverActive = false;
+    });
 
     $effect(() => {
         if (!container) return;
@@ -144,6 +155,13 @@
             animationId = requestAnimationFrame(animate);
 
             const elapsedTime = clock.getElapsedTime();
+
+            if (screensaverActive) {
+                gridMaterial.uniforms.uOpacity.value = 0.1;
+                camera.position.x += 0.002;
+            } else {
+                gridMaterial.uniforms.uOpacity.value = 0.7;
+            }
 
             gridMaterial.uniforms.uCameraPos.value.copy(camera.position);
             gridMaterial.uniforms.uTime.value = elapsedTime;

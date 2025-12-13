@@ -26,6 +26,7 @@
 	"dependencies": {
 		"@rcade/api": "workspace:*",
 		"@rcade/plugin-input-classic": "workspace:*",
+		"@rcade/plugin-sleep": "workspace:*",
 		"@rcade/plugin-menu": "workspace:*",
 		"events": "^3.3.0",
 		"three": "^0.182.0"

@@ -6,6 +6,7 @@
     import { tick, onMount } from "svelte";
     import { Game } from "@rcade/api";
     import { on as onInput } from "@rcade/plugin-input-classic";
+    import { SCREENSAVER } from "@rcade/plugin-sleep";
     import EventEmitter from "events";
 
     // Dummy function to load games - replace with actual API call
@@ -14,6 +15,19 @@
             Game.fromApiResponse(response),
         );
     }
+
+    SCREENSAVER.updateScreensaver({ transparent: true });
+
+    let screensaverActive = false;
+
+    SCREENSAVER.addEventListener("started", () => {
+        viewportState = "neutral";
+        screensaverActive = true;
+    });
+
+    SCREENSAVER.addEventListener("stopped", () => {
+        screensaverActive = false;
+    });
 
     let games: Game[] = [];
     let loading = true;
@@ -245,6 +259,10 @@
     }
 
     onInput("press", (e) => {
+        if (screensaverActive) {
+            return;
+        }
+
         if (e.button === "DOWN" && e.player == 1) {
             if (viewportState === "show-top") {
                 viewportState = "neutral";
@@ -421,7 +439,7 @@
             <BackgroundOverlay events={moveEvents} />
         </div>
 
-        <div class="ui-layer">
+        <div class="ui-layer" class:screensaver={screensaverActive}>
             {#if loading}
                 <div class="empty-state">
                     <span>LOADING_GAMES...</span>
@@ -610,6 +628,17 @@
         --font-mono: "JetBrains Mono", monospace;
 
         --ease-snappy: cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .ui-layer {
+        transition:
+            opacity 0.4s ease,
+            filter 0.4s ease;
+    }
+
+    .ui-layer.screensaver {
+        opacity: 0;
+        pointer-events: none;
     }
 
     main {
