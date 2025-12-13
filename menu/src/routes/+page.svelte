@@ -31,7 +31,7 @@
     });
 
     let delta: number = 0;
-    const DELTA_EPSILON = 5;
+    const DELTA_EPSILON = 10;
 
     (async () => {
         const channel = await PluginChannel.acquire(
