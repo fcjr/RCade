@@ -384,7 +384,6 @@
     >
         <div class="filter-drawer">
             <div class="drawer-header">FILTER_SYSTEM</div>
-            <div class="drawer-sub">Use ARROWS to nav, ENTER to toggle</div>
 
             <div
                 class="chips-container"
@@ -410,6 +409,11 @@
                         <span class="chip-text">#{tag}</span>
                     </div>
                 {/each}
+                {#if uniqueTags.length === 0}
+                    <div class="no-filters">
+                        <span>NO_FILTERS_AVAILABLE</span>
+                    </div>
+                {/if}
             </div>
         </div>
 
@@ -691,7 +695,8 @@
 
     .drawer-header {
         font-family: var(--font-mono);
-        font-size: 0.4rem;
+        font-size: 0.6rem;
+        font-weight: bold;
         color: var(--color-primary);
         letter-spacing: 0.05em;
         opacity: 1;
@@ -797,6 +802,14 @@
     .filter-chip.cursor-active.selected .filter-check {
         opacity: 1;
         color: #000;
+    }
+
+    .no-filters {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: #aaa;
+        padding: 4px 0;
+        font-weight: bold;
     }
 
     .top-section {
@@ -977,11 +990,12 @@
         align-items: center;
     }
     .meta-slash {
-        color: var(--color-primary);
+        color: white;
+        opacity: 0.5;
         font-weight: bold;
     }
     .meta-ver {
-        opacity: 0.5;
+        opacity: 1;
         transition: opacity 0.2s;
     }
 
@@ -1023,7 +1037,7 @@
 
     .grid-label {
         font-family: var(--font-mono);
-        font-size: 0.4rem;
+        font-size: 0.45rem;
         color: var(--color-primary);
         letter-spacing: 0.05em;
         opacity: 0.9;

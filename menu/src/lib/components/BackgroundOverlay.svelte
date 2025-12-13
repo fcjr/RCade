@@ -58,8 +58,8 @@
             side: THREE.DoubleSide,
             transparent: true,
             uniforms: {
-                uBaseColor: { value: new THREE.Color(0xaaaaaa) },
-                uGlowColor: { value: new THREE.Color(0xaaaaaa) },
+                uBaseColor: { value: new THREE.Color(0xfacc15) },
+                uGlowColor: { value: new THREE.Color(0xfacc15) },
                 uSize: { value: 10.0 },
                 uTime: { value: 0.0 },
                 uFadeDistance: { value: 150.0 },
