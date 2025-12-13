@@ -601,7 +601,7 @@
     :root {
         --color-primary: #facc15;
         --color-text-primary: #ffffff;
-        --color-text-secondary: rgba(255, 255, 255, 0.6);
+        --color-text-secondary: rgba(255, 255, 255, 1);
         --drawer-height: 70px;
         --filter-drawer-height: 90px;
 
@@ -641,7 +641,7 @@
         position: absolute;
         inset: 0;
         z-index: 0;
-        opacity: 0.5;
+        opacity: 1;
     }
 
     .ui-layer {
@@ -983,14 +983,14 @@
         font-family: var(--font-mono);
         font-size: 0.45rem;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 1);
         display: flex;
         gap: 4px;
         align-items: center;
     }
     .meta-slash {
         color: white;
-        opacity: 0.5;
+        opacity: 1;
         font-weight: bold;
     }
     .meta-ver {
@@ -1006,6 +1006,20 @@
         font-weight: 800;
         letter-spacing: -0.02em;
         color: white;
+    }
+
+    .game-title,
+    .game-desc,
+    .meta-line,
+    .data-entry,
+    .grid-label {
+        text-shadow:
+            0 0px 2px rgba(0, 0, 0, 1),
+            0 0px 4px rgba(0, 0, 0, 1),
+            0 0px 2px rgba(0, 0, 0, 1),
+            0 0px 4px rgba(0, 0, 0, 1),
+            0 0px 2px rgba(0, 0, 0, 1),
+            0 0px 4px rgba(0, 0, 0, 1);
     }
 
     .game-desc {
