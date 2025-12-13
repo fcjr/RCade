@@ -32,4 +32,4 @@ jobs:
         uses: ./action-deploy
         with:
           manifestPath: './menu/rcade.manifest.json'
-          artifactPath: './menu/dist/'
+          artifactPath: './menu/build/'
