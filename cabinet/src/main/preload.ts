@@ -3,6 +3,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { RcadeAPI, GameInfo, Route } from '../shared/types';
 import type { ScreensaverConfig } from '@rcade/plugin-sleep';
+import { QuitOptions } from '@rcade/sdk';
 
 const args = JSON.parse(process.env.STARTUP_CONFIG || '{}');
 
@@ -34,9 +35,9 @@ const rcadeAPI: RcadeAPI = {
   getGames: () => ipcRenderer.invoke('get-games'),
   getMenuGame: () => ipcRenderer.invoke('get-menu-game'),
   loadGame: async (game: GameInfo) => await ipcRenderer.invoke('load-game', game),
-  unloadGame: (gameId: string | undefined, name: string, version: string | undefined) => {
+  unloadGame: (gameId: string | undefined, name: string, version: string | undefined, quitOptions: QuitOptions) => {
     ipcRenderer.emit('unload-game');
-    return ipcRenderer.invoke('unload-game', gameId, name, version)
+    return ipcRenderer.invoke('unload-game', gameId, name, version, quitOptions)
   },
   onUnloadGame: (callback: (config: ScreensaverConfig) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, config: ScreensaverConfig) => callback(config);

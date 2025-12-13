@@ -373,8 +373,9 @@
         gameActive = true;
     }
 
-    onGameQuit(() => {
+    onGameQuit(quitOptions => {
         // todo: handle quit error
+        console.error(quitOptions);
         gameActive = false;
     });
 

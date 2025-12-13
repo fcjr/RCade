@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@rcade/api": "workspace:*",
-    "@rcade/sdk-plugin": "0.1.0",
+    "@rcade/sdk-plugin": "workspace:*",
+    "@rcade/sdk": "workspace:*",
     "@types/node": "^25.0.1",
     "electron": "^39.2.7"
   }

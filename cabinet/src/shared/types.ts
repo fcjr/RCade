@@ -1,5 +1,6 @@
 import { GameManifest, Permission } from '@rcade/api';
 import type { ScreensaverConfig } from '@rcade/plugin-sleep';
+import { QuitOptions } from '@rcade/sdk';
 import { z } from 'zod';
 
 export interface PackageVersion {
@@ -54,7 +55,7 @@ export interface RcadeAPI {
   getGames: () => Promise<GameInfo[]>;
   getMenuGame: () => Promise<GameInfo>;
   loadGame: (game: GameInfo) => Promise<LoadGameResult>;
-  unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined) => Promise<void>;
+  unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions) => Promise<void>;
   onUnloadGame: (callback: () => void) => () => void;
   onMenuKey: (callback: () => void) => () => void;
   onInputActivity: (callback: () => void) => () => void;

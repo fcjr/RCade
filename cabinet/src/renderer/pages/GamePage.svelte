@@ -2,7 +2,8 @@
   import { onMount, onDestroy } from "svelte";
   import type { GameInfo } from "../../shared/types";
   import { navigateToMenu } from "../router.svelte";
-
+  import { QuitOptionsSchema, type QuitOptions } from "@rcade/sdk";
+  import z from "zod";
   interface Props {
     game: GameInfo;
   }
@@ -30,9 +31,20 @@
     }
   }
 
-  async function handleMenuKey() {
+  async function closeGame(quitOptions: QuitOptions | undefined) {
+    if (QuitOptionsSchema.safeParse(quitOptions).error)
+      quitOptions = {
+        type: "error",
+        reason: "Game provided an invalid quit reason object",
+      };
+
     if (window.rcade) {
-      await window.rcade.unloadGame(game.id, game.name, game.latestVersion);
+      await window.rcade.unloadGame(
+        game.id,
+        game.name,
+        game.latestVersion,
+        quitOptions!,
+      );
     }
     navigateToMenu();
   }
@@ -41,7 +53,9 @@
 
   onMount(() => {
     if (window.rcade && game.name !== "menu") {
-      unsubscribeMenuKey = window.rcade.onMenuKey(handleMenuKey);
+      unsubscribeMenuKey = window.rcade.onMenuKey(() =>
+        closeGame({ type: "return-to-menu" }),
+      );
     }
 
     loadGame();
@@ -63,7 +77,10 @@
     const instance = crypto.randomUUID();
     const handleMessage = async (event: MessageEvent) => {
       // Handle ports transferred from preload script
-      if (event.data?.type === "plugin-port-transfer" && event.data.gameInstance == instance) {
+      if (
+        event.data?.type === "plugin-port-transfer" &&
+        event.data.gameInstance == instance
+      ) {
         const { nonce } = event.data;
         const port = event.ports[0];
         if (port) {
@@ -77,12 +94,17 @@
         return;
       }
 
+      if (event.data.type === "quit") {
+        closeGame(event.data.options as QuitOptions | undefined);
+        return;
+      }
+
       if (event.data.type === "acquire_plugin_channel") {
         try {
           const { nonce, name, version } = await window.rcade.acquirePlugin(
             event.data.channel.name,
             event.data.channel.version,
-            instance
+            instance,
           );
 
           // Wait for the port to arrive via postMessage

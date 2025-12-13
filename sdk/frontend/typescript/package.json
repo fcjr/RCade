@@ -4,6 +4,7 @@
   "module": "index.ts",
   "main": "./dist/index.js",
   "type": "module",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "bun": "./index.ts",
@@ -11,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node"
+    "build": "tsc --build tsconfig.json"
   },
   "files": [
     "dist",

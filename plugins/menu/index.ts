@@ -1,10 +1,11 @@
 import { Client, Game } from "@rcade/api";
 import { type PluginEnvironment, type Plugin } from "@rcade/sdk-plugin";
-import { app, type MessageEvent, type MessagePortMain } from "electron";
+import { app } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { SETTINGS } from "./settings";
+import type { QuitOptions } from "@rcade/sdk";
 
 const cabinetApiKey = process.env.CABINET_API_KEY;
 const apiClient = cabinetApiKey ? Client.newKeyed(cabinetApiKey) : Client.new();
@@ -84,8 +85,8 @@ export default class MenuPlugin implements Plugin {
         });
 
         // @ts-ignore
-        environment.getWebContents().addListener("game-unloaded", (_event: MessageEvent) => {
-            port.postMessage({ type: "quit_game" });
+        environment.getWebContents().addListener("game-unloaded", (options: QuitOptions) => {
+            port.postMessage({ type: "quit_game", options });
         });
 
         port.start();

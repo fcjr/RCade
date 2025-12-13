@@ -12,6 +12,7 @@ import * as tar from 'tar';
 import type { GameInfo, LoadGameResult } from '../shared/types';
 import { parseCliArgs } from "./args.js";
 import { PluginManager } from '../plugins/index.js';
+import { QuitOptions } from '@rcade/sdk';
 
 const args = parseCliArgs();
 
@@ -532,7 +533,7 @@ app.whenReady().then(async () => {
     return { url };
   });
 
-  ipcMain.handle('unload-game', async (event, gameId: string | undefined, gameName: string, version: string | undefined): Promise<void> => {
+  ipcMain.handle('unload-game', async (event, gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions): Promise<void> => {
     // Clear game permissions when unloading
     currentGamePermissions = [];
 
@@ -558,7 +559,7 @@ app.whenReady().then(async () => {
       console.log(`[GameServer] Stopped server for ${serverKey}`);
     }
 
-    event.sender.emit("game-unloaded");
+    event.sender.emit("game-unloaded", quitOptions);
   });
 
   createWindow();

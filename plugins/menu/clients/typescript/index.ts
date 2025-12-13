@@ -1,4 +1,4 @@
-import { PluginChannel } from "@rcade/sdk";
+import { PluginChannel, type QuitOptions } from "@rcade/sdk";
 
 let channel: Promise<PluginChannel> | null = null;
 
@@ -8,7 +8,7 @@ let channel: Promise<PluginChannel> | null = null;
     channel.then(channel => {
         channel.getPort().addEventListener("message", (event) => {
             if (event.data.type === "quit_game") {
-                quitHandler?.();
+                quitHandler?.(event.data.options);
             }
         })
     });
@@ -89,7 +89,7 @@ export async function getLastGame(): Promise<string | undefined> {
     });
 }
 
-let quitHandler: (() => void) | undefined = undefined;
-export function onGameQuit(handler: () => void) {
+let quitHandler: ((quitOptions: QuitOptions) => void) | undefined = undefined;
+export function onGameQuit(handler: (quitOptions: QuitOptions) => void) {
     quitHandler = handler;
 }
