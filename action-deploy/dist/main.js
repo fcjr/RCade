@@ -38752,23 +38752,28 @@ class PluginDetector {
     return languages;
   }
   parsePackageJsonFile(filePath) {
-    const content = fs.readFileSync(filePath, "utf-8");
-    const packageJson = JSON5.parse(content);
-    const packages = [];
-    const allDeps = {
-      ...packageJson.dependencies,
-      ...packageJson.devDependencies
-    };
-    for (const [name, version2] of Object.entries(allDeps)) {
-      if (typeof version2 === "string") {
-        packages.push({
-          language: "javascript",
-          name,
-          version: this.cleanVersion(version2)
-        });
+    try {
+      const content = fs.readFileSync(filePath, "utf-8");
+      const packageJson = JSON5.parse(content);
+      const packages = [];
+      const allDeps = {
+        ...packageJson.dependencies,
+        ...packageJson.devDependencies
+      };
+      for (const [name, version2] of Object.entries(allDeps)) {
+        if (typeof version2 === "string") {
+          packages.push({
+            language: "javascript",
+            name,
+            version: this.cleanVersion(version2)
+          });
+        }
       }
+      return packages;
+    } catch (error46) {
+      console.error(`Error parsing package.json at ${filePath}: ${error46.message}`);
+      return [];
     }
-    return packages;
   }
   parseBunLockFile(filePath) {
     const content = fs.readFileSync(filePath, "utf-8");
