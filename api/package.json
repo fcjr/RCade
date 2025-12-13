@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "bun build index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly",
-    "prepare": "bun run build"
+    "prepare": "bun build index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly"
   },
   "files": [
     "dist"
