@@ -1,951 +1,61 @@
 <script lang="ts">
     import BackgroundOverlay from "$lib/components/BackgroundOverlay.svelte";
-    import { fly, fade, slide } from "svelte/transition";
+    import { fly, slide } from "svelte/transition";
+    import { getGames, playGame } from "@rcade/plugin-menu";
     import { quartOut } from "svelte/easing";
-    import { tick } from "svelte";
+    import { tick, onMount } from "svelte";
+    import { Game } from "@rcade/api";
+    import { on as onInput } from "@rcade/plugin-input-classic";
+    import EventEmitter from "events";
 
-    const pagesData = [
-        // --- ORIGINALS ---
-        {
-            gameName: "Neon Racer",
-            id: "neon-racer",
-            description: "High-speed pursuit in a digital void.",
-            authors: [
-                { name: "Kaito_Dev", role: "Code" },
-                { name: "Vapor.Art", role: "Visuals" },
-            ],
-            categories: [
-                { name: "racing", description: "" },
-                { name: "arcade", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/input-classic" },
-                { name: "@rcade/input-spinners" },
-            ],
-            history: ["1.0.0", "1.0.1", "1.0.2"],
-        },
-        {
-            gameName: "Cyber Golf",
-            id: "cyber-golf",
-            description: "Physics-based putting in zero gravity.",
-            authors: [{ name: "Orbit_Studio", role: "Dev" }],
-            categories: [
-                { name: "sport", description: "" },
-                { name: "sim", description: "" },
-                { name: "relax", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/physics-core" },
-                { name: "@rcade/haptic-feedback" },
-            ],
-            history: ["1.5.0", "2.0.0", "2.1.0"],
-        },
-        {
-            gameName: "Void Fighter",
-            id: "void-fighter-ii",
-            description: "1v1 combat at the edge of the universe.",
-            authors: [
-                { name: "Ryu_X", role: "Code" },
-                { name: "Ken_Y", role: "Audio" },
-            ],
-            categories: [
-                { name: "fighting", description: "" },
-                { name: "multiplayer", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/net-play" },
-                { name: "@rcade/input-stick" },
-            ],
-            history: ["0.8.0", "0.9.0", "0.9.5"],
-        },
-        {
-            gameName: "Pixel Quest",
-            id: "pixel-quest",
-            description:
-                "A tiny hero in a massive procedurally generated dungeon.",
-            authors: [{ name: "Bit_Wizard", role: "Code" }],
-            categories: [
-                { name: "rpg", description: "" },
-                { name: "roguelike", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/save-state" },
-                { name: "@rcade/audio-8bit" },
-            ],
-            history: ["1.0", "2.0", "3.0.1"],
-        },
-        {
-            gameName: "Hyper Core",
-            id: "hyper-core-sys",
-            description: "A system simulation with extensive update history.",
-            authors: [{ name: "SysAdmin", role: "Root" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "complex", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/cpu-sim" },
-                { name: "@rcade/net-bus" },
-            ],
-            history: [
-                "0.1.0",
-                "0.5.0",
-                "1.0.0",
-                "1.5.0",
-                "2.0.0",
-                "2.2.0-LATEST",
-            ],
-        },
-        // --- ACTION / ARCADE ---
-        {
-            gameName: "Blast Radius",
-            id: "blast-radius",
-            description: "Defend the center core from incoming asteroids.",
-            authors: [{ name: "Arcade_King", role: "Dev" }],
-            categories: [
-                { name: "shooter", description: "" },
-                { name: "arcade", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/input-classic" }],
-            history: ["1.0.0"],
-        },
-        {
-            gameName: "Tank Battler 99",
-            id: "tank-battler-99",
-            description: "Top-down tank warfare in destructible mazes.",
-            authors: [{ name: "Iron_Treads", role: "Code" }],
-            categories: [
-                { name: "action", description: "" },
-                { name: "multiplayer", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/physics-2d" },
-                { name: "@rcade/net-play" },
-            ],
-            history: ["0.5.0", "1.0.0"],
-        },
-        {
-            gameName: "Sky Ace",
-            id: "sky-ace",
-            description: "Vertical scrolling shooter with biplanes.",
-            authors: [{ name: "Prop_Head", role: "Dev" }],
-            categories: [
-                { name: "shmup", description: "" },
-                { name: "arcade", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/scroll-engine" }],
-            history: ["1.0", "1.1", "1.2"],
-        },
-        {
-            gameName: "Ninja Rush",
-            id: "ninja-rush",
-            description: "Infinite runner with shurikens.",
-            authors: [{ name: "Shadow_Step", role: "Animation" }],
-            categories: [
-                { name: "platformer", description: "" },
-                { name: "action", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/anim-system" }],
-            history: ["1.0.0", "1.0.5"],
-        },
-        {
-            gameName: "Beat Street",
-            id: "beat-street",
-            description: "Side-scrolling brawler set in the 80s.",
-            authors: [{ name: "Knuckles", role: "Design" }],
-            categories: [
-                { name: "beat-em-up", description: "" },
-                { name: "retro", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/input-gamepad" }],
-            history: ["1.0.0"],
-        },
-        // --- PUZZLE / LOGIC ---
-        {
-            gameName: "Block Drop",
-            id: "block-drop",
-            description: "The classic falling block puzzle game.",
-            authors: [{ name: "Logic_Bomb", role: "Code" }],
-            categories: [
-                { name: "puzzle", description: "" },
-                { name: "classic", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/grid-engine" }],
-            history: ["1.0", "1.1", "1.2", "1.3"],
-        },
-        {
-            gameName: "Gem Hunter",
-            id: "gem-hunter",
-            description: "Match 3 gems to explore the cave.",
-            authors: [{ name: "Crystal_Clear", role: "Art" }],
-            categories: [
-                { name: "puzzle", description: "" },
-                { name: "casual", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/touch-input" }],
-            history: ["1.0.0"],
-        },
-        {
-            gameName: "Sudoku Infinite",
-            id: "sudoku-infinite",
-            description: "Unlimited generated number puzzles.",
-            authors: [{ name: "Math_Wiz", role: "Algo" }],
-            categories: [
-                { name: "puzzle", description: "" },
-                { name: "brain", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/number-gen" }],
-            history: ["0.9.0", "1.0.0"],
-        },
-        {
-            gameName: "Pipe Dreamer",
-            id: "pipe-dreamer",
-            description: "Connect the pipes before the water flows.",
-            authors: [{ name: "Plumb_Co", role: "Dev" }],
-            categories: [
-                { name: "puzzle", description: "" },
-                { name: "timed", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/grid-engine" }],
-            history: ["1.0.0", "1.1.0"],
-        },
-        {
-            gameName: "Quantum Chess",
-            id: "quantum-chess",
-            description:
-                "Chess where pieces can be in multiple squares at once.",
-            authors: [{ name: "Schrodinger", role: "Design" }],
-            categories: [
-                { name: "strategy", description: "" },
-                { name: "board", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/ai-opponent" }],
-            history: ["0.1a", "0.2a"],
-        },
-        // --- RPG / ADVENTURE ---
-        {
-            gameName: "Forest of Mana",
-            id: "forest-of-mana",
-            description: "Top-down action RPG in a cursed wood.",
-            authors: [
-                { name: "Green_Leaf", role: "Story" },
-                { name: "Pixel_Forge", role: "Code" },
-            ],
-            categories: [
-                { name: "rpg", description: "" },
-                { name: "fantasy", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/save-system" },
-                { name: "@rcade/dialogue-box" },
-            ],
-            history: ["1.0", "1.1"],
-        },
-        {
-            gameName: "Space Merchant",
-            id: "space-merchant",
-            description: "Buy low, sell high across the galaxy.",
-            authors: [{ name: "Credits_Inc", role: "Eco-Sim" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "sci-fi", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/rng-market" }],
-            history: ["1.0.0", "1.2.0", "1.5.0"],
-        },
-        {
-            gameName: "Dungeon Clicker",
-            id: "dungeon-clicker",
-            description: "Kill monsters by clicking. Forever.",
-            authors: [{ name: "Idle_Hands", role: "Dev" }],
-            categories: [
-                { name: "idle", description: "" },
-                { name: "casual", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/large-numbers" }],
-            history: ["1.0", "2.0", "3.0", "4.0"],
-        },
-        {
-            gameName: "The Noir Case",
-            id: "noir-case",
-            description: "Text-based detective mystery.",
-            authors: [{ name: "Type_Writer", role: "Writer" }],
-            categories: [
-                { name: "adventure", description: "" },
-                { name: "text", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/text-parser" }],
-            history: ["1.0.0"],
-        },
-        {
-            gameName: "Dragon Slayer",
-            id: "dragon-slayer-x",
-            description: "Turn-based battles against mythical beasts.",
-            authors: [{ name: "Dice_Roller", role: "System" }],
-            categories: [
-                { name: "rpg", description: "" },
-                { name: "strategy", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/battle-engine" }],
-            history: ["0.5", "1.0"],
-        },
-        // --- RACING / SPORTS ---
-        {
-            gameName: "Drift City",
-            id: "drift-city",
-            description: "Night time drifting with lo-fi beats.",
-            authors: [{ name: "Tire_Smoke", role: "Physics" }],
-            categories: [
-                { name: "racing", description: "" },
-                { name: "music", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/car-physics" },
-                { name: "@rcade/audio-stream" },
-            ],
-            history: ["1.0.0", "1.0.1"],
-        },
-        {
-            gameName: "Pixel Soccer",
-            id: "pixel-soccer",
-            description: "5v5 soccer with simple controls.",
-            authors: [{ name: "Goal_Post", role: "Dev" }],
-            categories: [
-                { name: "sport", description: "" },
-                { name: "multiplayer", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/physics-2d" }],
-            history: ["1.0.0"],
-        },
-        {
-            gameName: "Pro Bowling",
-            id: "pro-bowling",
-            description: "Realistic bowling simulation.",
-            authors: [{ name: "Lane_Master", role: "Code" }],
-            categories: [
-                { name: "sport", description: "" },
-                { name: "sim", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/physics-3d" }],
-            history: ["1.0", "1.1"],
-        },
-        {
-            gameName: "Moto Xtreme",
-            id: "moto-xtreme",
-            description: "Dirt bike trials over impossible obstacles.",
-            authors: [{ name: "Mud_Flap", role: "Dev" }],
-            categories: [
-                { name: "racing", description: "" },
-                { name: "platformer", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/bike-physics" }],
-            history: ["0.8", "0.9", "1.0"],
-        },
-        {
-            gameName: "Table Tennis VR",
-            id: "table-tennis-vr",
-            description: "Ping pong in virtual reality.",
-            authors: [{ name: "VR_Vision", role: "Dev" }],
-            categories: [
-                { name: "sport", description: "" },
-                { name: "vr", description: "" },
-            ],
-            dependencies: [
-                { name: "@rcade/vr-headset" },
-                { name: "@rcade/motion-controllers" },
-            ],
-            history: ["1.0.0"],
-        },
-        // --- HORROR / WEIRD ---
-        {
-            gameName: "Static Signal",
-            id: "static-signal",
-            description: "Find the frequency in the white noise.",
-            authors: [{ name: "Ghost_In_Machine", role: "Audio" }],
-            categories: [
-                { name: "horror", description: "" },
-                { name: "audio", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/audio-proc" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "The Hallway",
-            id: "the-hallway",
-            description: "A walking simulator that never ends.",
-            authors: [{ name: "Loop_Master", role: "Design" }],
-            categories: [
-                { name: "horror", description: "" },
-                { name: "psychological", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/3d-engine" }],
-            history: ["1.0.0"],
-        },
-        {
-            gameName: "Glitch Garden",
-            id: "glitch-garden",
-            description: "Farming sim where the crops are corrupted data.",
-            authors: [{ name: "Hex_Editor", role: "Dev" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "experimental", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/grid-engine" }],
-            history: ["0.1", "0.2"],
-        },
-        // --- STRATEGY / SIM ---
-        {
-            gameName: "Ant Colony",
-            id: "ant-colony",
-            description: "Manage a hive of digital insects.",
-            authors: [{ name: "Bio_Sim", role: "AI" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "strategy", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/ai-swarm" }],
-            history: ["1.0.0", "1.5.0"],
-        },
-        {
-            gameName: "Tower Defense Z",
-            id: "tower-defense-z",
-            description: "Protect the base from zombies.",
-            authors: [{ name: "Turret_Tech", role: "Code" }],
-            categories: [
-                { name: "strategy", description: "" },
-                { name: "action", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/pathfinding" }],
-            history: ["1.0", "1.1", "1.2"],
-        },
-        {
-            gameName: "City Planner 2000",
-            id: "city-planner",
-            description: "Build a metropolis from scratch.",
-            authors: [{ name: "Urban_Dev", role: "Design" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "strategy", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/eco-engine" }],
-            history: ["1.0.0"],
-        },
-        {
-            gameName: "Mars Base",
-            id: "mars-base",
-            description: "Survival strategy on the red planet.",
-            authors: [{ name: "Red_Rock", role: "Dev" }],
-            categories: [
-                { name: "survival", description: "" },
-                { name: "strategy", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/resource-manager" }],
-            history: ["0.5", "0.6", "0.7"],
-        },
-        // --- FILLER / MISC (To reach volume) ---
-        {
-            gameName: "Color Match",
-            id: "color-match",
-            description: "Simple color sorting game.",
-            authors: [{ name: "Junior_Dev", role: "Learning" }],
-            categories: [{ name: "casual", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Snake 3D",
-            id: "snake-3d",
-            description: "The classic snake game in a cube.",
-            authors: [{ name: "Retro_Revive", role: "Dev" }],
-            categories: [{ name: "arcade", description: "" }],
-            dependencies: [{ name: "@rcade/3d-engine" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Pong Clone",
-            id: "pong-clone",
-            description: "A legal tribute to the original.",
-            authors: [{ name: "Law_Abiding", role: "Code" }],
-            categories: [{ name: "classic", description: "" }],
-            dependencies: [{ name: "@rcade/input-paddles" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Rhythm Hero",
-            id: "rhythm-hero",
-            description: "Hit the notes to the beat.",
-            authors: [{ name: "Audio_Surf", role: "Music" }],
-            categories: [{ name: "rhythm", description: "" }],
-            dependencies: [{ name: "@rcade/audio-sync" }],
-            history: ["1.0", "2.0"],
-        },
-        {
-            gameName: "Cooking Dash",
-            id: "cooking-dash",
-            description: "Prepare meals under pressure.",
-            authors: [{ name: "Chef_Code", role: "Dev" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "time-management", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Word Search",
-            id: "word-search",
-            description: "Find hidden words in the grid.",
-            authors: [{ name: "Vocab_Labs", role: "Dev" }],
-            categories: [{ name: "puzzle", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Solitaire",
-            id: "solitaire-basic",
-            description: "Standard Klondike Solitaire.",
-            authors: [{ name: "Card_Shark", role: "Dev" }],
-            categories: [{ name: "card", description: "" }],
-            dependencies: [{ name: "@rcade/card-deck" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Poker Night",
-            id: "poker-night",
-            description: "Texas Hold'em vs AI.",
-            authors: [{ name: "Bluff_Master", role: "AI" }],
-            categories: [
-                { name: "card", description: "" },
-                { name: "gambling", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/card-deck" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Blackjack",
-            id: "blackjack-21",
-            description: "Try to hit 21 without busting.",
-            authors: [{ name: "Casino_Royale", role: "Dev" }],
-            categories: [{ name: "card", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Checkers",
-            id: "checkers-online",
-            description: "Classic board game strategy.",
-            authors: [{ name: "Board_Walk", role: "Dev" }],
-            categories: [{ name: "board", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Ludo Star",
-            id: "ludo-star",
-            description: "Family board game fun.",
-            authors: [{ name: "Dice_Games", role: "Dev" }],
-            categories: [{ name: "board", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Minesweeper X",
-            id: "minesweeper-x",
-            description: "Don't click on the bombs.",
-            authors: [{ name: "Win_95", role: "Inspo" }],
-            categories: [{ name: "puzzle", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Fishing Sim",
-            id: "fishing-sim",
-            description: "Relax by the digital lake.",
-            authors: [{ name: "Reel_Time", role: "Dev" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "relax", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Hunting Season",
-            id: "hunting-season",
-            description: "Track wild game in the forest.",
-            authors: [{ name: "Outdoor_Games", role: "Dev" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "shooter", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/3d-forest" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Train Conductor",
-            id: "train-conductor",
-            description: "Keep the trains running on time.",
-            authors: [{ name: "Rail_Road", role: "Dev" }],
-            categories: [{ name: "sim", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Flight School",
-            id: "flight-school",
-            description: "Learn to fly a Cessna.",
-            authors: [{ name: "Aero_Dyna", role: "Physics" }],
-            categories: [{ name: "sim", description: "" }],
-            dependencies: [{ name: "@rcade/flight-physics" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Submarine Commander",
-            id: "submarine-commander",
-            description: "Deep sea exploration and combat.",
-            authors: [{ name: "Sonar_Ping", role: "Audio" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "action", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Alien Invasion",
-            id: "alien-invasion",
-            description: "They came from above.",
-            authors: [{ name: "X_Files", role: "Story" }],
-            categories: [{ name: "action", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Zombie Run",
-            id: "zombie-run",
-            description: "Run from the horde.",
-            authors: [{ name: "Undead_Dev", role: "Code" }],
-            categories: [
-                { name: "horror", description: "" },
-                { name: "runner", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Vampire Hunter",
-            id: "vampire-hunter",
-            description: "Slay vampires in a gothic castle.",
-            authors: [{ name: "Belmont_Fan", role: "Dev" }],
-            categories: [
-                { name: "action", description: "" },
-                { name: "platformer", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Werewolf Village",
-            id: "werewolf-village",
-            description: "Find the werewolf among the villagers.",
-            authors: [{ name: "Social_Deduction", role: "Design" }],
-            categories: [
-                { name: "multiplayer", description: "" },
-                { name: "strategy", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Cyber Hacker",
-            id: "cyber-hacker",
-            description: "Breach the mainframe.",
-            authors: [{ name: "Script_Kiddie", role: "Dev" }],
-            categories: [
-                { name: "puzzle", description: "" },
-                { name: "sim", description: "" },
-            ],
-            dependencies: [{ name: "@rcade/terminal" }],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Robot Wars",
-            id: "robot-wars",
-            description: "Build and fight custom bots.",
-            authors: [{ name: "Mecha_Eng", role: "Dev" }],
-            categories: [
-                { name: "action", description: "" },
-                { name: "building", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Dino Park",
-            id: "dino-park",
-            description: "Manage a prehistoric zoo.",
-            authors: [{ name: "Amber_Mosquito", role: "Dev" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "strategy", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Super Jump Man",
-            id: "super-jump-man",
-            description: "Jump on turtles and save the princess.",
-            authors: [{ name: "Plumber_Bro", role: "Dev" }],
-            categories: [{ name: "platformer", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Mega Blaster",
-            id: "mega-blaster",
-            description: "Blue robot shoots lemons.",
-            authors: [{ name: "Rock_Roll", role: "Dev" }],
-            categories: [
-                { name: "platformer", description: "" },
-                { name: "action", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Pocket Monster",
-            id: "pocket-monster",
-            description: "Catch them all.",
-            authors: [{ name: "Ball_Thrower", role: "Dev" }],
-            categories: [{ name: "rpg", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Final Fantasy X-2",
-            id: "final-fantasy-clone",
-            description: "Spiky hair and big swords.",
-            authors: [{ name: "JRPG_Lover", role: "Dev" }],
-            categories: [{ name: "rpg", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Kingdom Hearts Clone",
-            id: "kingdom-hearts-clone",
-            description: "Keys and darkness.",
-            authors: [{ name: "Disney_Fan", role: "Dev" }],
-            categories: [
-                { name: "action", description: "" },
-                { name: "rpg", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Metal Gear Solidish",
-            id: "metal-gear-solidish",
-            description: "Tactical espionage action.",
-            authors: [{ name: "Box_Hider", role: "Dev" }],
-            categories: [{ name: "stealth", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Silent Hillish",
-            id: "silent-hillish",
-            description: "Foggy town with scary nurses.",
-            authors: [{ name: "Fog_Machine", role: "Dev" }],
-            categories: [{ name: "horror", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Resident Evilish",
-            id: "resident-evilish",
-            description: "Mansion with zombies and puzzles.",
-            authors: [{ name: "Herb_Mixer", role: "Dev" }],
-            categories: [
-                { name: "horror", description: "" },
-                { name: "survival", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Grand Theft Autoish",
-            id: "gta-clone",
-            description: "Open world crime simulator.",
-            authors: [{ name: "Crime_Lord", role: "Dev" }],
-            categories: [
-                { name: "action", description: "" },
-                { name: "open-world", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Call of Dutyish",
-            id: "cod-clone",
-            description: "Modern warfare shooter.",
-            authors: [{ name: "Trigger_Happy", role: "Dev" }],
-            categories: [{ name: "fps", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Battlefieldish",
-            id: "battlefield-clone",
-            description: "Large scale warfare with vehicles.",
-            authors: [{ name: "Tank_Driver", role: "Dev" }],
-            categories: [{ name: "fps", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Overwatchish",
-            id: "overwatch-clone",
-            description: "Hero shooter with abilities.",
-            authors: [{ name: "Hero_Maker", role: "Dev" }],
-            categories: [
-                { name: "fps", description: "" },
-                { name: "multiplayer", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Fortniteish",
-            id: "fortnite-clone",
-            description: "Battle royale with building.",
-            authors: [{ name: "Bus_Driver", role: "Dev" }],
-            categories: [{ name: "battle-royale", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "PUBGish",
-            id: "pubg-clone",
-            description: "Realistic battle royale.",
-            authors: [{ name: "Pan_Man", role: "Dev" }],
-            categories: [{ name: "battle-royale", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Apex Legendsish",
-            id: "apex-clone",
-            description: "Fast paced battle royale.",
-            authors: [{ name: "Slide_Jump", role: "Dev" }],
-            categories: [{ name: "battle-royale", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Valorantish",
-            id: "valorant-clone",
-            description: "Tactical shooter with magic.",
-            authors: [{ name: "Corner_Peaker", role: "Dev" }],
-            categories: [{ name: "fps", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "CS:GOish",
-            id: "csgo-clone",
-            description: "Terrorists vs Counter-Terrorists.",
-            authors: [{ name: "Bomb_Planter", role: "Dev" }],
-            categories: [{ name: "fps", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Rocket Leagueish",
-            id: "rocket-league-clone",
-            description: "Cars playing soccer.",
-            authors: [{ name: "Boost_Pad", role: "Dev" }],
-            categories: [
-                { name: "sport", description: "" },
-                { name: "racing", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Fall Guysish",
-            id: "fall-guys-clone",
-            description: "Obstacle course battle royale.",
-            authors: [{ name: "Bean_Man", role: "Dev" }],
-            categories: [{ name: "party", description: "" }],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Among Usish",
-            id: "among-us-clone",
-            description: "Find the imposter in space.",
-            authors: [{ name: "Sus_Guy", role: "Dev" }],
-            categories: [
-                { name: "party", description: "" },
-                { name: "social", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Stardew Valleyish",
-            id: "stardew-clone",
-            description: "Farming and relationships.",
-            authors: [{ name: "Crop_Waterer", role: "Dev" }],
-            categories: [
-                { name: "sim", description: "" },
-                { name: "rpg", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Terrariaish",
-            id: "terraria-clone",
-            description: "2D Minecraft with bosses.",
-            authors: [{ name: "Digger_Dan", role: "Dev" }],
-            categories: [
-                { name: "sandbox", description: "" },
-                { name: "adventure", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-        {
-            gameName: "Minecraftish",
-            id: "minecraft-clone",
-            description: "Blocks and creepers.",
-            authors: [{ name: "Notch_Fan", role: "Dev" }],
-            categories: [
-                { name: "sandbox", description: "" },
-                { name: "survival", description: "" },
-            ],
-            dependencies: [],
-            history: ["1.0"],
-        },
-    ];
+    // Dummy function to load games - replace with actual API call
+    async function loadGames(): Promise<Game[]> {
+        return (await getGames()).map((response: any) =>
+            Game.fromApiResponse(response),
+        );
+    }
+
+    let games: Game[] = [];
+    let loading = true;
+
+    onMount(async () => {
+        games = await loadGames();
+        loading = false;
+        if (games.length > 0) {
+            tick().then(() => {
+                updateVersionMasks();
+                updateFilterMasks();
+                updatePaginationState();
+            });
+        }
+    });
 
     // --- FILTER LOGIC ---
-    const uniqueTags = [
-        ...new Set(pagesData.flatMap((p) => p.categories.map((c) => c.name))),
+    $: uniqueTags = [
+        ...new Set(
+            games.flatMap((g) =>
+                g
+                    .latest()
+                    .categories()
+                    .map((c) => c.name),
+            ),
+        ),
     ].sort();
+
     let selectedTags: string[] = [];
     let filterCursorIndex = 0;
 
-    $: filteredPages =
+    $: filteredGames =
         selectedTags.length === 0
-            ? pagesData
-            : pagesData.filter((p) =>
-                  p.categories.some((c) => selectedTags.includes(c.name)),
+            ? games
+            : games.filter((g) =>
+                  g
+                      .latest()
+                      .categories()
+                      .some((c) => selectedTags.includes(c.name)),
               );
 
-    $: totalPages = filteredPages.length;
+    $: totalPages = filteredGames.length;
 
     // --- NAVIGATION STATE ---
     let activePage = 0;
@@ -969,13 +79,14 @@
     let pagesHiddenLeft = 0;
     let pagesHiddenRight = 0;
 
-    $: current = filteredPages[activePage];
+    $: currentGame = filteredGames[activePage];
+    $: currentVersion = currentGame?.versions()[activeVersionIndex];
 
     // RESET LOGIC
     let lastGameId = "";
-    $: if (current && current.id !== lastGameId) {
-        lastGameId = current.id;
-        activeVersionIndex = current.history.length - 1;
+    $: if (currentGame && currentGame.id() !== lastGameId) {
+        lastGameId = currentGame.id();
+        activeVersionIndex = currentGame.versions().length - 1;
 
         if (viewportState === "show-bottom") {
             tick().then(() => {
@@ -990,9 +101,7 @@
     }
 
     // --- PAGINATION SYNC ---
-    // Auto-scroll the pagination dots when activePage changes
     $: if (paginationContainer && activePage >= 0) {
-        // Use tick to ensure DOM is ready if page count changed
         tick().then(() => {
             triggerScroll(
                 paginationContainer,
@@ -1024,27 +133,20 @@
         if (!paginationContainer) return;
         const { scrollLeft, scrollWidth, clientWidth } = paginationContainer;
 
-        // Update visual masks (mask logic is fine)
         paginationMaskLeft = scrollLeft > 5 ? "30px" : "0px";
         paginationMaskRight =
             scrollWidth - clientWidth - scrollLeft > 5 ? "30px" : "0px";
 
-        // --- NEW LOGIC HERE ---
         if (scrollWidth <= clientWidth) {
-            // If content fits without scrolling, reset both counters and exit.
             pagesHiddenLeft = 0;
             pagesHiddenRight = 0;
             return;
         }
 
-        // Calculate hidden items count only if scrolling is required
         const children = Array.from(
             paginationContainer.children,
         ) as HTMLElement[];
 
-        // The thresholds are correct for a scrolling container:
-        // leftThreshold is the left edge of the visible window
-        // rightThreshold is the right edge of the visible window
         const leftThreshold = scrollLeft;
         const rightThreshold = scrollLeft + clientWidth;
 
@@ -1139,20 +241,14 @@
             selectedTags = [...selectedTags, tag];
         }
         activePage = 0;
-        // Reset pagination scroll when filters change
         tick().then(updatePaginationState);
     }
 
-    function getDepLabel(name: string) {
-        return name;
-    }
-
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
+    onInput("press", (e) => {
+        if (e.button === "DOWN" && e.player == 1) {
             if (viewportState === "show-top") {
                 viewportState = "neutral";
-            } else if (current) {
+            } else if (currentGame) {
                 viewportState = "show-bottom";
                 tick().then(() =>
                     triggerScroll(
@@ -1163,8 +259,7 @@
                     ),
                 );
             }
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
+        } else if (e.button === "UP" && e.player == 1) {
             if (viewportState === "show-bottom") {
                 viewportState = "neutral";
             } else {
@@ -1180,14 +275,35 @@
             }
         }
 
-        if (e.key === "Enter" && viewportState === "show-top") {
-            e.preventDefault();
+        if (e.button === "A" && e.player == 1 && viewportState === "show-top") {
+            if (uniqueTags.length === 0) return;
+
             toggleFilter(uniqueTags[filterCursorIndex]);
         }
 
-        if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            if (viewportState === "show-bottom" && current) {
+        if (
+            e.button === "A" &&
+            e.player == 1 &&
+            viewportState === "show-bottom"
+        ) {
+            activeVersionIndex = activeVersionIndex; // Trigger reactive update
+            viewportState = "neutral";
+        }
+
+        if (e.button === "A" && e.player == 1 && viewportState === "neutral") {
+            console.log(
+                `Launching game: ${currentGame?.name()} (v${currentVersion?.version()})`,
+            );
+
+            playGame(currentGame.intoApiResponse(), currentVersion.version());
+        }
+
+        if (e.button === "B" && e.player == 1) {
+            viewportState = "neutral";
+        }
+
+        if (e.button === "LEFT" && e.player == 1) {
+            if (viewportState === "show-bottom" && currentGame) {
                 const newIndex = Math.max(0, activeVersionIndex - 1);
                 activeVersionIndex = newIndex;
                 triggerScroll(
@@ -1207,13 +323,15 @@
                 );
             } else {
                 const newPage = Math.max(0, activePage - 1);
-                if (newPage !== activePage) setPage(newPage);
+                if (newPage !== activePage) {
+                    setPage(newPage);
+                    moveEvents.emit("move", true); // Emit true for left
+                }
             }
-        } else if (e.key === "ArrowRight") {
-            e.preventDefault();
-            if (viewportState === "show-bottom" && current) {
+        } else if (e.button === "RIGHT" && e.player == 1) {
+            if (viewportState === "show-bottom" && currentGame) {
                 const newIndex = Math.min(
-                    current.history.length - 1,
+                    currentGame.versions().length - 1,
                     activeVersionIndex + 1,
                 );
                 activeVersionIndex = newIndex;
@@ -1237,14 +355,20 @@
                 );
             } else {
                 const newPage = Math.min(totalPages - 1, activePage + 1);
-                if (newPage !== activePage) setPage(newPage);
+                if (newPage !== activePage) {
+                    setPage(newPage);
+                    moveEvents.emit("move", false); // Emit false for right
+                }
             }
         }
-    }
+    });
+
+    const moveEvents = new EventEmitter();
+
+    console.log({ moveEvents });
 </script>
 
 <svelte:window
-    on:keydown={handleKeydown}
     on:resize={() => {
         updateVersionMasks();
         updateFilterMasks();
@@ -1291,11 +415,15 @@
 
         <div class="bg-layer">
             <div style="width:100%; height:100%; background: #111;"></div>
-            <BackgroundOverlay />
+            <BackgroundOverlay events={moveEvents} />
         </div>
 
         <div class="ui-layer">
-            {#if selectedTags.length > 0}
+            {#if loading}
+                <div class="empty-state">
+                    <span>LOADING_GAMES...</span>
+                </div>
+            {:else if selectedTags.length > 0}
                 <div
                     class="filter-hud-static"
                     transition:slide|local={{ duration: 250, axis: "y" }}
@@ -1308,7 +436,7 @@
                     </div>
                 </div>
             {/if}
-            {#if current}
+            {#if currentGame && currentVersion}
                 <div class="top-section">
                     <div class="pagination-wrapper">
                         <div
@@ -1343,9 +471,9 @@
                         </div>
                     </div>
 
-                    {#if current.categories.length > 0}
+                    {#if currentVersion.categories().length > 0}
                         <div class="category-strip">
-                            {#each current.categories as category}
+                            {#each currentVersion.categories() as category}
                                 <span class="category-tag">
                                     <span class="tag-hash">#</span
                                     >{category.name}
@@ -1356,7 +484,7 @@
                 </div>
 
                 <div class="content-stage">
-                    {#key current.id}
+                    {#key currentGame.id()}
                         <div
                             class="slide-container"
                             in:fly={{
@@ -1374,20 +502,21 @@
                             <div class="bottom-section">
                                 <div class="header-group">
                                     <div class="meta-line">
-                                        <span class="meta-id">{current.id}</span
+                                        <span class="meta-id"
+                                            >{currentGame.name()}</span
                                         >
                                         <span class="meta-slash">/</span>
                                         <span class="meta-ver"
-                                            >v{current.history[
-                                                activeVersionIndex
-                                            ] || "---"}</span
+                                            >v{currentVersion.version()}</span
                                         >
                                     </div>
                                     <h1 class="game-title">
-                                        {current.gameName}
+                                        {currentVersion.displayName() ||
+                                            currentGame.name()}
                                     </h1>
                                     <p class="game-desc">
-                                        {current.description}
+                                        {currentVersion.description() ||
+                                            "No description available."}
                                     </p>
                                 </div>
 
@@ -1397,10 +526,10 @@
                                         <div
                                             class="grid-content authors-content"
                                         >
-                                            {#each current.authors as author}
+                                            {#each currentVersion.authors() as author}
                                                 <div class="data-entry">
                                                     <span class="entry-main"
-                                                        >{author.name}</span
+                                                        >{author.display_name}</span
                                                     >
                                                 </div>
                                             {/each}
@@ -1410,12 +539,10 @@
                                     <div class="grid-row">
                                         <div class="grid-label">PLUGINS</div>
                                         <div class="grid-content">
-                                            {#each current.dependencies as dep}
+                                            {#each currentVersion.dependencies() as dep}
                                                 <div class="data-entry">
                                                     <span class="entry-main"
-                                                        >{getDepLabel(
-                                                            dep.name,
-                                                        )}</span
+                                                        >{dep.name}</span
                                                     >
                                                 </div>
                                             {/each}
@@ -1426,14 +553,14 @@
                         </div>
                     {/key}
                 </div>
-            {:else}
+            {:else if !loading}
                 <div class="empty-state">
-                    <span>NO_RESULTS_FOUND</span>
+                    <span>NO_GAMES_FOUND</span>
                 </div>
             {/if}
         </div>
 
-        {#if current}
+        {#if currentGame}
             <div class="version-drawer">
                 <div class="drawer-header">VERSION_HISTORY</div>
                 <div
@@ -1442,7 +569,7 @@
                     on:scroll={updateVersionMasks}
                     style="--mask-left: {maskLeftSize}; --mask-right: {maskRightSize};"
                 >
-                    {#each current.history as ver, i}
+                    {#each currentGame.versions() as ver, i}
                         <div
                             class="version-chip"
                             class:current={i === activeVersionIndex}
@@ -1458,7 +585,7 @@
                             role="button"
                             tabindex="0"
                         >
-                            <span class="chip-text">{ver}</span>
+                            <span class="chip-text">{ver.version()}</span>
                         </div>
                     {/each}
                 </div>
@@ -1705,11 +832,10 @@
         box-sizing: border-box;
     }
 
-    /* --- PAGINATION NEW STYLES --- */
     .pagination-wrapper {
         position: relative;
         width: 100%;
-        max-width: 300px; /* Constrain width to force scrolling on many dots */
+        max-width: 300px;
         margin-bottom: 16px;
         margin-top: 16px;
         overflow: visible;
@@ -1735,7 +861,6 @@
         width: fit-content;
 
         box-sizing: border-box;
-        /* Mask logic same as version chips */
         mask-image: linear-gradient(
             to right,
             transparent 0px,
@@ -1764,7 +889,7 @@
         font-size: 0.5rem;
         color: #fff;
         font-weight: bold;
-        pointer-events: none; /* Let clicks pass through */
+        pointer-events: none;
         opacity: 0;
         transition: opacity 0.2s ease;
         z-index: 10;
@@ -1785,7 +910,7 @@
     .dot {
         width: 3px;
         height: 3px;
-        flex-shrink: 0; /* Prevent shrinking */
+        flex-shrink: 0;
         border-radius: 50%;
         background-color: rgba(255, 255, 255, 0.2);
         transition: all 0.3s;
@@ -1803,12 +928,6 @@
             0 0 6px var(--color-primary),
             0 0 10px var(--color-primary);
     }
-
-    /* Fix flex behavior for scroll centering trick: 
-       To center when few items, but scroll left-align when many, 
-       we use margin: auto on the first/last elements or justify-content logic. 
-       Since we use mask, simple left align usually looks best for scrollable strips.
-    */
 
     .category-strip {
         display: flex;
@@ -1910,11 +1029,10 @@
         opacity: 0.9;
         padding-top: 1px;
     }
-
     .grid-content {
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 0px 12px;
     }
 
     .data-entry {
@@ -1927,14 +1045,12 @@
     }
 
     .filter-hud-static {
-        /* Layout: Part of the flow, pushes content down */
         width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        overflow: hidden; /* Important for slide transition */
+        overflow: hidden;
 
-        /* CRT Scanline Texture */
         background: repeating-linear-gradient(
             0deg,
             transparent,
@@ -1942,12 +1058,11 @@
             rgba(0, 0, 0, 0.5) 3px
         );
 
-        /* Subtle separator */
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .hud-inner {
-        padding: 8px 0; /* Vertical padding inside the slide area */
+        padding: 8px 0;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -1971,7 +1086,6 @@
         text-transform: uppercase;
     }
 
-    /* The blinking cursor effect */
     .hud-msg::after {
         content: "_";
         animation: blink 1s step-end infinite;

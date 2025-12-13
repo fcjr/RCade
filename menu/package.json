@@ -24,6 +24,10 @@
 		"vite": "^7.2.6"
 	},
 	"dependencies": {
+		"@rcade/api": "workspace:*",
+		"@rcade/plugin-input-classic": "^0.2.3",
+		"@rcade/plugin-menu": "workspace:*",
+		"events": "^3.3.0",
 		"three": "^0.182.0"
 	}
 }

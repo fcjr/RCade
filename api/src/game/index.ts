@@ -43,4 +43,8 @@ export class Game {
     public gitSsh(): string {
         return this.apiResponse.git.ssh;
     }
+
+    public intoApiResponse(): any {
+        return this.apiResponse;
+    }
 }

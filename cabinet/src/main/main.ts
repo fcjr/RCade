@@ -413,6 +413,7 @@ app.whenReady().then(async () => {
         authors: game.latest().authors().map(a => ({ display_name: a.display_name })),
         dependencies: game.latest().dependencies(),
         permissions: game.latest().permissions(),
+        apiResponse: game.intoApiResponse(),
       }))
         .filter((game) => game.name !== 'menu');
 

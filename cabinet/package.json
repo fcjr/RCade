@@ -22,6 +22,7 @@
     "@rcade/api": "workspace:*",
     "@rcade/input-classic": "workspace:*",
     "@rcade/input-spinners": "workspace:*",
+    "@rcade/plugin-menu-backend": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
     "hono": "^4.6.14",
     "semver": "^7.7.3",

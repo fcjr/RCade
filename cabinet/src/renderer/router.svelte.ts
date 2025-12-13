@@ -1,9 +1,5 @@
-import { type GameInfo } from '../shared/types';
-
-type Route =
-  | { page: 'carousel' }
-  | { page: 'blank' }
-  | { page: 'game'; game: GameInfo };
+import { tick } from 'svelte';
+import { type GameInfo, Route } from '../shared/types';
 
 const { manifest: initialManifest } = window.rcade.getArgs();
 
@@ -35,6 +31,18 @@ export function getLastPlayedGame() {
   return lastPlayedGame;
 }
 
+window.rcade.onRoute((route: Route) => {
+  console.log('Route change received:', route);
+
+  if (route.page === 'game') {
+    navigateToGame(route.game);
+  } else if (route.page === 'carousel') {
+    currentRoute = { page: 'carousel' };
+  } else if (route.page === 'blank') {
+    navigateToMenu();
+  }
+});
+
 let MENU_GAME: GameInfo | undefined = undefined;
 
 export async function navigateToMenu() {
@@ -56,7 +64,11 @@ export async function navigateToMenu() {
   currentRoute = { page: 'game', game: MENU_GAME };
 }
 
-export function navigateToGame(game: GameInfo) {
+export async function navigateToGame(game: GameInfo) {
+  currentRoute = { page: 'blank' };
+
+  await tick();
+
   lastPlayedGame = game;
   currentRoute = { page: 'game', game };
 }

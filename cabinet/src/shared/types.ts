@@ -39,6 +39,11 @@ export interface GameInfo {
   permissions: Permission[];
 }
 
+export type Route =
+  | { page: 'carousel' }
+  | { page: 'blank' }
+  | { page: 'game'; game: GameInfo };
+
 export interface LoadGameResult {
   url: string;
 }
@@ -52,4 +57,5 @@ export interface RcadeAPI {
   onMenuKey: (callback: () => void) => () => void;
   onInputActivity: (callback: () => void) => () => void;
   acquirePlugin: (name: string, version: string) => Promise<{ nonce: string, name: string, version: string }>;
+  onRoute: (callback: (route: Route) => void) => () => void;
 }

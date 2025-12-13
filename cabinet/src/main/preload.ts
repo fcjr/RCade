@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 
 import { contextBridge, ipcRenderer } from 'electron';
-import type { RcadeAPI, GameInfo } from '../shared/types';
+import type { RcadeAPI, GameInfo, Route } from '../shared/types';
 
 const args = JSON.parse(process.env.STARTUP_CONFIG || '{}');
 
@@ -66,6 +66,11 @@ const rcadeAPI: RcadeAPI = {
         reject
       });
     });
+  },
+  onRoute: (callback: (route: Route) => void) => {
+    const listener = (_: any, route: Route) => callback(route);
+    ipcRenderer.on('route-move', listener);
+    return () => ipcRenderer.removeListener('route-move', listener);
   }
 };
 

@@ -1,0 +1,18 @@
+{
+  "name": "@rcade/plugin-menu-backend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@rcade/api": "workspace:*",
+    "@rcade/sdk-plugin": "0.1.0",
+    "@types/node": "^25.0.1",
+    "electron": "^39.2.7"
+  }
+}

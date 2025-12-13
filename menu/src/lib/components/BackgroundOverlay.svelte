@@ -1,17 +1,33 @@
 <script lang="ts">
+    import type EventEmitter from "events";
     import * as THREE from "three";
 
-    let container: HTMLElement | null = null;
+    let { events }: { events: EventEmitter } = $props();
 
-    // In Svelte 5, $effect runs after the component mounts to the DOM.
-    // The return function inside $effect handles cleanup (onDestroy).
+    let container: HTMLElement | null = null; // Camera glide animation state
+
+    const GLIDE_DURATION_MS = 150;
+    const CAMERA_MOVE_STEP = 2.0; // The fixed distance the camera should move per event
+
+    let targetCameraX = 0;
+    let currentAnimationId: number | null = null; // Fixed lookAt target is only used once in setup, but defined here for context
+
+    const initialLookAtTarget = new THREE.Vector3(0, -10, -50); /**
+     * @param start The starting value (e.g., camera.position.x)
+     * @param end The target value (targetCameraX)
+     * @param t The interpolation factor (0.0 to 1.0)
+     * @returns The interpolated value
+     */
+
+    function lerp(start: number, end: number, t: number): number {
+        return start * (1 - t) + end * t;
+    } // --- THREE.JS SETUP EFFECT ---
+
     $effect(() => {
-        if (!container) return;
+        if (!container) return; // 1. Setup Scene
 
-        // 1. Setup Scene
         const scene = new THREE.Scene();
-        scene.background = null; // Transparent background
-        // Fixed canvas dimensions
+        scene.background = null;
         const canvasWidth = 336;
         const canvasHeight = 262;
 
@@ -22,20 +38,21 @@
             1000,
         );
         camera.position.set(0, 5, 20);
-        camera.lookAt(0, -10, -50);
+        camera.lookAt(initialLookAtTarget); // Set the initial angle once
+        // Initialize targetCameraX to current camera position
 
-        // 2. Setup Renderer with Alpha
+        targetCameraX = camera.position.x; // 2. Setup Renderer (Omitted Three.js setup for brevity)
+
         const renderer = new THREE.WebGLRenderer({
             antialias: false,
             powerPreference: "high-performance",
-            alpha: true, // Key for transparency
+            alpha: true,
         });
         renderer.setSize(canvasWidth, canvasHeight);
-        renderer.setPixelRatio(1); // Fixed pixel ratio
-        renderer.setClearColor(0x000000, 0); // 0 opacity
-        container.appendChild(renderer.domElement);
+        renderer.setPixelRatio(1);
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement); // --- GRID SETUP (Omitted) ---
 
-        // --- GRID SETUP ---
         const gridGeometry = new THREE.PlaneGeometry(1000, 1000);
         const gridMaterial = new THREE.ShaderMaterial({
             side: THREE.DoubleSide,
@@ -90,24 +107,20 @@
                 }
             `,
         });
-
         const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial);
         gridMesh.rotation.x = -Math.PI / 2;
-        scene.add(gridMesh);
+        scene.add(gridMesh); // --- PARTICLES SETUP (Omitted) ---
 
-        // --- PARTICLES SETUP ---
         const particlesCount = 500;
         const particlesGeometry = new THREE.BufferGeometry();
         const posArray = new Float32Array(particlesCount * 3);
         const randomArray = new Float32Array(particlesCount);
-
         for (let i = 0; i < particlesCount; i++) {
             posArray[i * 3 + 0] = (Math.random() - 0.5) * 300;
             posArray[i * 3 + 1] = Math.random() * 50;
             posArray[i * 3 + 2] = (Math.random() - 0.5) * 300;
             randomArray[i] = Math.random();
         }
-
         particlesGeometry.setAttribute(
             "position",
             new THREE.BufferAttribute(posArray, 3),
@@ -116,7 +129,6 @@
             "aRandom",
             new THREE.BufferAttribute(randomArray, 1),
         );
-
         const particlesMaterial = new THREE.ShaderMaterial({
             transparent: true,
             depthWrite: false,
@@ -161,48 +173,91 @@
                 }
             `,
         });
-
         const particlesMesh = new THREE.Points(
             particlesGeometry,
             particlesMaterial,
         );
-        scene.add(particlesMesh);
+        scene.add(particlesMesh); // --- CAMERA GLIDE FUNCTION ---
 
-        // --- ANIMATION LOOP ---
+        let glideStartTime: number;
+        let startCameraX: number;
+
+        const glideCamera = (timestamp: number) => {
+            if (!glideStartTime) {
+                glideStartTime = timestamp;
+                startCameraX = camera.position.x;
+            }
+
+            const elapsed = timestamp - glideStartTime;
+            let t = elapsed / GLIDE_DURATION_MS;
+            t = 1 - Math.pow(1 - t, 3); // Simple ease-out
+
+            if (elapsed < GLIDE_DURATION_MS) {
+                // Interpolate camera position
+                camera.position.x = lerp(startCameraX, targetCameraX, t);
+                renderer.render(scene, camera);
+                currentAnimationId = requestAnimationFrame(glideCamera);
+            } else {
+                // End of animation: ensure the camera is exactly at the target
+                camera.position.x = targetCameraX;
+                renderer.render(scene, camera);
+                currentAnimationId = null;
+            }
+        }; // --- ANIMATION LOOP ---
+
         const clock = new THREE.Clock();
         let animationId: number;
 
         const animate = () => {
             animationId = requestAnimationFrame(animate);
 
-            const elapsedTime = clock.getElapsedTime();
+            const elapsedTime = clock.getElapsedTime(); // Update shader uniforms using the camera's current position
 
             gridMaterial.uniforms.uCameraPos.value.copy(camera.position);
             gridMaterial.uniforms.uTime.value = elapsedTime;
 
             particlesMaterial.uniforms.uTime.value = elapsedTime;
-            particlesMaterial.uniforms.uCameraPos.value.copy(camera.position);
+            particlesMaterial.uniforms.uCameraPos.value.copy(camera.position); // Only render here if no glide animation is currently running
 
-            renderer.render(scene, camera);
+            if (currentAnimationId === null) {
+                renderer.render(scene, camera);
+            }
         };
 
-        animate();
+        animate(); // --- RESIZE HANDLER (Omitted) ---
 
-        // --- RESIZE HANDLER ---
         const onResize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         };
-        window.addEventListener("resize", onResize);
+        window.addEventListener("resize", onResize); // --- EVENT LISTENER SETUP ---
 
-        // --- CLEANUP FUNCTION ---
-        // This runs automatically when the component is unmounted
+        const handleMove = (isLeft: boolean) => {
+            const moveDirection = isLeft ? -1 : 1;
+            const newTargetX =
+                camera.position.x + moveDirection * CAMERA_MOVE_STEP; // Set the new target X position
+            // *** MODIFIED LINE: Removed THREE.MathUtils.clamp() ***
+
+            targetCameraX = newTargetX; // If an animation is running, cancel it
+
+            if (currentAnimationId) {
+                cancelAnimationFrame(currentAnimationId);
+            } // Restart the glide animation
+
+            glideStartTime = 0; // Reset start time
+            currentAnimationId = requestAnimationFrame(glideCamera);
+        };
+
+        events.on("move", handleMove); // --- CLEANUP FUNCTION ---
+
         return () => {
             window.removeEventListener("resize", onResize);
             cancelAnimationFrame(animationId);
+            if (currentAnimationId) cancelAnimationFrame(currentAnimationId);
 
-            // Dispose of Three.js objects to prevent memory leaks
+            events.off("move", handleMove); // Dispose of Three.js objects
+
             gridGeometry.dispose();
             gridMaterial.dispose();
             particlesGeometry.dispose();
@@ -219,14 +274,15 @@
 <div bind:this={container} class="canvas-wrapper"></div>
 
 <style>
+    /* Your CSS remains the same */
     .canvas-wrapper {
-        position: fixed; /* Fixed to viewport */
+        position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: 10; /* Ensure it's above background but below interactive UI */
-        pointer-events: none; /* Allows clicking through the canvas */
+        z-index: 10;
+        pointer-events: none;
         overflow: hidden;
         image-rendering: pixelated;
     }

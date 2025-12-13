@@ -1,0 +1,15 @@
+{
+  "name": "@rcade/plugin-menu",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@rcade/sdk": "^0.2.2"
+  }
+}

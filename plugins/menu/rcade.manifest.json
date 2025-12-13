@@ -1,0 +1,23 @@
+{
+    "$schema": "../../web/static/manifest.schema.json",
+    "kind": "plugin",
+    "name": "@rcade/menu",
+    "description": "The main menu plugin for RCade, providing game browsing.",
+    "visibility": "private",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "display_name": "Rose Kodsi-Hall",
+            "recurse_id": 6834
+        }
+    ],
+    "libraries": [
+        {
+            "language": "javascript",
+            "package": {
+                "name": "@rcade/plugin-menu",
+                "versions": "0.x.x"
+            }
+        }
+    ]
+}
