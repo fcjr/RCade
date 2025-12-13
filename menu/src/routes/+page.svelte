@@ -51,50 +51,75 @@
 
     // run consume deltas every frame
     function frameLoop() {
-        if (Math.abs(delta) >= DELTA_EPSILON) {
+        // for every DELTA_EPSILON in delta, emit left/right move
+        while (Math.abs(delta) >= DELTA_EPSILON) {
             if (viewportState === "neutral") {
-                const newPage =
-                    delta > 0
-                        ? Math.min(totalPages - 1, activePage + 1)
-                        : Math.max(0, activePage - 1);
-                if (newPage !== activePage) {
-                    direction = delta > 0 ? 1 : -1;
-                    activePage = newPage;
-
-                    for (let i = 0; i < Math.abs(delta); i++) {
-                        moveEvents.emit("move", delta > 0); // Emit true for left
+                if (delta > 0) {
+                    const newPage = Math.min(totalPages - 1, activePage + 1);
+                    if (newPage !== activePage) {
+                        setPage(newPage);
+                        moveEvents.emit("move", false); // Emit false for right
                     }
+                    delta -= DELTA_EPSILON;
+                } else if (delta < 0) {
+                    const newPage = Math.max(0, activePage - 1);
+                    if (newPage !== activePage) {
+                        setPage(newPage);
+                        moveEvents.emit("move", true); // Emit true for left
+                    }
+                    delta += DELTA_EPSILON;
                 }
             } else if (viewportState === "show-top") {
-                const newIndex =
-                    delta > 0
-                        ? Math.min(uniqueTags.length - 1, filterCursorIndex + 1)
-                        : Math.max(0, filterCursorIndex - 1);
-                filterCursorIndex = newIndex;
-                triggerScroll(
-                    filtersContainer,
-                    filterCursorIndex,
-                    false,
-                    updateFilterMasks,
-                );
+                if (delta > 0) {
+                    const newIndex = Math.min(
+                        uniqueTags.length - 1,
+                        filterCursorIndex + 1,
+                    );
+                    filterCursorIndex = newIndex;
+                    triggerScroll(
+                        filtersContainer,
+                        filterCursorIndex,
+                        false,
+                        updateFilterMasks,
+                    );
+                    delta -= DELTA_EPSILON;
+                } else if (delta < 0) {
+                    const newIndex = Math.max(0, filterCursorIndex - 1);
+                    filterCursorIndex = newIndex;
+                    triggerScroll(
+                        filtersContainer,
+                        filterCursorIndex,
+                        false,
+                        updateFilterMasks,
+                    );
+                    delta += DELTA_EPSILON;
+                }
             } else if (viewportState === "show-bottom" && currentGame) {
-                const newIndex =
-                    delta > 0
-                        ? Math.min(
-                              currentGame.versions().length - 1,
-                              activeVersionIndex + 1,
-                          )
-                        : Math.max(0, activeVersionIndex - 1);
-                activeVersionIndex = newIndex;
-                triggerScroll(
-                    versionsContainer,
-                    activeVersionIndex,
-                    false,
-                    updateVersionMasks,
-                );
+                if (delta > 0) {
+                    const newIndex = Math.min(
+                        currentGame.versions().length - 1,
+                        activeVersionIndex + 1,
+                    );
+                    activeVersionIndex = newIndex;
+                    triggerScroll(
+                        versionsContainer,
+                        activeVersionIndex,
+                        false,
+                        updateVersionMasks,
+                    );
+                    delta -= DELTA_EPSILON;
+                } else if (delta < 0) {
+                    const newIndex = Math.max(0, activeVersionIndex - 1);
+                    activeVersionIndex = newIndex;
+                    triggerScroll(
+                        versionsContainer,
+                        activeVersionIndex,
+                        false,
+                        updateVersionMasks,
+                    );
+                    delta += DELTA_EPSILON;
+                }
             }
-
-            delta = 0;
         }
 
         requestAnimationFrame(frameLoop);
