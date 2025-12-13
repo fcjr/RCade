@@ -158,6 +158,9 @@
 
             if (screensaverActive) {
                 gridMaterial.uniforms.uOpacity.value = 0.4;
+                gridMaterial.uniforms.uGlowColor.value = new THREE.Color(
+                    0xfacc15,
+                );
                 camera.position.x += 0.002;
             } else {
                 gridMaterial.uniforms.uOpacity.value = 0.7;
