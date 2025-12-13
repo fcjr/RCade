@@ -7,7 +7,8 @@ if (typeof ReadableStream.prototype[Symbol.asyncIterator] !== "function") {
 }
 
 import { Client } from "@rcade/api";
-import { unpackTar } from "modern-tar";
+// Dynamically import modern-tar after polyfill to ensure Safari compatibility
+const { unpackTar } = await import("modern-tar");
 import { getMimeType } from "./mime";
 import { read, remove, write } from "./persistence";
 import * as cheerio from "cheerio";
