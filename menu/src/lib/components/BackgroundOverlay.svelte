@@ -228,5 +228,6 @@
         z-index: 10; /* Ensure it's above background but below interactive UI */
         pointer-events: none; /* Allows clicking through the canvas */
         overflow: hidden;
+        image-rendering: pixelated;
     }
 </style>
