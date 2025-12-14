@@ -481,8 +481,6 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('load-game', async (event, game: GameInfo): Promise<LoadGameResult> => {
-    await setTimeout(1000);
-
     const { id, latestVersion } = game;
     const abortController = new AbortController();
 
