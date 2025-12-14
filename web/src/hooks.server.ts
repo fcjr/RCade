@@ -26,6 +26,10 @@ const corsHandle: Handle = async ({ event, resolve }) => {
         response.headers.set('Access-Control-Allow-Credentials', 'true');
     }
 
+    // Cross-Origin policies for SharedArrayBuffer support (required for WASM threading in iframed games)
+    response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+    response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+
     return response;
 };
 
