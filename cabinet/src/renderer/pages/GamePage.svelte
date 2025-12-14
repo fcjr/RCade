@@ -26,6 +26,11 @@
       }
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to load game";
+      window.rcade.gameLoaded(game.id, game.name, game.latestVersion, {
+        type: "backend",
+        error: Error.isError(error) ? error.message : String(error),
+      });
+      closeGame({ type: "return-to-menu" });
     } finally {
       loading = false;
     }
@@ -193,6 +198,22 @@
       title={game.name}
       sandbox="allow-scripts allow-same-origin"
       allow={game.permissions.includes("camera") ? "camera" : ""}
+      onerror={(error) => {
+        window.rcade.gameLoaded(game.id, game.name, game.latestVersion, {
+          kind: "iframe",
+          error: Error.isError(error) ? error.message : String(error),
+        });
+
+        closeGame({ type: "return-to-menu" });
+      }}
+      onload={() => {
+        window.rcade.gameLoaded(
+          game.id,
+          game.name,
+          game.latestVersion,
+          undefined,
+        );
+      }}
     ></iframe>
   </div>
 {/if}
@@ -259,7 +280,6 @@
     width: 100%;
     height: 100%;
     border: none;
-    background: #fff;
   }
 
   .game-frame.no-pointer {

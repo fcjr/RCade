@@ -13,6 +13,7 @@ import type { GameInfo, LoadGameResult } from '../shared/types';
 import { parseCliArgs } from "./args.js";
 import { PluginManager } from '../plugins/index.js';
 import { QuitOptions } from '@rcade/sdk';
+import { setTimeout } from 'timers/promises';
 
 const args = parseCliArgs();
 
@@ -480,6 +481,8 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('load-game', async (event, game: GameInfo): Promise<LoadGameResult> => {
+    await setTimeout(1000);
+
     const { id, latestVersion } = game;
     const abortController = new AbortController();
 
@@ -561,6 +564,10 @@ app.whenReady().then(async () => {
 
     event.sender.emit("game-unloaded", quitOptions);
   });
+
+  ipcMain.handle("game-load-finished", async (event, result) => {
+    event.sender.emit("game-load-finished", result);
+  })
 
   createWindow();
 

@@ -10,6 +10,10 @@ let channel: Promise<PluginChannel> | null = null;
             if (event.data.type === "quit_game") {
                 quitHandler?.(event.data.options);
             }
+
+            if (event.data.type === "game_load_finished") {
+                loadHandler?.(event.data.result);
+            }
         })
     });
 })();
@@ -92,4 +96,9 @@ export async function getLastGame(): Promise<string | undefined> {
 let quitHandler: ((quitOptions: QuitOptions) => void) | undefined = undefined;
 export function onGameQuit(handler: (quitOptions: QuitOptions) => void) {
     quitHandler = handler;
+}
+
+let loadHandler: ((result: any) => void) | undefined = undefined;
+export function onGameLoad(handler: (result: any) => void) {
+    loadHandler = handler;
 }

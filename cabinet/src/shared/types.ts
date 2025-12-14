@@ -56,6 +56,7 @@ export interface RcadeAPI {
   getMenuGame: () => Promise<GameInfo>;
   loadGame: (game: GameInfo) => Promise<LoadGameResult>;
   unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions) => Promise<void>;
+  gameLoaded: (gameId: string | undefined, gameName: string, version: string | undefined, result: any) => Promise<void>;
   onUnloadGame: (callback: () => void) => () => void;
   onMenuKey: (callback: () => void) => () => void;
   onInputActivity: (callback: () => void) => () => void;

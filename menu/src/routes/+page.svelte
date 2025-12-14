@@ -1,7 +1,13 @@
 <script lang="ts">
     import BackgroundOverlay from "$lib/components/BackgroundOverlay.svelte";
     import { fly, slide } from "svelte/transition";
-    import { getGames, getLastGame, onGameQuit, playGame } from "@rcade/plugin-menu";
+    import {
+        getGames,
+        getLastGame,
+        onGameLoad,
+        onGameQuit,
+        playGame,
+    } from "@rcade/plugin-menu";
     import { quartOut } from "svelte/easing";
     import { tick, onMount } from "svelte";
     import { Game } from "@rcade/api";
@@ -368,20 +374,43 @@
         tick().then(updatePaginationState);
     }
 
+    let gameLoading = false;
+    let gameError: string | undefined = undefined;
+
     function startGame(game: any, version: string) {
         playGame(game, version);
-        gameActive = true;
+        gameLoading = true;
     }
 
-    onGameQuit(quitOptions => {
+    onGameQuit((quitOptions) => {
         // todo: handle quit error
         console.error(quitOptions);
         gameActive = false;
     });
 
+    onGameLoad((result) => {
+        if (result !== undefined) {
+            gameError = result.error;
+        } else {
+            gameActive = true;
+        }
+
+        gameLoading = false;
+    });
+
     function registerPressHandler() {
         return onInput("press", (e) => {
-            if (screensaverActive || gameActive) {
+            if (gameError) {
+                // Allow A or B to dismiss the error
+                if ((e.button === "B" || e.button === "A") && e.player == 1) {
+                    gameError = undefined;
+                    // Ensure loading is off if we just dismissed an error
+                    gameLoading = false;
+                }
+                return;
+            }
+
+            if (screensaverActive || gameActive || gameLoading) {
                 return;
             }
 
@@ -606,7 +635,7 @@
     }}
 />
 
-<main>
+<main class:gameActive>
     <Fireworks
         class="fireworks"
         options={fireworkOptions}
@@ -833,11 +862,48 @@
             </div>
         {/if}
     </div>
+    {#if gameLoading}
+        <div
+            class="overlay-backdrop"
+            transition:fly={{ duration: 400, opacity: 0 }}
+        >
+            <div class="mini-loader">
+                <div class="loader-spinner-mini"></div>
+                <div class="loader-content-mini">
+                    <div class="loader-label">> SYSTEM_INIT</div>
+                    <div class="loader-bar-mini">
+                        <div class="loader-progress-mini"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    {#if gameError}
+        <div
+            class="overlay-backdrop error-mode"
+            transition:slide={{ axis: "y", duration: 200 }}
+        >
+            <div class="mini-error-box">
+                <div class="mini-err-header">
+                    <span>(!) EXECUTION_FAILURE</span>
+                </div>
+                <div class="mini-err-body">
+                    <p class="mini-err-msg">"{gameError}"</p>
+                </div>
+                <div class="mini-err-footer">
+                    <span class="key-badge">B</span>
+                    <span class="key-label">BACK</span>
+                </div>
+            </div>
+        </div>
+    {/if}
 </main>
 
 <style>
     :root {
         --color-primary: #facc15;
+        --color-error: #ff3333;
         --color-text-primary: #ffffff;
         --color-text-secondary: rgba(255, 255, 255, 1);
         --drawer-height: 70px;
@@ -869,6 +935,12 @@
         background-color: #000;
         font-family: var(--font-body);
         color: var(--color-text-primary);
+        transition: opacity 0.1s;
+        opacity: 1;
+    }
+
+    main.gameActive {
+        opacity: 0;
     }
 
     .shifting-viewport {
@@ -1426,5 +1498,164 @@
         position: absolute;
         pointer-events: none;
         z-index: 100;
+    }
+    .overlay-backdrop {
+        position: absolute;
+        inset: 0;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* --- MINI LOADER --- */
+    .mini-loader {
+        display: flex;
+        align-items: center;
+        gap: 12px; /* Horizontal layout saves vertical space */
+        padding: 10px 20px;
+        border: 1px solid rgba(250, 204, 21, 0.3);
+        background: rgba(0, 0, 0, 0.8);
+        box-shadow: 0 0 10px rgba(250, 204, 21, 0.1);
+    }
+
+    .loader-spinner-mini {
+        width: 24px;
+        height: 24px;
+        border: 2px solid rgba(250, 204, 21, 0.2);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .loader-content-mini {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .loader-label {
+        font-family: var(--font-mono);
+        color: var(--color-primary);
+        font-size: 0.6rem; /* Small readable text */
+        letter-spacing: 0.05em;
+        text-shadow: 0 0 5px var(--color-primary);
+        font-weight: bold;
+    }
+
+    .loader-bar-mini {
+        width: 100px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+    }
+
+    .loader-progress-mini {
+        width: 100%;
+        height: 100%;
+        background: var(--color-primary);
+        transform: translateX(-100%);
+        animation: loadProgress 1.5s ease-in-out infinite;
+    }
+
+    /* --- MINI ERROR SCREEN --- */
+    .overlay-backdrop.error-mode {
+        background: rgba(20, 0, 0, 0.95);
+        backdrop-filter: blur(2px);
+    }
+
+    .mini-error-box {
+        width: 280px; /* Fits comfortably inside 363px */
+        border: 1px solid var(--color-error);
+        background: #050000;
+        box-shadow: 0 0 15px rgba(255, 51, 51, 0.2);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mini-err-header {
+        background: var(--color-error);
+        color: #000;
+        font-family: var(--font-mono);
+        font-weight: 800;
+        font-size: 0.55rem;
+        padding: 2px 6px;
+        letter-spacing: 0.05em;
+    }
+
+    .mini-err-body {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .mini-err-msg {
+        font-family: var(--font-display);
+        color: #fff;
+        font-size: 0.9rem; /* Main text size */
+        line-height: 1.1;
+        margin: 0;
+        text-transform: uppercase;
+        border-left: 2px solid rgba(255, 51, 51, 0.5);
+        padding-left: 8px;
+        word-break: break-word; /* Prevent overflow */
+    }
+
+    .mini-err-meta {
+        font-family: var(--font-mono);
+        font-size: 0.45rem;
+        color: var(--color-error);
+        opacity: 0.8;
+        border-top: 1px dashed rgba(255, 51, 51, 0.3);
+        padding-top: 4px;
+    }
+
+    .mini-err-footer {
+        padding: 4px 8px;
+        background: rgba(255, 51, 51, 0.1);
+        border-top: 1px solid rgba(255, 51, 51, 0.2);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .key-badge {
+        background: #fff;
+        color: #000;
+        font-family: var(--font-mono);
+        font-size: 0.5rem;
+        font-weight: bold;
+        padding: 0px 4px;
+        border-radius: 2px;
+        line-height: 1.2;
+    }
+
+    .key-label {
+        font-family: var(--font-mono);
+        font-size: 0.5rem;
+        color: var(--color-error);
+        font-weight: bold;
+    }
+
+    /* --- ANIMATIONS --- */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes loadProgress {
+        0% {
+            transform: translateX(-100%);
+        }
+        50% {
+            transform: translateX(0%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
     }
 </style>

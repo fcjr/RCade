@@ -89,6 +89,11 @@ export default class MenuPlugin implements Plugin {
             port.postMessage({ type: "quit_game", options });
         });
 
+        // @ts-ignore
+        environment.getWebContents().addListener("game-load-finished", (result) => {
+            port.postMessage({ type: "game_load_finished", result });
+        });
+
         port.start();
     }
 

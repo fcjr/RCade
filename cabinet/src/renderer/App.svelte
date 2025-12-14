@@ -22,21 +22,19 @@
   <Screensaver />
 {/if}
 
-{#await window.rcade.getMenuGame() then menuGame}
-  <div class="{route.page == "game" ? "hidden" : ""}"><GamePage game={menuGame}/></div>
-{:catch}
-  <CarouselPage />
-{/await}
-
 {#if route.page === "game"}
   <GamePage game={route.game} />
 {/if}
 
-<style>
-  .hidden {
-    display: none;
-  }
+{#await window.rcade.getMenuGame() then menuGame}
+  <div>
+    <GamePage game={menuGame} />
+  </div>
+{:catch}
+  <CarouselPage />
+{/await}
 
+<style>
   @font-face {
     font-family: "NotoColorEmoji";
     src: url("/fonts/NotoColorEmoji.ttf") format("truetype");

@@ -39,6 +39,9 @@ const rcadeAPI: RcadeAPI = {
     ipcRenderer.emit('unload-game');
     return ipcRenderer.invoke('unload-game', gameId, name, version, quitOptions)
   },
+  gameLoaded: async (gameId: string | undefined, name: string, version: string | undefined, result: any) => {
+    ipcRenderer.invoke('game-load-finished', result);
+  },
   onUnloadGame: (callback: (config: ScreensaverConfig) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, config: ScreensaverConfig) => callback(config);
     ipcRenderer.on('unload-game', listener);
