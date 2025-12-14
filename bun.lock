@@ -131,6 +131,19 @@
     },
     "engine": {
       "name": "@rcade/engine",
+      "dependencies": {
+        "@rcade/api": "workspace:*",
+        "@rcade/log": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "log": {
+      "name": "@rcade/log",
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -341,6 +354,7 @@
         "@isomorphic-git/lightning-fs": "^4.6.2",
         "@rcade/api": "workspace:*",
         "@rcade/engine": "workspace:*",
+        "@rcade/log": "workspace:*",
         "isomorphic-git": "^1.35.1",
         "memfs": "^4.51.0",
         "semver": "^7.7.3",
@@ -372,6 +386,7 @@
       "dependencies": {
         "@rcade/api": "workspace:*",
         "@rcade/engine": "workspace:*",
+        "@rcade/log": "workspace:*",
         "modern-tar": "^0.7.2",
         "pako": "^2.1.0",
       },
@@ -792,6 +807,8 @@
     "@rcade/input-classic": ["@rcade/input-classic@workspace:plugins/input-classic"],
 
     "@rcade/input-spinners": ["@rcade/input-spinners@workspace:plugins/input-spinners"],
+
+    "@rcade/log": ["@rcade/log@workspace:log"],
 
     "@rcade/menu": ["@rcade/menu@workspace:menu"],
 

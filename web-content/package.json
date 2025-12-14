@@ -25,6 +25,7 @@
 		"wrangler": "^4.54.0"
 	},
 	"dependencies": {
+		"@rcade/log": "workspace:*",
 		"@rcade/api": "workspace:*",
 		"@rcade/engine": "workspace:*",
 		"modern-tar": "^0.7.2",

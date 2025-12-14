@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { inject } from "$lib/inject";
+    import { INJECT_SCRIPT } from "$lib/injection_script";
     import { onMount } from "svelte";
 
     onMount(() => {
-        inject();
+        eval(INJECT_SCRIPT);
     });
 </script>

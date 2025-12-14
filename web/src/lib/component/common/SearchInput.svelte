@@ -38,12 +38,10 @@
 		bind:value
 		{placeholder}
 		oninput={(e) => {
-			console.log('Input Value:', (e.target as HTMLInputElement).value);
 			value = (e.target as HTMLInputElement).value;
 			if (oninput) oninput(value);
 		}}
 		onchange={(e) => {
-			console.log('Change Value:', (e.target as HTMLInputElement).value);
 			value = (e.target as HTMLInputElement).value;
 			if (onchange) onchange(value);
 		}}

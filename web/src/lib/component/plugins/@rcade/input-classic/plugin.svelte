@@ -100,10 +100,6 @@
 
 			// if there's a channel, send { type: "system" | "button", player: number, button: "ONE_PLAYER" | "A" | "UP" | etc.., pressed: boolean }
 			if (this.currentChannel) {
-				console.log(
-					`InputClassicEmulator sending button state: player=${player}, button=${button}, pressed=${pressed}`
-				);
-
 				this.currentChannel.postMessage({
 					type: player === 'system' ? 'system' : 'button',
 					player: player === 'system' ? 0 : player === 'p1' ? 1 : 2,
@@ -241,8 +237,6 @@
 		if (stateVar === undefined) return;
 		if (stateVar.v === (state === 'PRESS')) return; // No change
 
-		console.log(`Player ${player.toUpperCase()} ${state} ${action}`);
-
 		stateVar.v = state === 'PRESS';
 
 		provider.updateButtonState(player, action, state === 'PRESS');
@@ -253,8 +247,6 @@
 
 		if (stateVar === undefined) return;
 		if (stateVar.v === (state === 'PRESS')) return; // No change
-
-		console.log(`System ${state} ${action}`);
 
 		stateVar.v = state === 'PRESS';
 

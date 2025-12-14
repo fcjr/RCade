@@ -47,8 +47,6 @@
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Orbitron:wght@500;700&family=Roboto+Mono:wght@400;700&display=swap');
-
 	:root {
 		--deck-bg: #1e2124;
 		--deck-face: #282b30;

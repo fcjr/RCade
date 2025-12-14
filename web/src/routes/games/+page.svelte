@@ -13,8 +13,6 @@
 	let activeFilters: string[] = $derived(page.url.searchParams.getAll('c'));
 
 	function handleSearch(value: string) {
-		console.log('Search Value:', value);
-
 		if (value) {
 			page.url.searchParams.set('q', value);
 		} else {
@@ -25,8 +23,6 @@
 	}
 
 	function handleFilter(filters: string[]) {
-		console.log('Filter Values:', filters);
-
 		if (filters.length > 0) {
 			page.url.searchParams.delete('c');
 			filters.forEach((filter) => {

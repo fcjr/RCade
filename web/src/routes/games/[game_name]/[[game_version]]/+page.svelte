@@ -8,6 +8,8 @@
 	} from '$lib/component/plugins/@rcade/input-classic/plugin.svelte';
 	import { RCadeWebEngine, type ProgressReport } from '@rcade/engine';
 	import type { Game, GameVersion } from '@rcade/api';
+	import { Logger, BrowserLogRenderer } from '@rcade/log';
+	import { onDestroy } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -84,7 +86,7 @@
 
 			await ENGINE.unload();
 
-			await ENGINE.load(game.id(), version.version(), (progress) => {
+			await ENGINE.load(game, version.version(), (progress) => {
 				if (current_state.kind !== 'loading' && current_state.kind !== 'initializing') return;
 
 				current_state = { kind: 'loading', progress };
@@ -92,18 +94,37 @@
 
 			current_state = { kind: 'playing' };
 		} catch (err) {
-			current_state = { kind: 'error', error: (err as Error).message };
+			handleError(err);
 			return;
 		}
 	}
 
 	let ENGINE: RCadeWebEngine | undefined = undefined;
+	let ENGINE_DESTROY = new AbortController();
+
+	onDestroy(() => {
+		ENGINE_DESTROY.abort();
+	});
+
+	function handleError(content: any) {
+		if (typeof content === 'string')
+			return void (current_state = { kind: 'error', error: content });
+
+		if (Error.isError(content))
+			return void (current_state = { kind: 'error', error: (content as Error).message });
+
+		return (current_state = { kind: 'error', error: String(content) });
+	}
 
 	async function play() {
 		current_state = { kind: 'initializing' };
 
 		try {
-			ENGINE ??= await RCadeWebEngine.initialize(gameContents);
+			ENGINE ??= await RCadeWebEngine.initialize(gameContents, {
+				logger: Logger.create().withHandler(BrowserLogRenderer).withMinimumLevel('DEBUG'),
+				appUrl: 'http://localhost:5174',
+				cancellationToken: ENGINE_DESTROY.signal
+			});
 
 			ENGINE.onPermissionDenied((permission) => {
 				current_state = { kind: 'permission_denied', permission };
@@ -111,7 +132,7 @@
 
 			ENGINE.register(plugin);
 
-			await ENGINE.load(data.game.id(), data.version.version(), (progress) => {
+			await ENGINE.load(data.game, data.version.version(), (progress) => {
 				if (current_state.kind !== 'loading' && current_state.kind !== 'initializing') return;
 
 				current_state = { kind: 'loading', progress };
@@ -119,7 +140,7 @@
 
 			current_state = { kind: 'playing' };
 		} catch (err) {
-			current_state = { kind: 'error', error: (err as Error).message };
+			handleError(err);
 			return;
 		}
 

@@ -1,10 +1,12 @@
 import type { PluginProvider } from "./plugin/provider";
 
-export { type PluginProvider } from "./plugin/provider";
+import { Logger, BrowserLogRenderer, type LogHandler, LogEntry } from "@rcade/log";
+import { Client, Game } from "@rcade/api";
 
 export type RCadeWebEngineConfig = {
     appUrl: string,
     cancellationToken?: AbortSignal,
+    logger?: Logger,
 }
 
 export type ProgressReport = {
@@ -34,10 +36,10 @@ export type ProgressReport = {
 }
 
 export class RCadeWebEngine {
-    static async move(iframe: HTMLIFrameElement, resolved_url: string) {
+    private static async move(logger: Logger, iframe: HTMLIFrameElement, resolved_url: string) {
         iframe.src = resolved_url;
 
-        console.log("Moving iframe to", resolved_url);
+        logger.debug("Moving iframe to", resolved_url);
 
         const hello = new Promise((resolve) => {
             const listener = (event: MessageEvent) => {
@@ -57,13 +59,13 @@ export class RCadeWebEngine {
             iframe.addEventListener("load", onLoad);
         });
 
-        console.log("Iframe moved to", resolved_url);
+        logger.debug("Iframe moved to", resolved_url);
 
-        console.log("Waiting for SW port...");
+        logger.debug("Waiting for SW port...");
 
         const { message, port } = await hello as any;
 
-        console.log("SW port acquired");
+        logger.debug("SW port acquired");
 
         port.start();
 
@@ -72,6 +74,7 @@ export class RCadeWebEngine {
 
     static async initialize(element: HTMLElement, config: Partial<RCadeWebEngineConfig> = {}) {
         const appUrl = new URL(config.appUrl ?? "https://usercontent.rcade.dev");
+        const logger = (config.logger ?? Logger.create().withHandler(BrowserLogRenderer).withMinimumLevel("INFO")).withModule("RCadeEngine");
 
         appUrl.pathname = "/__rcade_blank";
 
@@ -82,13 +85,14 @@ export class RCadeWebEngine {
         iframe.style.border = "none";
         iframe.allow = "camera";
 
-        let loaded = this.move(iframe, appUrl.toString());
+        let loaded = this.move(logger, iframe, appUrl.toString());
 
         // mount the iframe to the element
         element.appendChild(iframe);
 
         // Set up cancellation handler
         const cleanup = () => {
+            logger.warn("Initialize Cancelled");
             iframe.remove();
         };
 
@@ -103,45 +107,64 @@ export class RCadeWebEngine {
 
         const { message, port } = await loaded;
 
-        return new RCadeWebEngine(iframe, message, port, appUrl, config.cancellationToken);
+        if (config.cancellationToken) {
+            config.cancellationToken.removeEventListener("abort", cleanup);
+        }
+
+        return new RCadeWebEngine(logger, iframe, message, port, appUrl, config.cancellationToken);
     }
 
+    private port_listener: any;
+    private window_listener: any;
+
     private constructor(
+        private logger: Logger,
         private iframe: HTMLIFrameElement,
         private hello: any,
         private port: MessagePort,
         private appUrl: URL,
         cancellationToken?: AbortSignal
     ) {
+        logger.info("Initialized");
+
         if (cancellationToken) {
             cancellationToken.addEventListener("abort", () => {
                 this.dispose();
             }, { once: true });
         }
 
-        port.addEventListener("message", (event) => {
-            console.log("RCadeWebEngine received port message:", event.data);
+        this.port_listener = (event: MessageEvent) => {
+            if (event.data && event.data.type === "SW_LOG") {
+                logger.dispatch(LogEntry.fromLogObject(event.data.content));
+                return
+            }
 
             if (event.data && event.data.type === "DISPOSE_PORT") {
-                // iframe.src = 
-                // this.eval(`
-                //     document.body.innerHTML = "<h1>Service Worker Disposed</h1><p>The service worker has disposed the communication port. Please refresh the page to try again.</p>";
-                //     document.body.style.display = "flex";
-                //     document.body.style.flexDirection = "column";
-                //     document.body.style.justifyContent = "center";
-                //     document.body.style.alignItems = "center";
-                //     document.body.style.height = "100vh";
-                //     document.body.style.backgroundColor = "#f8d7da";
-                //     document.body.style.color = "#721c24";
-                //     document.body.style.fontFamily = "Arial, sans-serif";
-                //     document.body.style.textAlign = "center";
-                //     document.body.style.padding = "20px";
-                // `)
+                this.dispose();
+                return;
             }
-        });
 
-        window.addEventListener("message", (event) => {
-            console.log("RCadeWebEngine received window message:", event.data);
+            if (event.data && ["GAME_LOAD_PROGRESS", "GAME_LOADED", "GAME_LOAD_FAILED", "GAME_UNLOADED", "GAME_UNLOAD_FAILED"].includes(event.data.type)) {
+                return;
+            }
+
+            logger.warn("Received unknown port message:", event.data);
+        };
+
+        this.window_listener = (event: MessageEvent) => {
+            if (event.source !== iframe.contentWindow) {
+                logger.info("Ignoring message with incorrect source:", event.data);
+                return;
+            }
+
+            if (event.data && event.data.type === "WIN_LOG") {
+                logger.withModule("iframe").dispatch(LogEntry.fromLogObject(event.data.content));
+                return
+            }
+
+            if (event.data && ["SW_PORT_READY"].includes(event.data.type)) {
+                return;
+            }
 
             if (event.data && event.data.type === "PERMISSION_DENIED") {
                 this.permissionDeniedHandler?.(event.data.permission);
@@ -152,10 +175,12 @@ export class RCadeWebEngine {
                 const nonce = event.data.nonce;
                 const channel = event.data.channel;
 
+                const acquire = logger.info("Attempting to acquire:", channel);
+
                 const provider = this.plugins.get(channel.name);
 
                 if (!provider) {
-                    console.error(`No plugin registered with name: ${channel.name}`);
+                    logger.because(acquire).error(`No plugin registered with name: ${channel.name}`);
 
                     this.iframe.contentWindow?.postMessage({
                         type: "plugin_channel",
@@ -171,7 +196,11 @@ export class RCadeWebEngine {
                 try {
                     pluginPort = provider.getChannel(channel.version);
                 } catch (err: any) {
-                    console.error(`Error acquiring plugin channel for ${channel.name}:`, err);
+                    if (Error.isError(err)) {
+                        logger.dispatch(LogEntry.fromErrorWithCause(acquire, err));
+                    } else {
+                        logger.because(acquire).error(err);
+                    }
 
                     this.iframe.contentWindow?.postMessage({
                         type: "plugin_channel",
@@ -186,8 +215,17 @@ export class RCadeWebEngine {
                     nonce,
                     channel: { name: pluginPort.name, version: pluginPort.version },
                 }, "*", [pluginPort.channel]);
+
+                return;
             }
-        });
+
+            logger.warn("Received unknown window message:", event.data);
+        };
+
+        port.addEventListener("message", this.port_listener);
+        window.addEventListener("message", this.window_listener);
+
+        port.postMessage({ type: "LOG_START" })
     }
 
     private state: "idle" | "moving" | "loaded" | "error" = "idle";
@@ -198,6 +236,11 @@ export class RCadeWebEngine {
     }
 
     private dispose() {
+        this.logger.info("Disposing");
+
+        this.port.removeEventListener("message", this.port_listener);
+        window.removeEventListener("message", this.window_listener);
+
         this.port.postMessage({ type: "DISPOSE_PORT" });
         this.iframe.remove();
     }
@@ -222,10 +265,14 @@ export class RCadeWebEngine {
     }
 
     private async moveTo(path: string) {
-        const { message, port } = await RCadeWebEngine.move(this.iframe, new URL(path, this.appUrl).toString());
+        const { message, port } = await RCadeWebEngine.move(this.logger, this.iframe, new URL(path, this.appUrl).toString());
 
         this.port = port;
         this.port.start();
+
+        this.port.addEventListener("message", this.port_listener);
+
+        this.port.postMessage({ type: "LOG_START" })
 
         return message;
     }
@@ -247,7 +294,7 @@ export class RCadeWebEngine {
         this.plugins.delete(name);
     }
 
-    public async load(gameId: string, version: string | "latest" = "latest", progressHandler?: (progress: ProgressReport) => void) {
+    public async load(game: Game, version: string | "latest", progressHandler?: (progress: ProgressReport) => void) {
         if (this.state !== "idle") {
             throw new Error(`Cannot load game while in state: ${this.state}`);
         }
@@ -259,7 +306,7 @@ export class RCadeWebEngine {
         });
 
         this.state = "moving";
-        this.port.postMessage({ type: "LOAD_GAME", content: { gameId, version } });
+        this.port.postMessage({ type: "LOAD_GAME", content: { game: game.intoApiResponse(), version } });
 
         const response = await this.waitFor("GAME_LOADED", "GAME_LOAD_FAILED");
 

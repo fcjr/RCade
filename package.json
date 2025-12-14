@@ -22,7 +22,8 @@
     "vite-plugins",
     "web-content",
     "engine",
-    "menu"
+    "menu",
+    "log"
   ],
   "scripts": {
     "dev:web": "bun run --cwd web dev",

@@ -23,5 +23,9 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@rcade/log": "workspace:*",
+    "@rcade/api": "workspace:*"
   }
 }

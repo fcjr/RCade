@@ -17,50 +17,17 @@ if (typeof ReadableStream !== 'undefined' && !ReadableStream.prototype[Symbol.as
     };
 }
 
-import { Client } from "@rcade/api";
 import { unpackTar } from "modern-tar";
 import { ungzip } from "pako";
 import { getMimeType } from "./mime";
 import { read, remove, write } from "./persistence";
+import { LogEntry, LogForwarder, Logger } from "@rcade/log"
+import { Game } from "@rcade/api";
+import { INJECT_SCRIPT } from "../lib/injection_script";
 
 const DEV_MODE = false;
-
-const INJECT_SCRIPT = `
-// Wrap getUserMedia to catch permission denials and notify parent
-(function() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-    const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia = async function(constraints) {
-        try {
-            return await original(constraints);
-        } catch (err) {
-            if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
-                const permission = constraints?.video ? 'camera' : constraints?.audio ? 'microphone' : 'media';
-                window.parent.postMessage({ type: "PERMISSION_DENIED", permission }, "*");
-            }
-            throw err;
-        }
-    };
-})();
-
-(async () => {
-    const registration = await navigator.serviceWorker.ready;
-    const sw = registration.active;
-    const messageChannel = new MessageChannel();
-    const hello = new Promise((resolve) => {
-        const listener = (event) => {
-            if (event.data && event.data.type === "PORT_INIT") {
-                messageChannel.port1.removeEventListener("message", listener);
-                resolve(event.data.content);
-            }
-        };
-        messageChannel.port1.addEventListener("message", listener);
-        messageChannel.port1.start();
-    });
-    sw.postMessage({ type: "INIT_PORT" }, [messageChannel.port2]);
-    const content = await hello;
-    window.parent.postMessage({ type: "SW_PORT_READY", content }, "*", [messageChannel.port1]);
-})();`;
+const forwarder = LogForwarder.withTimeout(2000);
+const logger = Logger.create().withHandler(forwarder).withModule("ServiceWorker").withMinimumLevel("DEBUG");
 
 function determineDevUrl(url: URL) {
     if (url.pathname.startsWith("/@fs"))
@@ -86,75 +53,120 @@ function determineDevUrl(url: URL) {
 
 let g: ServiceWorkerGlobalScope = self as unknown as ServiceWorkerGlobalScope;
 
-const client = Client.new();
 let currently_on_blank = false;
 
 g.addEventListener("fetch", (event: FetchEvent) => {
+    const handle = logger.debug("Handling `fetch` event: ", event.request.method, event.request.url, Object.fromEntries(event.request.headers.entries()))
+
     let url = new URL(event.request.url);
 
     if (DEV_MODE && determineDevUrl(url)) {
+        logger.because(handle).debug("Ignored as a developer url");
         return;
     }
 
-    if (currently_on_blank)
+    if (currently_on_blank) {
+        logger.because(handle).debug("Ignored because origin state is the blank page");
         return;
+    }
 
-    if (url.pathname.startsWith("/__rcade_blank"))
+    if (url.pathname.startsWith("/__rcade_blank")) {
+        logger.because(handle).debug("Ignored because is the blank page");
         return;
+    }
 
     try {
         let referrer = new URL(event.request.referrer);
 
         if (referrer.pathname.startsWith("/__rcade_blank")) {
+            logger.because(handle).debug("Ignored because origin is the blank page");
             currently_on_blank = true;
+            return;
         } else {
             currently_on_blank = false;
         }
-    } catch (e) { }
+    } catch (err) {
+        if (Error.isError(err)) {
+            logger.dispatch(LogEntry.fromErrorWithCause(handle, err).withLevel("DEBUG"));
+        } else {
+            logger.because(handle).debug(err)
+        }
+    }
 
-    return event.respondWith(
-        read("CURRENT_GAME").then(async (data) => {
-            console.log("Fetching asset for", data, ":", url.pathname);
+    let responding: LogEntry = handle;
 
-            const CURRENT_GAME = JSON.parse(data) as [string, string];
-            const cache = await caches.open(`${CURRENT_GAME[0]}/${CURRENT_GAME[1]}`);
-            const response = await cache.match(new URL(`https://${CURRENT_GAME[1]}.${CURRENT_GAME[0]}.rcade-game${url.pathname}`));
+    try {
+        return event.respondWith(
+            read("CURRENT_GAME").then(async (data) => {
+                const CURRENT_GAME = JSON.parse(data) as [string, string];
 
-            if (!response) {
-                return new Response("ASSET MISSING", { status: 404 });
-            }
+                responding = logger.because(handle).debug(`Responding for ${CURRENT_GAME[0]} @ ${CURRENT_GAME[1]}`);
 
-            if (response.headers.get("Content-Type")?.toLowerCase().includes("text/html")) {
-                const html = await response.text();
-                const scriptTag = `<script>${INJECT_SCRIPT}</script>`;
+                const cache = await caches.open(`${CURRENT_GAME[0]}/${CURRENT_GAME[1]}`);
+                const response = await cache.match(new URL(`https://${CURRENT_GAME[1]}.${CURRENT_GAME[0]}.rcade-game${url.pathname}`));
 
-                let injectedHtml: string;
-                if (/<head(\s[^>]*)?>|<head>/i.test(html)) {
-                    // first try to insert after <head> tag
-                    injectedHtml = html.replace(/<head(\s[^>]*)?>|<head>/i, (match) => match + scriptTag);
-                } else if (/<html(\s[^>]*)?>|<html>/i.test(html)) {
-                    // if <head>, insert after <html> tag
-                    injectedHtml = html.replace(/<html(\s[^>]*)?>|<html>/i, (match) => match + scriptTag);
-                } else {
-                    // else if no <head> or <html>, prepend to document
-                    injectedHtml = scriptTag + html;
+                if (!response) {
+                    logger.because(responding).warn("Request for missing asset", url.pathname);
+                    return new Response("ASSET MISSING", { status: 404 });
                 }
 
-                return new Response(injectedHtml, {
-                    headers: { "Content-Type": "text/html" }
-                });
-            }
 
-            return response;
-        }).catch(() => {
-            return new Response("NO GAME LOADED", { status: 404 });
-        })
-    );
+                if (response.headers.get("Content-Type")?.toLowerCase().includes("text/html")) {
+                    let patching = logger.because(responding).debug("Patching response");
+
+                    try {
+                        const html = await response.text();
+                        const scriptTag = `<script>${INJECT_SCRIPT}</script>`;
+
+                        let injectedHtml: string;
+                        if (/<head(\s[^>]*)?>|<head>/i.test(html)) {
+                            // first try to insert after <head> tag
+                            injectedHtml = html.replace(/<head(\s[^>]*)?>|<head>/i, (match) => match + scriptTag);
+                        } else if (/<html(\s[^>]*)?>|<html>/i.test(html)) {
+                            // if <head>, insert after <html> tag
+                            injectedHtml = html.replace(/<html(\s[^>]*)?>|<html>/i, (match) => match + scriptTag);
+                        } else {
+                            // else if no <head> or <html>, prepend to document
+                            injectedHtml = scriptTag + html;
+                        }
+
+                        return new Response(injectedHtml, {
+                            headers: { "Content-Type": "text/html" }
+                        });
+                    } catch (err) {
+                        if (Error.isError(err)) {
+                            logger.dispatch(LogEntry.fromErrorWithCause(patching, err));
+                        } else {
+                            logger.because(patching).error(err);
+                        }
+
+                        return new Response("PATCHING ERROR", { status: 500 });
+                    }
+                }
+
+                return response;
+            }).catch((err) => {
+                if (Error.isError(err)) {
+                    logger.dispatch(LogEntry.fromErrorWithCause(responding, err));
+                } else {
+                    logger.error(err);
+                }
+
+                return new Response("NO GAME LOADED", { status: 404 });
+            })
+        );
+    } catch (err) {
+        if (Error.isError(err)) {
+            logger.dispatch(LogEntry.fromErrorWithCause(responding, err));
+        } else {
+            logger.because(responding).error(err);
+        }
+    }
 });
 
 let CURRENT_PORT: MessagePort | undefined = undefined;
 
-g.addEventListener("message", (event) => {
+g.addEventListener("message", async (event) => {
     if (event.data && event.data.type === "INIT_PORT") {
         const port: MessagePort = event.ports[0];
 
@@ -168,30 +180,50 @@ g.addEventListener("message", (event) => {
         CURRENT_PORT = port;
 
         port.addEventListener("message", handlePortMessage);
-        port.postMessage({ type: "PORT_INIT", content: {} });
+        port.postMessage({ type: "PORT_INIT", content: { game: JSON.parse(await read("CURRENT_GAME")) } });
+
         return;
     }
+
+    logger.warn("Unknown global message", event.data);
 });
 
 function handlePortMessage(event: MessageEvent) {
     if (event.data && event.data.type === "DISPOSE_PORT") {
         CURRENT_PORT?.close();
         CURRENT_PORT = undefined;
+        forwarder.setTarget(undefined);
+        return;
+    }
+
+    if (event.data && event.data.type === "LOG_START") {
+        let port = CURRENT_PORT!;
+        forwarder.setTarget((msg) => {
+            port.postMessage({ type: "SW_LOG", content: msg.toLogObject() })
+        });
+
         return;
     }
 
     if (event.data && event.data.type === "LOAD_GAME") {
-        const { gameId, version } = event.data.content;
+        const loading = logger.debug("Loading game", event.data.content);
 
-        console.log("Loading game", gameId, "version", version);
+        const { game, version } = event.data.content;
 
-        loadGame(gameId, version)
-            .then(async ({ game_id, version }) => {
+        loadGame(game, version, loading)
+            .then(async ({ game_id, version, name }) => {
                 currently_on_blank = false;
-                await write("CURRENT_GAME", JSON.stringify([game_id, version]));
+                await write("CURRENT_GAME", JSON.stringify([game_id, version, name]));
                 CURRENT_PORT?.postMessage({ type: "GAME_LOADED", content: { game_id, version } });
+                logger.because(loading).debug("Loaded game");
             })
             .catch((err) => {
+                if (Error.isError(err)) {
+                    logger.dispatch(LogEntry.fromErrorWithCause(loading, err));
+                } else {
+                    logger.because(loading).error(err);
+                }
+
                 CURRENT_PORT?.postMessage({ type: "GAME_LOAD_FAILED", content: err.message });
             });
 
@@ -199,15 +231,26 @@ function handlePortMessage(event: MessageEvent) {
     }
 
     if (event.data && event.data.type === "UNLOAD_GAME") {
+        const unloading = logger.debug("Unloading");
+
         remove("CURRENT_GAME")
             .then(() => {
                 CURRENT_PORT?.postMessage({ type: "GAME_UNLOADED" });
+                logger.because(unloading).debug("Unloaded");
             })
             .catch((err) => {
+                if (Error.isError(err)) {
+                    logger.dispatch(LogEntry.fromErrorWithCause(unloading, err));
+                } else {
+                    logger.because(unloading).error(err);
+                }
+
                 CURRENT_PORT?.postMessage({ type: "GAME_UNLOAD_FAILED", content: err.message });
             });
         return;
     }
+
+    logger.warn("Unknown port message", event.data);
 }
 
 function resolveAbsolutePath(relativePath: string, basePath: string, game_id: string, version: string) {
@@ -254,10 +297,11 @@ function announceProgress(progress: ProgressReport) {
         CURRENT_PORT.postMessage({ type: "GAME_LOAD_PROGRESS", content: progress });
 }
 
-export async function loadGame(game_id: string, version: string | "latest") {
+export async function loadGame(gameData: any, version: string | "latest", loading: LogEntry) {
     announceProgress({ state: "starting" });
 
-    const game = await client.getGame(game_id);
+    const game = Game.fromApiResponse(gameData);
+    loading = logger.because(loading).debug("Found game", game.name(), `(${game.id()})`);
     let ver;
 
     if (version === "latest") {
@@ -266,19 +310,29 @@ export async function loadGame(game_id: string, version: string | "latest") {
         ver = game.versions().find(v => v.version() === version)
     }
 
-    if (ver === undefined)
-        throw new Error("Version not found");
+    if (ver === undefined) {
+        logger.because(loading).error(`Version ${version} not found.`);
+        throw new Error(`Version ${version} not found`);
+    }
+
+    loading = logger.because(loading).debug(`Found version: ${ver.version()}`);
 
     const contentUrl = ver.contentUrl();
 
-    if (contentUrl === undefined)
+    if (contentUrl === undefined) {
+        logger.because(loading).error(`No content url for this version`);
         throw new Error("No content URL for this version");
+    }
 
     announceProgress({ state: "fetching" });
+
+    loading = logger.because(loading).debug("fetching", contentUrl)
 
     const content = await fetch(contentUrl);
     const contentLength = content.headers.get('content-length');
     const total = contentLength ? parseInt(contentLength, 10) : undefined;
+
+    loading = logger.because(loading).debug(`Downloading bundle with size`, content.headers.get('content-length'))
 
     let loaded = 0;
     const reader = content.body!.getReader();
@@ -306,14 +360,16 @@ export async function loadGame(game_id: string, version: string | "latest") {
     }
 
     announceProgress({ state: "opening" });
-    const cache = await caches.open(`${game_id}/${ver.version()}`);
+    const cache = await caches.open(`${game.id()}/${ver.version()}`);
 
     // Decompress gzip using pako (pure JS, Safari-compatible)
     const decompressedData = ungzip(compressedData);
 
     const cache_keys = await cache.keys();
 
+    loading = logger.because(loading).debug(`Clearing cache`)
     for (const key of cache_keys) {
+        logger.because(loading).debug(`Clearing`, key.url);
         announceProgress({
             state: "clearing_cache",
             current: key.url,
@@ -323,18 +379,23 @@ export async function loadGame(game_id: string, version: string | "latest") {
         await cache.delete(key);
     }
 
+    loading = logger.because(loading).debug(`Unpacking tarball`)
     announceProgress({ state: "unpacking" });
     const entries = await unpackTar(decompressedData);
+
+    loading = logger.because(loading).debug(`Found ${entries.length} files`);
 
     const file_count = entries.filter(entry => entry.header.type === "file").length;
 
     for (const entry of entries) {
         if (entry.header.type === "file") {
-            const response = new Response(entry.data ?? new Uint8Array(0), {
+            const response = new Response((entry.data ?? new Uint8Array(0)) as any, {
                 headers: { "Content-Type": getMimeType(entry.header.name) }
             });
 
-            const path = resolveAbsolutePath(entry.header.name, "/", game_id, ver.version());
+            const path = resolveAbsolutePath(entry.header.name, "/", game.id(), ver.version());
+
+            logger.because(loading).debug(`Caching`, path.toString());
 
             announceProgress({
                 state: "caching",
@@ -342,9 +403,10 @@ export async function loadGame(game_id: string, version: string | "latest") {
                 current_index: entries.indexOf(entry) + 1,
                 total: file_count,
             });
+
             await cache.put(path, response);
         }
     }
 
-    return { game_id, version: ver.version() };
+    return { game_id: game.id(), version: ver.version(), name: game.name() };
 }

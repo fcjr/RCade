@@ -10,10 +10,6 @@
 	import Footer from '$lib/component/Footer.svelte';
 
 	let isLoggedIn = $state(page.data.session != null);
-
-	function handlePlayGame(gameId: string) {
-		console.log('Playing game:', gameId);
-	}
 </script>
 
 <div class="app">
