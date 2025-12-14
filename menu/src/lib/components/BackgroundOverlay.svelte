@@ -2,10 +2,15 @@
     import type EventEmitter from "events";
     import * as THREE from "three";
     import { SCREENSAVER } from "@rcade/plugin-sleep";
+    import { onMount } from "svelte";
 
     let { events }: { events: EventEmitter } = $props();
 
-    let container: HTMLElement | null = null;
+    // todo: get canvas size from sdk instead of hardcoding resolution
+    const canvasWidth = 336;
+    const canvasHeight = 262;
+    let canvas: HTMLCanvasElement;
+    const TILE_WIDTH = 10;
 
     const GLIDE_DURATION_MS = 150;
     const CAMERA_MOVE_STEP = 2.0;
@@ -29,13 +34,9 @@
         screensaverActive = false;
     });
 
-    $effect(() => {
-        if (!container) return;
-
+    onMount(() => {
         const scene = new THREE.Scene();
         scene.background = null;
-        const canvasWidth = 336;
-        const canvasHeight = 262;
 
         const camera = new THREE.PerspectiveCamera(
             45,
@@ -46,28 +47,29 @@
         camera.position.set(0, 5, 20);
         camera.lookAt(initialLookAtTarget);
 
-        targetCameraX = camera.position.x;
+        let currentCameraX = camera.position.x;
+        targetCameraX = currentCameraX;
 
         const renderer = new THREE.WebGLRenderer({
             antialias: false,
             powerPreference: "high-performance",
             alpha: true,
+            canvas,
         });
         renderer.setSize(canvasWidth, canvasHeight);
         renderer.setPixelRatio(1);
         renderer.setClearColor(0x000000, 0);
-        container.appendChild(renderer.domElement);
 
         // Enhanced Grid with sharper lines
         const gridGeometry = new THREE.PlaneGeometry(1000, 1000);
         const gridMaterial = new THREE.ShaderMaterial({
-            side: THREE.DoubleSide,
+            side: THREE.FrontSide,
             transparent: true,
             blending: THREE.AdditiveBlending,
             uniforms: {
                 uBaseColor: { value: new THREE.Color(0xfacc15) },
                 uGlowColor: { value: new THREE.Color(0xfde047) },
-                uSize: { value: 10.0 },
+                uSize: { value: TILE_WIDTH },
                 uTime: { value: 0.0 },
                 uFadeDistance: { value: 150.0 },
                 uCameraPos: { value: new THREE.Vector3() },
@@ -129,7 +131,7 @@
         const glideCamera = (timestamp: number) => {
             if (!glideStartTime) {
                 glideStartTime = timestamp;
-                startCameraX = camera.position.x;
+                startCameraX = currentCameraX;
             }
 
             const elapsed = timestamp - glideStartTime;
@@ -137,11 +139,11 @@
             t = 1 - Math.pow(1 - t, 3);
 
             if (elapsed < GLIDE_DURATION_MS) {
-                camera.position.x = lerp(startCameraX, targetCameraX, t);
+                currentCameraX = lerp(startCameraX, targetCameraX, t);
                 renderer.render(scene, camera);
                 currentAnimationId = requestAnimationFrame(glideCamera);
             } else {
-                camera.position.x = targetCameraX;
+                currentCameraX = targetCameraX;
                 renderer.render(scene, camera);
                 currentAnimationId = null;
             }
@@ -161,11 +163,12 @@
                 gridMaterial.uniforms.uGlowColor.value = new THREE.Color(
                     0xfacc15,
                 );
-                camera.position.x += 0.002;
-                targetCameraX = camera.position.x;
+                currentCameraX += 0.002;
+                targetCameraX = currentCameraX;
             } else {
                 gridMaterial.uniforms.uOpacity.value = 0.7;
             }
+            camera.position.x = currentCameraX % TILE_WIDTH;
 
             gridMaterial.uniforms.uCameraPos.value.copy(camera.position);
             gridMaterial.uniforms.uTime.value = elapsedTime;
@@ -209,15 +212,17 @@
             gridGeometry.dispose();
             gridMaterial.dispose();
             renderer.dispose();
-
-            if (renderer.domElement && container) {
-                container.removeChild(renderer.domElement);
-            }
         };
     });
 </script>
 
-<div bind:this={container} class="canvas-wrapper"></div>
+<canvas
+    bind:this={canvas}
+    width={canvasWidth}
+    height={canvasHeight}
+    class="canvas-wrapper"
+>
+</canvas>
 
 <style>
     .canvas-wrapper {
