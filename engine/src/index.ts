@@ -143,6 +143,11 @@ export class RCadeWebEngine {
         window.addEventListener("message", (event) => {
             console.log("RCadeWebEngine received window message:", event.data);
 
+            if (event.data && event.data.type === "PERMISSION_DENIED") {
+                this.permissionDeniedHandler?.(event.data.permission);
+                return;
+            }
+
             if (event.data && event.data.type === "acquire_plugin_channel") {
                 const nonce = event.data.nonce;
                 const channel = event.data.channel;
@@ -186,6 +191,11 @@ export class RCadeWebEngine {
     }
 
     private state: "idle" | "moving" | "loaded" | "error" = "idle";
+    private permissionDeniedHandler?: (permission: string) => void;
+
+    public onPermissionDenied(handler: (permission: string) => void) {
+        this.permissionDeniedHandler = handler;
+    }
 
     private dispose() {
         this.port.postMessage({ type: "DISPOSE_PORT" });

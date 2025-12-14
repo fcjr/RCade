@@ -25,7 +25,25 @@ import { read, remove, write } from "./persistence";
 
 const DEV_MODE = false;
 
-const INJECT_SCRIPT = `(async () => {
+const INJECT_SCRIPT = `
+// Wrap getUserMedia to catch permission denials and notify parent
+(function() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = async function(constraints) {
+        try {
+            return await original(constraints);
+        } catch (err) {
+            if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+                const permission = constraints?.video ? 'camera' : constraints?.audio ? 'microphone' : 'media';
+                window.parent.postMessage({ type: "PERMISSION_DENIED", permission }, "*");
+            }
+            throw err;
+        }
+    };
+})();
+
+(async () => {
     const registration = await navigator.serviceWorker.ready;
     const sw = registration.active;
     const messageChannel = new MessageChannel();

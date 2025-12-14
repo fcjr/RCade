@@ -99,36 +99,15 @@
 
 	let ENGINE: RCadeWebEngine | undefined = undefined;
 
-	async function requestPermissions(): Promise<{ granted: boolean; denied?: string }> {
-		const permissions = data.version.permissions();
-
-		for (const permission of permissions) {
-			if (permission === 'camera') {
-				try {
-					const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-					// Stop the stream immediately - we just needed to request permission
-					stream.getTracks().forEach((track) => track.stop());
-				} catch {
-					return { granted: false, denied: 'camera' };
-				}
-			}
-		}
-
-		return { granted: true };
-	}
-
 	async function play() {
 		current_state = { kind: 'initializing' };
 
-		// Check and request required permissions before loading the game
-		const permissionResult = await requestPermissions();
-		if (!permissionResult.granted) {
-			current_state = { kind: 'permission_denied', permission: permissionResult.denied! };
-			return;
-		}
-
 		try {
 			ENGINE ??= await RCadeWebEngine.initialize(gameContents);
+
+			ENGINE.onPermissionDenied((permission) => {
+				current_state = { kind: 'permission_denied', permission };
+			});
 
 			ENGINE.register(plugin);
 
