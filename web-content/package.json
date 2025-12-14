@@ -28,7 +28,6 @@
 		"@rcade/engine": "workspace:*",
 		"acorn": "^8.15.0",
 		"cheerio": "^1.1.2",
-		"modern-tar": "^0.7.2",
-		"web-streams-polyfill": "^4.2.0"
+		"modern-tar": "^0.7.2"
 	}
 }

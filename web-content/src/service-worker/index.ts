@@ -1,14 +1,7 @@
 /// <reference lib="webworker" />
 
-// Polyfill ReadableStream async iterator for Safari compatibility
-// Safari doesn't support ReadableStream[Symbol.asyncIterator] which modern-tar requires
-if (typeof ReadableStream.prototype[Symbol.asyncIterator] !== "function") {
-    await import("web-streams-polyfill/polyfill");
-}
-
 import { Client } from "@rcade/api";
-// Dynamically import modern-tar after polyfill to ensure Safari compatibility
-const { unpackTar } = await import("modern-tar");
+import { unpackTar } from "modern-tar";
 import { getMimeType } from "./mime";
 import { read, remove, write } from "./persistence";
 import * as cheerio from "cheerio";
@@ -269,8 +262,11 @@ export async function loadGame(game_id: string, version: string | "latest") {
 
     announceProgress({ state: "opening" });
     const cache = await caches.open(`${game_id}/${ver.version()}`);
+
+    // Decompress gzip to ArrayBuffer (Safari-compatible, avoids ReadableStream async iteration)
     const ds = new DecompressionStream('gzip');
     const decompressedStream = contentBlob.stream().pipeThrough(ds);
+    const decompressedBuffer = await new Response(decompressedStream).arrayBuffer();
 
     const cache_keys = await cache.keys();
 
@@ -285,7 +281,8 @@ export async function loadGame(game_id: string, version: string | "latest") {
     }
 
     announceProgress({ state: "unpacking" });
-    const entries = await unpackTar(decompressedStream);
+    // Pass ArrayBuffer to unpackTar instead of stream to avoid Safari's lack of Symbol.asyncIterator on ReadableStream
+    const entries = await unpackTar(decompressedBuffer);
 
     const file_count = entries.filter(entry => entry.header.type === "file").length;
 
