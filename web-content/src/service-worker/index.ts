@@ -29,6 +29,8 @@ const DEV_MODE = false;
 const forwarder = LogForwarder.withTimeout(2000);
 const logger = Logger.create().withHandler(forwarder).withModule("ServiceWorker").withMinimumLevel("DEBUG");
 
+(globalThis as any).logger = logger;
+
 function determineDevUrl(url: URL) {
     if (url.pathname.startsWith("/@fs"))
         return true;
@@ -98,6 +100,10 @@ g.addEventListener("fetch", (event: FetchEvent) => {
     try {
         return event.respondWith(
             read("CURRENT_GAME").then(async (data) => {
+                if (data === undefined) {
+                    return new Response("NO GAME LOADED", { status: 404 });
+                }
+
                 const CURRENT_GAME = JSON.parse(data) as [string, string];
 
                 responding = logger.because(handle).debug(`Responding for ${CURRENT_GAME[0]} @ ${CURRENT_GAME[1]}`);
@@ -152,7 +158,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
                     logger.error(err);
                 }
 
-                return new Response("NO GAME LOADED", { status: 404 });
+                return new Response("PATCHING ERROR", { status: 500 });
             })
         );
     } catch (err) {
@@ -180,7 +186,7 @@ g.addEventListener("message", async (event) => {
         CURRENT_PORT = port;
 
         port.addEventListener("message", handlePortMessage);
-        port.postMessage({ type: "PORT_INIT", content: { game: JSON.parse(await read("CURRENT_GAME")) } });
+        port.postMessage({ type: "PORT_INIT", content: { game: JSON.parse((await read("CURRENT_GAME"))!) } });
 
         return;
     }

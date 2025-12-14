@@ -11,7 +11,9 @@ const CACHE_URL_PREFIX = 'https://persistence.rcade-game/';
  * @param key - The key to read
  * @returns The stored value, or throws if not found
  */
-export async function read(key: string): Promise<string> {
+export async function read(key: string): Promise<string | undefined> {
+    (globalThis as any).logger.withModule("persistence").debug(`READ`, key);
+
     if (!key) {
         throw new Error('Key cannot be empty');
     }
@@ -21,7 +23,7 @@ export async function read(key: string): Promise<string> {
     const response = await cache.match(url);
 
     if (!response) {
-        throw new Error(`Key not found: ${key}`);
+        return undefined
     }
 
     return await response.text();
@@ -33,6 +35,8 @@ export async function read(key: string): Promise<string> {
  * @param value - The value to store
  */
 export async function write(key: string, value: string): Promise<void> {
+    (globalThis as any).logger.withModule("persistence").debug(`WRITE`, key, value);
+
     if (!key) {
         throw new Error('Key cannot be empty');
     }

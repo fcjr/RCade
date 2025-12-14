@@ -57,83 +57,55 @@ export const INJECT_SCRIPT = `
 
     sw.postMessage({ type: "INIT_PORT" }, [messageChannel.port2]);
 
-    const content = await hello;
+    const helloReply = await hello;
 
-    manuallyLog("Port exchange finished", content);
+    manuallyLog("Port exchange finished", helloReply);
 
-    window.parent.postMessage({ type: "SW_PORT_READY", content }, "*", [messageChannel.port1]);
+    window.parent.postMessage({ type: "SW_PORT_READY", content: helloReply }, "*", [messageChannel.port1]);
+
+    function manuallyLogGame(level, ...message) {
+        window.parent.postMessage({
+            type: "WIN_LOG",
+            content: {
+                level: level,
+                modules: [helloReply.game[2]],
+                content: message.map(it => {
+                    // check to see if content can be cloned with structuredClone
+                    try {
+                        window.parent.postMessage({ type: "__IGNORE", it });
+                        return it
+                    } catch(err) {
+                        return String(it)
+                    }
+                }),
+                time: Date.now(),
+                id: crypto.randomUUID(),
+                cause: undefined,
+            }
+        }, "*")
+    }
 
     globalThis.console = {
         ...globalThis.console,
 
         log(...things) {
-            window.parent.postMessage({
-                type: "WIN_LOG",
-                content: {
-                    level: "INFO",
-                    modules: [(content).game[2]],
-                    content: things,
-                    time: Date.now(),
-                    id: crypto.randomUUID(),
-                    cause: undefined,
-                }
-            }, "*")
+            manuallyLogGame("INFO", ...things)
         },
 
         info(...things) {
-            window.parent.postMessage({
-                type: "WIN_LOG",
-                content: {
-                    level: "INFO",
-                    modules: [(content).game[2]],
-                    content: things,
-                    time: Date.now(),
-                    id: crypto.randomUUID(),
-                    cause: undefined,
-                }
-            }, "*")
+            manuallyLogGame("INFO", ...things)
         },
 
         debug(...things) {
-            window.parent.postMessage({
-                type: "WIN_LOG",
-                content: {
-                    level: "DEBUG",
-                    modules: [(content).game[2]],
-                    content: things,
-                    time: Date.now(),
-                    id: crypto.randomUUID(),
-                    cause: undefined,
-                }
-            }, "*")
+            manuallyLogGame("DEBUG", ...things)
         },
 
         error(...things) {
-            window.parent.postMessage({
-                type: "WIN_LOG",
-                content: {
-                    level: "ERROR",
-                    modules: [(content).game[2]],
-                    content: things,
-                    time: Date.now(),
-                    id: crypto.randomUUID(),
-                    cause: undefined,
-                }
-            }, "*")
+            manuallyLogGame("ERROR", ...things)
         },
 
         warn(...things) {
-            window.parent.postMessage({
-                type: "WIN_LOG",
-                content: {
-                    level: "WARN",
-                    modules: [(content).game[2]],
-                    content: things,
-                    time: Date.now(),
-                    id: crypto.randomUUID(),
-                    cause: undefined,
-                }
-            }, "*")
+            manuallyLogGame("WARN", ...things)
         },
     }
 })();`;
