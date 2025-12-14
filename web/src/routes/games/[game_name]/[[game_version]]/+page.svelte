@@ -122,7 +122,6 @@
 		try {
 			ENGINE ??= await RCadeWebEngine.initialize(gameContents, {
 				logger: Logger.create().withHandler(BrowserLogRenderer).withMinimumLevel('DEBUG'),
-				appUrl: 'http://localhost:5174',
 				cancellationToken: ENGINE_DESTROY.signal
 			});
 
@@ -258,7 +257,8 @@
 										<div class="error-title">PERMISSION REQUIRED</div>
 										<div class="error-code">ACCESS_DENIED</div>
 										<p class="error-msg">
-											This game requires {current_state.permission} access to run. Please allow {current_state.permission} access and try again.
+											This game requires {current_state.permission} access to run. Please allow {current_state.permission}
+											access and try again.
 										</p>
 										<button class="retry-btn" onclick={() => (current_state = { kind: 'idle' })}>
 											DISMISS
