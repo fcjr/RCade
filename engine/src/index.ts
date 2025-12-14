@@ -84,6 +84,7 @@ export class RCadeWebEngine {
         iframe.style.height = "262px";
         iframe.style.border = "none";
         iframe.allow = "camera";
+        iframe.sandbox = "allow-scripts";
 
         let loaded = this.move(logger, iframe, appUrl.toString());
 
