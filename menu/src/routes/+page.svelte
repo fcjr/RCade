@@ -9,6 +9,7 @@
     import { SCREENSAVER } from "@rcade/plugin-sleep";
     import EventEmitter from "events";
     import { PluginChannel } from "@rcade/sdk";
+    import { Fireworks, type FireworksOptions } from "@fireworks-js/svelte";
 
     // Dummy function to load games - replace with actual API call
     async function loadGames(): Promise<Game[]> {
@@ -151,6 +152,15 @@
                 loading = false;
             }
         });
+
+        // register input handlers
+        const unsubPress = registerPressHandler();
+        const unsubInputEnd = registerInputEndHandler();
+
+        return () => {
+            unsubPress();
+            unsubInputEnd();
+        };
     });
 
     // --- FILTER LOGIC ---
@@ -367,7 +377,8 @@
         tick().then(updatePaginationState);
     }
 
-    onInput("press", (e) => {
+    function registerPressHandler() {
+        return onInput("press", (e) => {
         if (screensaverActive) {
             return;
         }
@@ -418,15 +429,21 @@
         }
 
         if (e.button === "A" && e.player == 1 && viewportState === "neutral") {
-            console.log(
-                `Launching game: ${currentGame?.name()} (v${currentVersion?.version()})`,
-            );
-
             playGame(currentGame.intoApiResponse(), currentVersion.version());
         }
 
-        if (e.button === "B" && e.player == 1) {
+        if (e.button === "B" && e.player == 1 && viewportState === "neutral") {
+            playGame(currentGame.intoApiResponse(), currentVersion.version());
+        } else if (e.button === "B" && e.player == 1) {
             viewportState = "neutral";
+        }
+
+        if (e.button === "ONE_PLAYER" && viewportState === "neutral") {
+            playGame(currentGame.intoApiResponse(), currentVersion.version());
+        }
+
+        if (e.button === "TWO_PLAYER" && viewportState === "neutral") {
+            playGame(currentGame.intoApiResponse(), currentVersion.version());
         }
 
         if (e.button === "LEFT" && e.player == 1) {
@@ -488,11 +505,76 @@
                 }
             }
         }
+
+
+        // P2 dpad -- tilt controls
+        if (e.button === "UP" && e.player == 2) {
+            tiltX = -TILT_AMOUNT;
+        } else if (e.button === "DOWN" && e.player == 2) {
+            tiltX = TILT_AMOUNT;
+        } else if (e.button === "LEFT" && e.player == 2) {
+            tiltY = -TILT_AMOUNT;
+        } else if (e.button === "RIGHT" && e.player == 2) {
+            tiltY = TILT_AMOUNT;
+        }
+
+        // P2 A/B -- fireworks
+        if (e.button === "A" && e.player == 2 && !p2APressed) {
+            p2APressed = true;
+            launchFireworks();
+        } else if (e.button === "B" && e.player == 2 && !p2BPressed) {
+            p2BPressed = true;
+            launchFireworks();
+        }
     });
+    }
+
+    // P2 release events
+    function registerInputEndHandler() {
+        return onInput("inputEnd", (e) => {
+        if (e.player == 2) {
+            // reset tilt on dpad release
+            if (e.button === "UP" || e.button === "DOWN") {
+                tiltX = 0;
+            } else if (e.button === "LEFT" || e.button === "RIGHT") {
+                tiltY = 0;
+            }
+            // reset button state on release
+            if (e.button === "A") {
+                p2APressed = false;
+            } else if (e.button === "B") {
+                p2BPressed = false;
+            }
+        }
+    });
+    }
 
     const moveEvents = new EventEmitter();
 
     console.log({ moveEvents });
+
+    let fireworksComponent: Fireworks;
+    let p2APressed = false;
+    let p2BPressed = false;
+
+    function launchFireworks() {
+        fireworksComponent?.fireworksInstance()?.launch(1);
+    }
+
+    const fireworkOptions: FireworksOptions = {
+        sound: {
+            enabled: true,
+            files: [
+                'explosion0.mp3',
+                'explosion1.mp3',
+                'explosion2.mp3'
+            ],
+        }
+    };
+
+    let tiltX = 0;
+    let tiltY = 0;
+    const TILT_AMOUNT = 15;
 </script>
 
 <svelte:window
@@ -504,10 +586,13 @@
 />
 
 <main>
+    <Fireworks class="fireworks" options={fireworkOptions} bind:this={fireworksComponent} autostart={false} />
     <div
         class="shifting-viewport"
         class:show-top={viewportState === "show-top"}
         class:show-bottom={viewportState === "show-bottom"}
+        style:--tilt-x="{tiltX}deg"
+        style:--tilt-y="{tiltY}deg"
     >
         <div class="filter-drawer">
             <div class="drawer-header">FILTER_SYSTEM</div>
@@ -766,13 +851,14 @@
         height: 100%;
         will-change: transform;
         transition: transform 0.3s var(--ease-snappy);
+        transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
     }
 
     .shifting-viewport.show-bottom {
-        transform: translateY(calc(var(--drawer-height) * -1));
+        transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(calc(var(--drawer-height) * -1));
     }
     .shifting-viewport.show-top {
-        transform: translateY(var(--filter-drawer-height));
+        transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(var(--filter-drawer-height));
     }
 
     .bg-layer {
@@ -1300,5 +1386,15 @@
         50% {
             opacity: 0;
         }
+    }
+
+    :global(.fireworks) {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        pointer-events: none;
+        z-index: 100;
     }
 </style>

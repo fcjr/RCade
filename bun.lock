@@ -142,6 +142,7 @@
       "name": "@rcade/menu",
       "version": "0.0.1",
       "dependencies": {
+        "@fireworks-js/svelte": "^2.10.8",
         "@rcade/api": "workspace:*",
         "@rcade/plugin-input-classic": "workspace:*",
         "@rcade/plugin-menu": "workspace:*",
@@ -156,6 +157,7 @@
         "@sveltejs/vite-plugin-svelte": "^6.2.1",
         "@tailwindcss/vite": "^4.1.17",
         "@types/three": "^0.182.0",
+        "rcade": "workspace:*",
         "svelte": "^5.45.6",
         "svelte-check": "^4.3.4",
         "tailwindcss": "^4.1.17",

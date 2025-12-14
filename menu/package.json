@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun run --cwd ../api build && bun run --cwd ../plugins/sleep/clients/typescript build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite dev",
+		"dev-emu": "concurrently \"vite --port 5173 --strictPort\" \"rcade dev http://localhost:5173\"",
 		"build": "bun run --cwd ../sdk/backend build && bun run --cwd ../sdk/frontend/typescript build && bun run --cwd ../plugins/sleep/clients/typescript build  && bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
@@ -21,14 +22,16 @@
 		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
-		"vite": "^7.2.6"
+		"vite": "^7.2.6",
+		"rcade": "workspace:*"
 	},
 	"dependencies": {
+		"@fireworks-js/svelte": "^2.10.8",
 		"@rcade/api": "workspace:*",
-		"@rcade/sdk": "workspace:*",
 		"@rcade/plugin-input-classic": "workspace:*",
-		"@rcade/plugin-sleep": "workspace:*",
 		"@rcade/plugin-menu": "workspace:*",
+		"@rcade/plugin-sleep": "workspace:*",
+		"@rcade/sdk": "workspace:*",
 		"events": "^3.3.0",
 		"three": "^0.182.0"
 	}
