@@ -30,6 +30,7 @@
 		| { kind: 'initializing' }
 		| { kind: 'loading'; progress: ProgressReport }
 		| { kind: 'playing' }
+		| { kind: 'permission_denied'; permission: string }
 		| { kind: 'error'; error: string } = $state({ kind: 'idle' });
 
 	// Function to scale game-contents to fit game container
@@ -98,8 +99,33 @@
 
 	let ENGINE: RCadeWebEngine | undefined = undefined;
 
+	async function requestPermissions(): Promise<{ granted: boolean; denied?: string }> {
+		const permissions = data.version.permissions();
+
+		for (const permission of permissions) {
+			if (permission === 'camera') {
+				try {
+					const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+					// Stop the stream immediately - we just needed to request permission
+					stream.getTracks().forEach((track) => track.stop());
+				} catch {
+					return { granted: false, denied: 'camera' };
+				}
+			}
+		}
+
+		return { granted: true };
+	}
+
 	async function play() {
 		current_state = { kind: 'initializing' };
+
+		// Check and request required permissions before loading the game
+		const permissionResult = await requestPermissions();
+		if (!permissionResult.granted) {
+			current_state = { kind: 'permission_denied', permission: permissionResult.denied! };
+			return;
+		}
 
 		try {
 			ENGINE ??= await RCadeWebEngine.initialize(gameContents);
@@ -226,6 +252,17 @@
 												{/if}
 											</div>
 										{/if}
+									</div>
+								{:else if current_state.kind === 'permission_denied'}
+									<div class="error-panel permission-panel">
+										<div class="error-title">PERMISSION REQUIRED</div>
+										<div class="error-code">ACCESS_DENIED</div>
+										<p class="error-msg">
+											This game requires {current_state.permission} access to run. Please allow {current_state.permission} access and try again.
+										</p>
+										<button class="retry-btn" onclick={() => (current_state = { kind: 'idle' })}>
+											DISMISS
+										</button>
 									</div>
 								{:else if current_state.kind === 'error'}
 									<div class="error-panel">
@@ -1064,6 +1101,20 @@
 	.retry-btn:hover {
 		background: var(--deck-text);
 		color: #000;
+	}
+
+	/* Permission Panel */
+	.permission-panel {
+		border-color: var(--deck-accent);
+		background: rgba(230, 126, 34, 0.1);
+	}
+
+	.permission-panel .error-title {
+		color: var(--deck-accent);
+	}
+
+	.permission-panel .error-code {
+		background: var(--deck-accent);
 	}
 
 	@media (max-width: 768px) {

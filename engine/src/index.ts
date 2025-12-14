@@ -80,6 +80,7 @@ export class RCadeWebEngine {
         iframe.style.width = "336px";
         iframe.style.height = "262px";
         iframe.style.border = "none";
+        iframe.allow = "camera";
 
         let loaded = this.move(iframe, appUrl.toString());
 
