@@ -130,17 +130,19 @@ export class BrowserLogRenderer {
                 const styleDelayed = `
                     ${fontBase}
                     font-size: 9px;
-                    color: #d97706; /* amber-600 */
-                    background-color: #fffbeb; /* amber-50 */
-                    border: 1px solid #fcd34d; /* amber-300 */
+                    background-color: #fbbf24;
+                    color: #78350f;
+                    border: 1px solid #f59e0b;
                     border-radius: 4px;
                     padding: 1px 4px;
                     margin-left: 4px;
                     vertical-align: middle;
+                    font-weight: bold;
                 `;
 
                 // Add the badge to format string
-                formatString += `%c⏱ DELAYED ${this.formatTimeDelta(latency, false)}`;
+                formatString += `%c %c⏱ DELAYED ${this.formatTimeDelta(latency, false)}`;
+                args.push("")
                 args.push(styleDelayed);
             }
         }
