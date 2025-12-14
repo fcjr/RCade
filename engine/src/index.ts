@@ -317,7 +317,7 @@ export class RCadeWebEngine {
 
         progressHandler?.({ state: "finishing" });
 
-        await this.moveTo("/index.html");
+        await this.moveTo("/");
         this.state = "loaded";
 
         return response;

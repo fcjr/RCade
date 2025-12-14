@@ -12,5 +12,19 @@
             "display_name": "Frank Chiarulli Jr.",
             "recurse_id": 6859
         }
+    ],
+    "dependencies": [
+        {
+            "name": "@rcade/input-classic",
+            "version": "1.0.0"
+        },
+        {
+            "name": "@rcade/menu",
+            "version": "1.0.0"
+        },
+        {
+            "name": "@rcade/sleep",
+            "version": "1.0.0"
+        }
     ]
 }

@@ -104,6 +104,10 @@ This command will:
             const dbPath = '.wrangler/state/v3/d1/miniflare-D1DatabaseObject';
 
             try {
+                // FIRST: Remove old backup if it exists
+                await rm(backupPath, { recursive: true, force: true });
+
+                // THEN: Try to backup current database
                 await access(dbPath);
                 await rename(dbPath, backupPath);
                 hasBackup = true;
@@ -226,6 +230,7 @@ This command will:
 
             } catch (err) {
                 console.log(` ${colors.red}✗ ${err.message.split(':')[0]}${colors.reset}`);
+                console.log(err);
                 failedTables++;
             }
         }
