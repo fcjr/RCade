@@ -12,6 +12,7 @@ import * as tar from 'tar';
 import type { GameInfo, LoadGameResult } from '../shared/types';
 import { parseCliArgs } from "./args.js";
 import { PluginManager } from '../plugins/index.js';
+import { QuitOptions } from '@rcade/sdk';
 
 const args = parseCliArgs();
 
@@ -478,7 +479,7 @@ app.whenReady().then(async () => {
     return gameInfos;
   });
 
-  ipcMain.handle('load-game', async (event, game: GameInfo): Promise<Omit<LoadGameResult, "pluginPorts">> => {
+  ipcMain.handle('load-game', async (event, game: GameInfo): Promise<LoadGameResult> => {
     const { id, latestVersion } = game;
     const abortController = new AbortController();
 
@@ -523,7 +524,7 @@ app.whenReady().then(async () => {
       throw new Error("Cannot load remote game with local_unversioned specifier. how did this happen?")
     }
 
-    const pm = await PluginManager.loadInto(event.sender, game.dependencies);
+    const pm = await PluginManager.loadInto(event.sender, game.dependencies, game.name == "menu");
 
     abortController.signal.addEventListener("abort", () => {
       pm.destroy();
@@ -532,7 +533,7 @@ app.whenReady().then(async () => {
     return { url };
   });
 
-  ipcMain.handle('unload-game', async (_event, gameId: string | undefined, gameName: string, version: string | undefined): Promise<void> => {
+  ipcMain.handle('unload-game', async (event, gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions): Promise<void> => {
     // Clear game permissions when unloading
     currentGamePermissions = [];
 
@@ -557,6 +558,8 @@ app.whenReady().then(async () => {
       gameServers.delete(serverKey);
       console.log(`[GameServer] Stopped server for ${serverKey}`);
     }
+
+    event.sender.emit("game-unloaded", quitOptions);
   });
 
   createWindow();

@@ -22,16 +22,24 @@
   <Screensaver />
 {/if}
 
-{#if route.page === "carousel"}
+{#await window.rcade.getMenuGame() then menuGame}
+  <div class="{route.page == "game" ? "hidden" : ""}"><GamePage game={menuGame}/></div>
+{:catch}
   <CarouselPage />
-{:else if route.page === "game"}
+{/await}
+
+{#if route.page === "game"}
   <GamePage game={route.game} />
 {/if}
 
 <style>
+  .hidden {
+    display: none;
+  }
+
   @font-face {
-    font-family: 'NotoColorEmoji';
-    src: url('/fonts/NotoColorEmoji.ttf') format('truetype');
+    font-family: "NotoColorEmoji";
+    src: url("/fonts/NotoColorEmoji.ttf") format("truetype");
     font-display: swap;
   }
 
@@ -55,13 +63,12 @@
       system-ui,
       -apple-system,
       sans-serif,
-      'NotoColorEmoji';
+      "NotoColorEmoji";
   }
 
   :global(body.hide-cursor),
   :global(body.hide-cursor *) {
-    cursor:
-      url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="),
+    cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="),
       none !important;
   }
 </style>

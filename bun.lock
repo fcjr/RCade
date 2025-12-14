@@ -64,6 +64,7 @@
         "@rcade/input-spinners": "workspace:*",
         "@rcade/plugin-menu-backend": "workspace:*",
         "@rcade/plugin-sleep": "workspace:*",
+        "@rcade/sdk": "workspace:*",
         "@rcade/sdk-plugin": "workspace:*",
         "@rcade/sleep": "workspace:*",
         "hono": "^4.6.14",
@@ -236,7 +237,8 @@
       "name": "@rcade/plugin-menu-backend",
       "dependencies": {
         "@rcade/api": "workspace:*",
-        "@rcade/sdk-plugin": "0.1.0",
+        "@rcade/sdk": "workspace:*",
+        "@rcade/sdk-plugin": "workspace:*",
         "@types/node": "^25.0.1",
         "electron": "^39.2.7",
       },

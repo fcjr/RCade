@@ -36,8 +36,6 @@ window.rcade.onRoute((route: Route) => {
 
   if (route.page === 'game') {
     navigateToGame(route.game);
-  } else if (route.page === 'carousel') {
-    currentRoute = { page: 'carousel' };
   } else if (route.page === 'blank') {
     navigateToMenu();
   }
@@ -47,21 +45,6 @@ let MENU_GAME: GameInfo | undefined = undefined;
 
 export async function navigateToMenu() {
   currentRoute = { page: 'blank' };
-
-  try {
-    const menuGame = await window.rcade.getMenuGame();
-    MENU_GAME = menuGame;
-  } catch (error) {
-    if (MENU_GAME) {
-      console.warn("Failed to fetch menu game, using cached version:", error);
-    } else {
-      console.error("Failed to fetch menu game and no cached version available:", error);
-      currentRoute = { page: 'carousel' };
-      return;
-    }
-  }
-
-  currentRoute = { page: 'game', game: MENU_GAME };
 }
 
 export async function navigateToGame(game: GameInfo) {

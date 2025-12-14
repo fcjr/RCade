@@ -1,7 +1,7 @@
 <script lang="ts">
     import BackgroundOverlay from "$lib/components/BackgroundOverlay.svelte";
     import { fly, slide } from "svelte/transition";
-    import { getGames, getLastGame, playGame } from "@rcade/plugin-menu";
+    import { getGames, getLastGame, onGameQuit, playGame } from "@rcade/plugin-menu";
     import { quartOut } from "svelte/easing";
     import { tick, onMount } from "svelte";
     import { Game } from "@rcade/api";
@@ -185,6 +185,7 @@
     let activeVersionIndex = 0;
     let direction = 1;
     let viewportState: "neutral" | "show-top" | "show-bottom" = "neutral";
+    let gameActive = false;
 
     let versionsContainer: HTMLDivElement;
     let filtersContainer: HTMLDivElement;
@@ -367,176 +368,210 @@
         tick().then(updatePaginationState);
     }
 
+    function startGame(game: any, version: string) {
+        playGame(game, version);
+        gameActive = true;
+    }
+
+    onGameQuit(quitOptions => {
+        // todo: handle quit error
+        console.error(quitOptions);
+        gameActive = false;
+    });
+
     function registerPressHandler() {
         return onInput("press", (e) => {
-        if (screensaverActive) {
-            return;
-        }
+            if (screensaverActive || gameActive) {
+                return;
+            }
 
-        if (e.button === "DOWN" && e.player == 1) {
-            if (viewportState === "show-top") {
+            if (e.button === "DOWN" && e.player == 1) {
+                if (viewportState === "show-top") {
+                    viewportState = "neutral";
+                } else if (currentGame) {
+                    viewportState = "show-bottom";
+                    tick().then(() =>
+                        triggerScroll(
+                            versionsContainer,
+                            activeVersionIndex,
+                            true,
+                            updateVersionMasks,
+                        ),
+                    );
+                }
+            } else if (e.button === "UP" && e.player == 1) {
+                if (viewportState === "show-bottom") {
+                    viewportState = "neutral";
+                } else {
+                    viewportState = "show-top";
+                    tick().then(() =>
+                        triggerScroll(
+                            filtersContainer,
+                            filterCursorIndex,
+                            true,
+                            updateFilterMasks,
+                        ),
+                    );
+                }
+            }
+
+            if (
+                e.button === "A" &&
+                e.player == 1 &&
+                viewportState === "show-top"
+            ) {
+                if (uniqueTags.length === 0) return;
+
+                toggleFilter(uniqueTags[filterCursorIndex]);
+            }
+
+            if (
+                e.button === "A" &&
+                e.player == 1 &&
+                viewportState === "show-bottom"
+            ) {
+                activeVersionIndex = activeVersionIndex; // Trigger reactive update
                 viewportState = "neutral";
-            } else if (currentGame) {
-                viewportState = "show-bottom";
-                tick().then(() =>
+            }
+
+            if (
+                e.button === "A" &&
+                e.player == 1 &&
+                viewportState === "neutral"
+            ) {
+                startGame(
+                    currentGame.intoApiResponse(),
+                    currentVersion.version(),
+                );
+            }
+
+            if (
+                e.button === "B" &&
+                e.player == 1 &&
+                viewportState === "neutral"
+            ) {
+                startGame(
+                    currentGame.intoApiResponse(),
+                    currentVersion.version(),
+                );
+            } else if (e.button === "B" && e.player == 1) {
+                viewportState = "neutral";
+            }
+
+            if (e.button === "ONE_PLAYER" && viewportState === "neutral") {
+                startGame(
+                    currentGame.intoApiResponse(),
+                    currentVersion.version(),
+                );
+            }
+
+            if (e.button === "TWO_PLAYER" && viewportState === "neutral") {
+                startGame(
+                    currentGame.intoApiResponse(),
+                    currentVersion.version(),
+                );
+            }
+
+            if (e.button === "LEFT" && e.player == 1) {
+                if (viewportState === "show-bottom" && currentGame) {
+                    const newIndex = Math.max(0, activeVersionIndex - 1);
+                    activeVersionIndex = newIndex;
                     triggerScroll(
                         versionsContainer,
                         activeVersionIndex,
-                        true,
+                        false,
                         updateVersionMasks,
-                    ),
-                );
-            }
-        } else if (e.button === "UP" && e.player == 1) {
-            if (viewportState === "show-bottom") {
-                viewportState = "neutral";
-            } else {
-                viewportState = "show-top";
-                tick().then(() =>
+                    );
+                } else if (viewportState === "show-top") {
+                    const newIndex = Math.max(0, filterCursorIndex - 1);
+                    filterCursorIndex = newIndex;
                     triggerScroll(
                         filtersContainer,
                         filterCursorIndex,
-                        true,
+                        false,
                         updateFilterMasks,
-                    ),
-                );
-            }
-        }
-
-        if (e.button === "A" && e.player == 1 && viewportState === "show-top") {
-            if (uniqueTags.length === 0) return;
-
-            toggleFilter(uniqueTags[filterCursorIndex]);
-        }
-
-        if (
-            e.button === "A" &&
-            e.player == 1 &&
-            viewportState === "show-bottom"
-        ) {
-            activeVersionIndex = activeVersionIndex; // Trigger reactive update
-            viewportState = "neutral";
-        }
-
-        if (e.button === "A" && e.player == 1 && viewportState === "neutral") {
-            playGame(currentGame.intoApiResponse(), currentVersion.version());
-        }
-
-        if (e.button === "B" && e.player == 1 && viewportState === "neutral") {
-            playGame(currentGame.intoApiResponse(), currentVersion.version());
-        } else if (e.button === "B" && e.player == 1) {
-            viewportState = "neutral";
-        }
-
-        if (e.button === "ONE_PLAYER" && viewportState === "neutral") {
-            playGame(currentGame.intoApiResponse(), currentVersion.version());
-        }
-
-        if (e.button === "TWO_PLAYER" && viewportState === "neutral") {
-            playGame(currentGame.intoApiResponse(), currentVersion.version());
-        }
-
-        if (e.button === "LEFT" && e.player == 1) {
-            if (viewportState === "show-bottom" && currentGame) {
-                const newIndex = Math.max(0, activeVersionIndex - 1);
-                activeVersionIndex = newIndex;
-                triggerScroll(
-                    versionsContainer,
-                    activeVersionIndex,
-                    false,
-                    updateVersionMasks,
-                );
-            } else if (viewportState === "show-top") {
-                const newIndex = Math.max(0, filterCursorIndex - 1);
-                filterCursorIndex = newIndex;
-                triggerScroll(
-                    filtersContainer,
-                    filterCursorIndex,
-                    false,
-                    updateFilterMasks,
-                );
-            } else {
-                const newPage = Math.max(0, activePage - 1);
-                if (newPage !== activePage) {
-                    setPage(newPage);
-                    moveEvents.emit("move", true); // Emit true for left
+                    );
+                } else {
+                    const newPage = Math.max(0, activePage - 1);
+                    if (newPage !== activePage) {
+                        setPage(newPage);
+                        moveEvents.emit("move", true); // Emit true for left
+                    }
+                }
+            } else if (e.button === "RIGHT" && e.player == 1) {
+                if (viewportState === "show-bottom" && currentGame) {
+                    const newIndex = Math.min(
+                        currentGame.versions().length - 1,
+                        activeVersionIndex + 1,
+                    );
+                    activeVersionIndex = newIndex;
+                    triggerScroll(
+                        versionsContainer,
+                        activeVersionIndex,
+                        false,
+                        updateVersionMasks,
+                    );
+                } else if (viewportState === "show-top") {
+                    const newIndex = Math.min(
+                        uniqueTags.length - 1,
+                        filterCursorIndex + 1,
+                    );
+                    filterCursorIndex = newIndex;
+                    triggerScroll(
+                        filtersContainer,
+                        filterCursorIndex,
+                        false,
+                        updateFilterMasks,
+                    );
+                } else {
+                    const newPage = Math.min(totalPages - 1, activePage + 1);
+                    if (newPage !== activePage) {
+                        setPage(newPage);
+                        moveEvents.emit("move", false); // Emit false for right
+                    }
                 }
             }
-        } else if (e.button === "RIGHT" && e.player == 1) {
-            if (viewportState === "show-bottom" && currentGame) {
-                const newIndex = Math.min(
-                    currentGame.versions().length - 1,
-                    activeVersionIndex + 1,
-                );
-                activeVersionIndex = newIndex;
-                triggerScroll(
-                    versionsContainer,
-                    activeVersionIndex,
-                    false,
-                    updateVersionMasks,
-                );
-            } else if (viewportState === "show-top") {
-                const newIndex = Math.min(
-                    uniqueTags.length - 1,
-                    filterCursorIndex + 1,
-                );
-                filterCursorIndex = newIndex;
-                triggerScroll(
-                    filtersContainer,
-                    filterCursorIndex,
-                    false,
-                    updateFilterMasks,
-                );
-            } else {
-                const newPage = Math.min(totalPages - 1, activePage + 1);
-                if (newPage !== activePage) {
-                    setPage(newPage);
-                    moveEvents.emit("move", false); // Emit false for right
-                }
+
+            // P2 dpad -- tilt controls
+            if (e.button === "UP" && e.player == 2) {
+                tiltX = -TILT_AMOUNT;
+            } else if (e.button === "DOWN" && e.player == 2) {
+                tiltX = TILT_AMOUNT;
+            } else if (e.button === "LEFT" && e.player == 2) {
+                tiltY = -TILT_AMOUNT;
+            } else if (e.button === "RIGHT" && e.player == 2) {
+                tiltY = TILT_AMOUNT;
             }
-        }
 
-
-        // P2 dpad -- tilt controls
-        if (e.button === "UP" && e.player == 2) {
-            tiltX = -TILT_AMOUNT;
-        } else if (e.button === "DOWN" && e.player == 2) {
-            tiltX = TILT_AMOUNT;
-        } else if (e.button === "LEFT" && e.player == 2) {
-            tiltY = -TILT_AMOUNT;
-        } else if (e.button === "RIGHT" && e.player == 2) {
-            tiltY = TILT_AMOUNT;
-        }
-
-        // P2 A/B -- fireworks
-        if (e.button === "A" && e.player == 2 && !p2APressed) {
-            p2APressed = true;
-            launchFireworks();
-        } else if (e.button === "B" && e.player == 2 && !p2BPressed) {
-            p2BPressed = true;
-            launchFireworks();
-        }
-    });
+            // P2 A/B -- fireworks
+            if (e.button === "A" && e.player == 2 && !p2APressed) {
+                p2APressed = true;
+                launchFireworks();
+            } else if (e.button === "B" && e.player == 2 && !p2BPressed) {
+                p2BPressed = true;
+                launchFireworks();
+            }
+        });
     }
 
     // P2 release events
     function registerInputEndHandler() {
         return onInput("inputEnd", (e) => {
-        if (e.player == 2) {
-            // reset tilt on dpad release
-            if (e.button === "UP" || e.button === "DOWN") {
-                tiltX = 0;
-            } else if (e.button === "LEFT" || e.button === "RIGHT") {
-                tiltY = 0;
+            if (e.player == 2) {
+                // reset tilt on dpad release
+                if (e.button === "UP" || e.button === "DOWN") {
+                    tiltX = 0;
+                } else if (e.button === "LEFT" || e.button === "RIGHT") {
+                    tiltY = 0;
+                }
+                // reset button state on release
+                if (e.button === "A") {
+                    p2APressed = false;
+                } else if (e.button === "B") {
+                    p2BPressed = false;
+                }
             }
-            // reset button state on release
-            if (e.button === "A") {
-                p2APressed = false;
-            } else if (e.button === "B") {
-                p2BPressed = false;
-            }
-        }
-    });
+        });
     }
 
     const moveEvents = new EventEmitter();
@@ -554,12 +589,8 @@
     const fireworkOptions: FireworksOptions = {
         sound: {
             enabled: true,
-            files: [
-                'explosion0.mp3',
-                'explosion1.mp3',
-                'explosion2.mp3'
-            ],
-        }
+            files: ["explosion0.mp3", "explosion1.mp3", "explosion2.mp3"],
+        },
     };
 
     let tiltX = 0;
@@ -576,7 +607,12 @@
 />
 
 <main>
-    <Fireworks class="fireworks" options={fireworkOptions} bind:this={fireworksComponent} autostart={false} />
+    <Fireworks
+        class="fireworks"
+        options={fireworkOptions}
+        bind:this={fireworksComponent}
+        autostart={false}
+    />
     <div
         class="shifting-viewport"
         class:show-top={viewportState === "show-top"}
@@ -841,14 +877,18 @@
         height: 100%;
         will-change: transform;
         transition: transform 0.3s var(--ease-snappy);
-        transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+        transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
+            rotateY(var(--tilt-y, 0deg));
     }
 
     .shifting-viewport.show-bottom {
-        transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(calc(var(--drawer-height) * -1));
+        transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
+            rotateY(var(--tilt-y, 0deg))
+            translateY(calc(var(--drawer-height) * -1));
     }
     .shifting-viewport.show-top {
-        transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(var(--filter-drawer-height));
+        transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
+            rotateY(var(--tilt-y, 0deg)) translateY(var(--filter-drawer-height));
     }
 
     .bg-layer {

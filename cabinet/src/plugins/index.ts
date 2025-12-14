@@ -13,8 +13,8 @@ import PluginMenu from "@rcade/plugin-menu-backend";
 import PluginMenuManifest from "@rcade/plugin-menu-backend/rcade.manifest.json";
 
 export class PluginManager {
-    public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"]) {
-        const manager = new PluginManager(wc);
+    public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"], isMenu: boolean) {
+        const manager = new PluginManager(wc, isMenu);
 
         for (let channel of preload ?? []) {
             await manager.load(channel.name, channel.version);
@@ -23,13 +23,13 @@ export class PluginManager {
         return manager;
     }
 
-    private constructor(private wc: WebContents) {
-        this.handler = async (event: Electron.Event, name: string, v: string) => {
+    private constructor(private wc: WebContents, private isMenu: boolean) {
+        this.handler = async (event: Electron.Event, name: string, v: string, gameInstance: string) => {
             const nonce = crypto.randomUUID();
 
             const { port, version } = await this.start(name, v);
 
-            wc.postMessage("plugin-port-ready", { nonce, name, version }, [port])
+            wc.postMessage("plugin-port-ready", { nonce, name, version, gameInstance }, [port])
 
             return { nonce }
         };
@@ -54,7 +54,7 @@ export class PluginManager {
             case "@rcade/menu": return { plugin: PluginMenu, manifest: PluginMenuManifest as PluginManifest };
         }
 
-        throw new Error(`Unknown Plugin ${name}`);
+        throw new Error(`Unknown plugin ${name}`);
     }
 
     private loadedPlugins: { plugin: Plugin, name: string, version: string }[] = [];
@@ -69,7 +69,7 @@ export class PluginManager {
         const { plugin, manifest } = this.ref(name);
 
         if (!semver.satisfies(manifest.version!, version)) {
-            throw new Error(`Version Not Found. Has: ${manifest.version}, Expected: ${version}`);
+            throw new Error(`Version not found. Has: ${manifest.version}, expected: ${version}`);
         }
 
         const loaded = new plugin();
@@ -80,6 +80,9 @@ export class PluginManager {
     }
 
     public async start(name: string, versionRange: string): Promise<{ port: MessagePortMain, version: string }> {
+        if (name == "@rcade/menu" && !this.isMenu)
+            throw new Error("Attempted to get menu plugin on non-menu game");
+
         const { plugin, version } = await this.load(name, versionRange);
         const port = new MessageChannelMain();
         const environment = new PluginEnvironment(this.wc, port.port1);

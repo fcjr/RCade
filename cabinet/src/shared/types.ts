@@ -1,5 +1,6 @@
 import { GameManifest, Permission } from '@rcade/api';
 import type { ScreensaverConfig } from '@rcade/plugin-sleep';
+import { QuitOptions } from '@rcade/sdk';
 import { z } from 'zod';
 
 export interface PackageVersion {
@@ -42,7 +43,6 @@ export interface GameInfo {
 }
 
 export type Route =
-  | { page: 'carousel' }
   | { page: 'blank' }
   | { page: 'game'; game: GameInfo };
 
@@ -55,13 +55,13 @@ export interface RcadeAPI {
   getGames: () => Promise<GameInfo[]>;
   getMenuGame: () => Promise<GameInfo>;
   loadGame: (game: GameInfo) => Promise<LoadGameResult>;
-  unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined) => Promise<void>;
+  unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions) => Promise<void>;
   onUnloadGame: (callback: () => void) => () => void;
   onMenuKey: (callback: () => void) => () => void;
   onInputActivity: (callback: () => void) => () => void;
   onScreensaverConfigChanged: (callback: (config: ScreensaverConfig) => void) => () => void;
   screensaverStarted: () => void;
   screensaverStopped: () => void;
-  acquirePlugin: (name: string, version: string) => Promise<{ nonce: string, name: string, version: string }>;
+  acquirePlugin: (name: string, version: string, gameInstance: string) => Promise<{ nonce: string, name: string, version: string }>;
   onRoute: (callback: (route: Route) => void) => () => void;
 }

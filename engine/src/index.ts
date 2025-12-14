@@ -1,7 +1,5 @@
 import type { PluginProvider } from "./plugin/provider";
 
-export type { PluginProvider };
-
 import { Logger, BrowserLogRenderer, type LogHandler, LogEntry } from "@rcade/log";
 import { Client, Game } from "@rcade/api";
 
