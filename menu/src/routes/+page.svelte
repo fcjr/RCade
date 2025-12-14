@@ -935,7 +935,7 @@
         background-color: #000;
         font-family: var(--font-body);
         color: var(--color-text-primary);
-        transition: opacity 0.1s;
+        transition: opacity 0.3s;
         opacity: 1;
     }
 
