@@ -1,6 +1,6 @@
 import { GameManifest, Permission } from '@rcade/api';
 import type { ScreensaverConfig } from '@rcade/plugin-sleep';
-import { QuitOptions } from '@rcade/sdk';
+import type { QuitOptions } from '@rcade/sdk';
 import { z } from 'zod';
 
 export interface PackageVersion {

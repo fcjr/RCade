@@ -1,14 +1,14 @@
 {
   "name": "@rcade/sdk",
   "version": "0.2.2",
-  "module": "index.ts",
-  "main": "./dist/index.js",
+  "module": "src/index.ts",
+  "main": "./dist/src/index.js",
   "type": "module",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "bun": "./index.ts",
-      "import": "./dist/index.js"
+      "bun": "./src/index.ts",
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
     }
   },
   "scripts": {

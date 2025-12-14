@@ -1,9 +1,12 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022"],
+    "module": "node20",
+    "moduleResolution": "node16",
+    "lib": [
+      "ES2022"
+    ],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -11,9 +14,26 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": false,
-    "noEmitOnError": true
+    "noEmitOnError": true,
   },
-  "include": ["src/main/**/*", "src/shared/**/*"],
-  "exclude": ["node_modules", "src/main/preload.ts"]
+  "references": [
+    {
+      "path": "../sdk"
+    },
+    {
+      "path": "../plugins"
+    },
+    {
+      "path": "../api"
+    },
+  ],
+  "include": [
+    "src/main/**/*",
+    "src/plugins/**/*",
+    "src/shared/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/main/preload.ts"
+  ]
 }

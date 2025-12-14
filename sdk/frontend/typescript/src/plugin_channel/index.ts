@@ -55,7 +55,7 @@ export class PluginChannel {
         private channel: { name: unknown, version: unknown },
     ) {
         // Listen for responses to requests
-        this.port.addEventListener('message', (event: MessageEvent) => {
+        this.port.addEventListener('message', (event) => {
             const { _nonce } = event.data ?? {};
             if (_nonce && this.pendingRequests.has(_nonce)) {
                 const pending = this.pendingRequests.get(_nonce)!;

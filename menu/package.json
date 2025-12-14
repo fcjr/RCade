@@ -4,9 +4,9 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "bun run --cwd ../api build && bun run --cwd ../plugins/sleep/clients/typescript build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/input-spinners/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite dev",
+		"dev": "bun run --cwd .. build && vite dev",
 		"dev-emu": "concurrently \"vite --port 5173 --strictPort\" \"rcade dev http://localhost:5173\"",
-		"build": "bun run --cwd ../sdk/backend build && bun run --cwd ../sdk/frontend/typescript build && bun run --cwd ../plugins/sleep/clients/typescript build  && bun run --cwd ../api build && bun run --cwd ../plugins/input-classic/clients/typescript build && bun run --cwd ../plugins/input-spinners/clients/typescript build && bun run --cwd ../plugins/menu/clients/typescript build && vite build",
+		"build": "bun run --cwd .. build && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

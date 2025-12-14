@@ -4,14 +4,14 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "bun run --cwd ../api build && vite dev",
-		"preview": "bun run --cwd ../api build && wrangler dev",
+		"dev": "bun run --cwd .. build && vite dev --port 5173",
+		"preview": "bun run --cwd .. build && wrangler dev",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
-		"deploy": "bun run --cwd ../api build && wrangler deploy"
+		"deploy": "bun run --cwd .. build && wrangler deploy"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.4",

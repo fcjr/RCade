@@ -2,6 +2,13 @@
   "name": "@rcade/plugin-menu-backend",
   "module": "index.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "bun": "./index.ts",
+      "import": "./dist/index.js"
+    },
+    "./rcade.manifest.json": "./rcade.manifest.json"
+  },
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"

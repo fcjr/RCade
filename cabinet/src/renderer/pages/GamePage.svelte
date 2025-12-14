@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import type { GameInfo } from "../../shared/types";
+  import type { GameInfo } from "../../shared/types.mjs";
   import { navigateToMenu } from "../router.svelte";
   import { QuitOptionsSchema, type QuitOptions } from "@rcade/sdk";
   import z from "zod";

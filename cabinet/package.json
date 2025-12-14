@@ -3,18 +3,15 @@
   "version": "0.1.38",
   "private": true,
   "type": "module",
-  "main": "dist/main/main.js",
+  "main": "dist/main/main.mjs",
   "scripts": {
-    "dev": "bun run build:api && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev": "bun run --cwd .. build && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
-    "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
-    "build:api": "bun run --cwd ../api build",
-    "build:main": "bun build src/main/main.ts --outdir dist/main --target node --external electron",
-    "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron",
-    "build": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder",
-    "build:mac": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --mac",
-    "build:win": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --win",
-    "build:linux": "bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --linux"
+    "dev:electron": "electron --trace-warnings .",
+    "build": "bun run --cwd .. build && vite build && electron-builder",
+    "build:mac": "bun run --cwd .. build && vite build && electron-builder --mac",
+    "build:win": "bun run --cwd .. build && vite build && electron-builder --win",
+    "build:linux": "bun run --cwd .. build && vite build && electron-builder --linux"
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",
@@ -23,7 +20,6 @@
     "@rcade/input-classic": "workspace:*",
     "@rcade/input-spinners": "workspace:*",
     "@rcade/sleep": "workspace:*",
-    "@rcade/plugin-sleep": "workspace:*",
     "@rcade/plugin-menu-backend": "workspace:*",
     "@rcade/sdk": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
@@ -33,6 +29,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@rcade/plugin-sleep": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@types/node": "^22.0.0",
     "@types/semver": "^7.7.1",

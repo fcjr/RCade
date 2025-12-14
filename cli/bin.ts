@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import packageJson from "./package.json";
+import packageJson from "./package.json" with { type: "json" };
 
-import { createCommand } from "./src/create";
-import { devCommand } from "./src/dev";
-import { playCommand } from "./src/play";
-import { cacheCommand } from "./src/cache";
-import { remixCommand } from "./src/remix";
+import { createCommand } from "./src/create.js";
+import { devCommand } from "./src/dev.js";
+import { playCommand } from "./src/play.js";
+import { cacheCommand } from "./src/cache.js";
+import { remixCommand } from "./src/remix.js";
 
 const program = new Command();
 

@@ -27,10 +27,11 @@ class Screensaver extends EventTarget {
         channel?.getPort().postMessage({ type: "update_screensaver", config });
     }
 
-    addEventListener<T extends keyof ScreensaverEvents>(type: T, listener: (evt: Event) => void, options?: AddEventListenerOptions): void {
+    override addEventListener<T extends keyof ScreensaverEvents>(type: T, listener: (evt: Event) => void, options?: AddEventListenerOptions): void {
         super.addEventListener(type, listener, options);
     }
-    removeEventListener<T extends keyof ScreensaverEvents>(type: T, listener: (evt: Event) => void): void {
+
+    override removeEventListener<T extends keyof ScreensaverEvents>(type: T, listener: (evt: Event) => void): void {
         super.removeEventListener(type, listener);
     }
 }
@@ -42,7 +43,7 @@ export const SCREENSAVER: Screensaver = new Screensaver();
     for (const res of resolvers)
         res();
 
-    channel?.getPort().addEventListener("message", (event: MessageEvent) => {
+    channel?.getPort().addEventListener("message", (event: any) => {
         switch (event.data.type) {
             case "screensaver_started":
                 SCREENSAVER.dispatchEvent(new Event("started"));

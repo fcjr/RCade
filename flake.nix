@@ -35,6 +35,7 @@
             openssl
             pkg-config
             bun
+            act
           ];
           LD_LIBRARY_PATH = lib.makeLibraryPath [
             openssl

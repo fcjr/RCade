@@ -1,0 +1,12 @@
+{
+  "references": [
+    {"path": "./input-classic"},
+    {"path": "./input-spinners"},
+    {"path": "./menu"},
+    {"path": "./sleep"}
+  ],
+  "compilerOptions": {
+    "composite": true,
+  },
+  "include": []
+}

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { Categories } from "./categories";
-import { Permission } from "./game/manifest";
+import { Categories } from "./categories.js";
+import { Permission } from "./game/manifest.js";
 
 export const GameAuthorResponse = z.object({
   display_name: z.string(),

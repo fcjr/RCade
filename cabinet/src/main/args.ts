@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { CliOptions } from '../shared/types';
+import { CliOptions } from '../shared/types.js';
 import { GameManifest } from '@rcade/api';
 import { readFileSync } from 'node:fs';
 import { app } from 'electron';

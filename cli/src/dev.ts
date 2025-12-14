@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import fs from "node:fs";
 import path from "node:path";
-import { resolveCabinetBinary, launchCabinet } from "./cabinet";
+import { resolveCabinetBinary, launchCabinet } from "./cabinet.js";
 
 export const devCommand = new Command("dev")
     .description("launch the RCade cabinet application for local development")

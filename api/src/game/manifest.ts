@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { Categories } from "../categories";
+import { Categories } from "../categories.js";
 
 export const Permission = z.enum(["camera"]);
 export type Permission = z.infer<typeof Permission>;

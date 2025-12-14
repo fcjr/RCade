@@ -4,13 +4,13 @@ import { MessageChannelMain, type MessagePortMain, type WebContents } from "elec
 import { PluginEnvironment, type Plugin } from "@rcade/sdk-plugin";
 
 import PluginInputClassic from "@rcade/input-classic";
-import PluginInputClassicManifest from "@rcade/input-classic/rcade.manifest.json";
+import PluginInputClassicManifest from "@rcade/input-classic/rcade.manifest.json" with { type: "json" };
 import PluginInputSpinners from "@rcade/input-spinners";
-import PluginInputSpinnersManifest from "@rcade/input-spinners/rcade.manifest.json";
+import PluginInputSpinnersManifest from "@rcade/input-spinners/rcade.manifest.json" with { type: "json" };
 import PluginSleep from "@rcade/sleep";
-import PluginSleepManifest from "@rcade/sleep/rcade.manifest.json";
+import PluginSleepManifest from "@rcade/sleep/rcade.manifest.json" with { type: "json" };
 import PluginMenu from "@rcade/plugin-menu-backend";
-import PluginMenuManifest from "@rcade/plugin-menu-backend/rcade.manifest.json";
+import PluginMenuManifest from "@rcade/plugin-menu-backend/rcade.manifest.json" with { type: "json" };
 
 export class PluginManager {
     public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"], isMenu: boolean) {

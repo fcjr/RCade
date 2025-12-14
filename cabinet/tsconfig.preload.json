@@ -1,9 +1,12 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ES2022",
-    "module": "CommonJS",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -11,9 +14,21 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": false,
     "noEmitOnError": true
   },
-  "include": ["src/main/preload.ts", "src/shared/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/main/preload.ts",
+    "src/shared/**/*"
+  ],
+  "references": [
+    {
+      "path": "../sdk"
+    },
+    {
+      "path": "../plugins"
+    }
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

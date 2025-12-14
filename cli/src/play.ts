@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { resolveCabinetBinary, launchCabinet } from "./cabinet";
+import { resolveCabinetBinary, launchCabinet } from "./cabinet.js";
 
 export const playCommand = new Command("play")
     .description("launch the RCade cabinet in windowed mode with keyboard emulation")

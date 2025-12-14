@@ -9,7 +9,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { Client, Game, Permission } from '@rcade/api';
 import * as tar from 'tar';
-import type { GameInfo, LoadGameResult } from '../shared/types';
+import type { GameInfo, LoadGameResult } from '../shared/types.js';
 import { parseCliArgs } from "./args.js";
 import { PluginManager } from '../plugins/index.js';
 import { QuitOptions } from '@rcade/sdk';

@@ -12,6 +12,7 @@ on:
           - patch
           - minor
           - major
+          - none
 
 concurrency:
   group: repo-commits
@@ -43,6 +44,7 @@ jobs:
 
       - name: Bump version
         id: bump
+        if: ${{ inputs.version_type != 'none' }}
         run: |
           # Get current version and compute new version
           OLD_VERSION=$(bun -e "console.log(require('./cabinet/package.json').version)")
@@ -93,14 +95,14 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install
+        run: bun ci
+
+      - name: Build Project
+        run: bun run build
 
       - name: Build Cabinet
         working-directory: cabinet
         run: |
-          bun run build:api
-          bun run build:main
-          bun run build:preload
           bunx --bun vite build
           bunx --bun electron-builder --mac --${{ matrix.arch }}
 
@@ -126,14 +128,14 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install
+        run: bun ci
+
+      - name: Build Project
+        run: bun run build
 
       - name: Build Cabinet
         working-directory: cabinet
         run: |
-          bun run build:api
-          bun run build:main
-          bun run build:preload
           bunx --bun vite build
           bunx --bun electron-builder --win --x64
 
@@ -159,14 +161,14 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install
+        run: bun ci
+
+      - name: Build Project
+        run: bun run build
 
       - name: Build Cabinet
         working-directory: cabinet
         run: |
-          bun run build:api
-          bun run build:main
-          bun run build:preload
           bunx --bun vite build
           bunx --bun electron-builder --linux --x64
 

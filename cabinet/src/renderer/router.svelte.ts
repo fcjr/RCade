@@ -1,5 +1,5 @@
 import { tick } from 'svelte';
-import { type GameInfo, Route } from '../shared/types';
+import { type GameInfo, Route } from '../shared/types.js';
 
 const { manifest: initialManifest } = window.rcade.getArgs();
 

@@ -108,7 +108,7 @@ jobs:
           bun-version: latest
 
       - name: Install Dependencies
-        run: bun install
+        run: bun ci
 
       - name: Build
         working-directory: ${{ matrix.directory }}

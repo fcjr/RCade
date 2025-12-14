@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import type { GameInfo } from '../../shared/types';
+  import type { GameInfo } from '../../shared/types.mjs';
   import { navigateToGame, getLastPlayedGame } from '../router.svelte';
   import { Fireworks, type FireworksOptions } from '@fireworks-js/svelte'
 

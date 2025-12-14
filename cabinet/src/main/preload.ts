@@ -1,9 +1,9 @@
 /// <reference lib="dom" />
 
 import { contextBridge, ipcRenderer } from 'electron';
-import type { RcadeAPI, GameInfo, Route } from '../shared/types';
+import type { RcadeAPI, GameInfo, Route } from '../shared/types.js';
 import type { ScreensaverConfig } from '@rcade/plugin-sleep';
-import { QuitOptions } from '@rcade/sdk';
+import type { QuitOptions } from '@rcade/sdk';
 
 const args = JSON.parse(process.env.STARTUP_CONFIG || '{}');
 

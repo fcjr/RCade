@@ -31,7 +31,7 @@ export async function getGames(): Promise<any[]> {
     return await new Promise<any[]>((resolve, reject) => {
         const nonce = crypto.randomUUID();
 
-        const handleMessage = (event: MessageEvent) => {
+        const handleMessage = (event: any) => {
             const { type, nonce: responseNonce, content } = event.data;
 
             if (responseNonce !== nonce) {
@@ -76,7 +76,7 @@ export async function getLastGame(): Promise<string | undefined> {
     return await new Promise(res => {
         const nonce = crypto.randomUUID();
 
-        const handleMessage = (event: MessageEvent) => {
+        const handleMessage = (event: any) => {
             const { type, nonce: responseNonce, content } = event.data;
 
             if (responseNonce !== nonce) {

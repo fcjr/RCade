@@ -1,6 +1,12 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
+	"references": [
+		{"path": "../log"},
+		{"path": "../api"},
+		{"path": "../engine"},
+	],
 	"compilerOptions": {
+		"composite": true,
 		"rewriteRelativeImportExtensions": true,
 		"allowJs": true,
 		"checkJs": true,

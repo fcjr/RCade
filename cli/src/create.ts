@@ -9,9 +9,9 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import Mustache from "mustache";
 import { mkdir } from "node:fs/promises";
-import { write_workflow } from "./workflow";
+import { write_workflow } from "./workflow.js";
 import { execa } from "execa";
-import packageJson from "../package.json";
+import packageJson from "../package.json" with { type: "json" };
 
 function expandTilde(filePath: string): string {
     if (filePath.startsWith("~/")) {
@@ -330,4 +330,3 @@ async function setup_cpp(path: string) {
 
     await exc`git init`;
 }
-

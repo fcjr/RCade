@@ -10,6 +10,7 @@
 	import type { Game, GameVersion } from '@rcade/api';
 	import { Logger, BrowserLogRenderer } from '@rcade/log';
 	import { onDestroy } from 'svelte';
+	import { env } from "$env/dynamic/public";
 
 	let { data }: { data: PageData } = $props();
 
@@ -122,7 +123,8 @@
 		try {
 			ENGINE ??= await RCadeWebEngine.initialize(gameContents, {
 				logger: Logger.create().withHandler(BrowserLogRenderer).withMinimumLevel('DEBUG'),
-				cancellationToken: ENGINE_DESTROY.signal
+				cancellationToken: ENGINE_DESTROY.signal,
+				appUrl: env.PUBLIC_USE_LOCAL_APP === "true" ? "http://localhost:5173" : undefined
 			});
 
 			ENGINE.onPermissionDenied((permission) => {

@@ -4,7 +4,7 @@ import { app } from "electron";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { SETTINGS } from "./settings";
+import { SETTINGS } from "./settings.js";
 import type { QuitOptions } from "@rcade/sdk";
 
 const cabinetApiKey = process.env.CABINET_API_KEY;

@@ -12,8 +12,7 @@
     }
   },
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly",
-    "prepare": "bun build index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly"
+    "build": "tsc -p tsconfig.json"
   },
   "files": [
     "dist"

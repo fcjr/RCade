@@ -6,12 +6,11 @@
   "exports": {
     ".": {
       "bun": "./src/index.ts",
-      "import": "./dist/index.js",
+      "import": "./dist/src/index.js",
       "types": "./dist/src/index.d.ts"
     }
   },
   "scripts": {
-    "build": "bun run --cwd ../log build && bun run --cwd ../api build && bun build src/index.ts --outdir dist --target node && tsc -p tsconfig.build.json --emitDeclarationOnly"
   },
   "files": [
     "dist"

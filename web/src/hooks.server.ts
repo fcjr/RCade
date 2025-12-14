@@ -1,6 +1,7 @@
 import { authHandle } from "$lib/auth";
-import type { Handle } from "@sveltejs/kit";
+import { redirect, type Handle } from "@sveltejs/kit";
 import { sequence } from '@sveltejs/kit/hooks';
+import { env } from "$env/dynamic/private";
 
 const corsHandle: Handle = async ({ event, resolve }) => {
     // Apply CORS headers for usercontent.rcade.dev
@@ -29,4 +30,17 @@ const corsHandle: Handle = async ({ event, resolve }) => {
     return response;
 };
 
-export const handle = sequence(corsHandle, authHandle);
+const devHandle: Handle = async ({ event, resolve }) => {
+    if (env.USE_HOSTED_API === "true" && event.url.pathname.startsWith("/api")) {
+        const rewriteUrl = event.url;
+        rewriteUrl.protocol = "https";
+        rewriteUrl.hostname = "rcade.dev";
+        rewriteUrl.port = "";
+        const newReq = new Request(rewriteUrl, event.request);
+        return await fetch(newReq);
+    }
+
+    return await resolve(event);
+};
+
+export const handle = sequence(corsHandle, authHandle, devHandle);

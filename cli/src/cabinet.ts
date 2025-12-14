@@ -89,15 +89,14 @@ export function getAnyCachedVersion(info: PlatformInfo): string | null {
     if (!fs.existsSync(CACHE_DIR)) {
         return null;
     }
-
     const versions = fs.readdirSync(CACHE_DIR)
         .filter(dir => {
             const binaryPath = getCachedBinaryPath(info, dir);
             return fs.existsSync(binaryPath);
         })
         .sort((a, b) => {
-            const [aMaj, aMin, aPatch] = a.split(".").map(Number);
-            const [bMaj, bMin, bPatch] = b.split(".").map(Number);
+            const [aMaj, aMin, aPatch] = a.split(".").map(Number) as any;
+            const [bMaj, bMin, bPatch] = b.split(".").map(Number) as any;
             if (bMaj !== aMaj) return bMaj - aMaj;
             if (bMin !== aMin) return bMin - aMin;
             return bPatch - aPatch;
