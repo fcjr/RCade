@@ -11,7 +11,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
-		"deploy": "bun run --cwd ../api build && wrangler deploy",
+		"deploy": "bun run --cwd ../api build && bun run --cwd ../engine build && wrangler deploy",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:local": "wrangler d1 migrations apply rcade --local",
 		"db:migrate:remote": "wrangler d1 migrations apply rcade --remote",
