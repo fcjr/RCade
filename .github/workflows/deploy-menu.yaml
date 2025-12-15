@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'menu/**'
+      - 'api/**'
+      - 'sdk/backend/**'
+      - 'sdk/frontend/typescript/**'
+      - 'plugins/sleep/clients/typescript/**'
+      - 'plugins/input-classic/clients/typescript/**'
+      - 'plugins/input-spinners/clients/typescript/**'
+      - 'plugins/menu/clients/typescript/**'
+      - '.github/workflows/deploy-menu.yaml'
 
 jobs:
   build-and-deploy:
