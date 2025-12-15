@@ -1,6 +1,17 @@
 import { authHandle } from "$lib/auth";
 import type { Handle } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
 import { sequence } from '@sveltejs/kit/hooks';
+
+const domainRedirectHandle: Handle = async ({ event, resolve }) => {
+    const host = event.request.headers.get('host');
+    if (host?.includes('rcade.recurse.com')) {
+        const url = new URL(event.request.url);
+        url.host = 'rcade.dev';
+        redirect(302, url.toString());
+    }
+    return resolve(event);
+};
 
 const corsHandle: Handle = async ({ event, resolve }) => {
     // Apply CORS headers for usercontent.rcade.dev
@@ -29,4 +40,4 @@ const corsHandle: Handle = async ({ event, resolve }) => {
     return response;
 };
 
-export const handle = sequence(corsHandle, authHandle);
+export const handle = sequence(domainRedirectHandle, corsHandle, authHandle);
