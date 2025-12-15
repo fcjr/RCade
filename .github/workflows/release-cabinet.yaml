@@ -34,7 +34,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.3.3"
 
       - name: Configure Git
         run: |
@@ -90,15 +90,17 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.3.3"
 
       - name: Install Dependencies
         run: bun install
 
+      - name: Build dependencies
+        run: bun run build --filter=@rcade/client^...
+
       - name: Build Cabinet
         working-directory: cabinet
         run: |
-          bun run build:api
           bun run build:main
           bun run build:preload
           bunx --bun vite build
@@ -123,15 +125,17 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.3.3"
 
       - name: Install Dependencies
         run: bun install
 
+      - name: Build dependencies
+        run: bun run build --filter=@rcade/client^...
+
       - name: Build Cabinet
         working-directory: cabinet
         run: |
-          bun run build:api
           bun run build:main
           bun run build:preload
           bunx --bun vite build
@@ -156,15 +160,17 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.3.3"
 
       - name: Install Dependencies
         run: bun install
 
+      - name: Build dependencies
+        run: bun run build --filter=@rcade/client^...
+
       - name: Build Cabinet
         working-directory: cabinet
         run: |
-          bun run build:api
           bun run build:main
           bun run build:preload
           bunx --bun vite build

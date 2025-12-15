@@ -5,17 +5,15 @@
   "type": "module",
   "main": "dist/main/main.js",
   "scripts": {
-    "dev": "bun run build:sdk && bun run build:api && concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
-    "build:sdk": "bun run --cwd ../sdk/frontend/typescript build",
-    "build:api": "bun run --cwd ../api build",
     "build:main": "bun build src/main/main.ts --outdir dist/main --target node --external electron",
     "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron",
-    "build": "bun run build:sdk && bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder",
-    "build:mac": "bun run build:sdk && bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --mac",
-    "build:win": "bun run build:sdk && bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --win",
-    "build:linux": "bun run build:sdk && bun run build:api && bun run build:main && bun run build:preload && vite build && electron-builder --linux"
+    "build": "bun run build:main && bun run build:preload && vite build && electron-builder",
+    "build:mac": "bun run build:main && bun run build:preload && vite build && electron-builder --mac",
+    "build:win": "bun run build:main && bun run build:preload && vite build && electron-builder --win",
+    "build:linux": "bun run build:main && bun run build:preload && vite build && electron-builder --linux"
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",

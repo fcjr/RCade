@@ -1,5 +1,8 @@
 node_modules
 
+# Turborepo
+.turbo
+
 # Output
 .output
 .vercel
