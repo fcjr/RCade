@@ -16,6 +16,7 @@
     import { SCREENSAVER } from "@rcade/plugin-sleep";
     import EventEmitter from "events";
     import { Fireworks, type FireworksOptions } from "@fireworks-js/svelte";
+    import { play_menu_move, preloadMenuSound } from "$lib/audio";
 
     // Dummy function to load games - replace with actual API call
     async function loadGames(): Promise<Game[]> {
@@ -125,6 +126,8 @@
         // Register input handlers
         const unsubPress = registerPressHandler();
         const unsubInputEnd = registerInputEndHandler();
+
+        preloadMenuSound();
 
         // Load games
         loadGames().then((loadedGames) => {
@@ -606,7 +609,9 @@
 
     const moveEvents = new EventEmitter();
 
-    console.log({ moveEvents });
+    moveEvents.on("move", () => {
+        play_menu_move();
+    });
 
     let fireworksComponent: Fireworks;
     let p2APressed = false;
