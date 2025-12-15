@@ -41,6 +41,11 @@
 
     // run consume deltas every frame
     function frameLoop() {
+        if (gameActive) {
+            requestAnimationFrame(frameLoop);
+            return;
+        }
+
         // Read spinner delta (resets after read) and accumulate
         accumulatedDelta += SPINNERS_P1.SPINNER.step_delta;
 

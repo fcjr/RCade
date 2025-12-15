@@ -67,8 +67,8 @@ export async function play_menu_move(): Promise<void> {
     // Apply pitch
     source.playbackRate.value = pitchVariation;
 
-    // Slight volume variation for more natural feel: 0.2 to 0.5
-    const volumeVariation = 0.2 + Math.random() * 0.3;
+    // Slight volume variation for more natural feel: 0.1 to 0.2
+    const volumeVariation = 0.1 + Math.random() * 0.1;
     gainNode.gain.value = volumeVariation;
 
     // Connect: source -> gain -> destination
