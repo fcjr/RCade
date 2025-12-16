@@ -1,6 +1,6 @@
 {
   "name": "@rcade/client",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "private": true,
   "type": "module",
   "main": "dist/main/main.js",
