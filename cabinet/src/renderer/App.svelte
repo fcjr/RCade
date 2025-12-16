@@ -22,17 +22,18 @@
   <Screensaver />
 {/if}
 
+<!-- TODO this is a hack to fix dev mode not loading a game, but we should fix this properly in the menugame -->
 {#if route.page === "game"}
   <GamePage game={route.game} />
+{:else}
+  {#await window.rcade.getMenuGame() then menuGame}
+    <div>
+      <GamePage game={menuGame} />
+    </div>
+  {:catch}
+    <CarouselPage />
+  {/await}
 {/if}
-
-{#await window.rcade.getMenuGame() then menuGame}
-  <div>
-    <GamePage game={menuGame} />
-  </div>
-{:catch}
-  <CarouselPage />
-{/await}
 
 <style>
   @font-face {
