@@ -223,7 +223,7 @@
     },
     "plugins/input-spinners/clients/typescript": {
       "name": "@rcade/plugin-input-spinners",
-      "version": "0.1.8",
+      "version": "0.2.0",
       "dependencies": {
         "@rcade/sdk": "^0.2.2",
       },
