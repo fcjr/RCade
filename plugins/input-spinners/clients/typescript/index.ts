@@ -48,17 +48,32 @@ export const PLAYER_2 = { SPINNER: spinner2 };
 
 export const STATUS = { connected: false };
 
+let currentPort: MessagePort | null = null;
+let currentMessageHandler: ((event: MessageEvent) => void) | null = null;
+
+function cleanup() {
+    if (currentPort && currentMessageHandler) {
+        currentPort.removeEventListener("message", currentMessageHandler);
+        currentPort = null;
+        currentMessageHandler = null;
+    }
+}
+
 (async () => {
+    cleanup();
+
     const channel = await PluginChannel.acquire("@rcade/input-spinners", "^1.0.0");
+    currentPort = channel.getPort();
 
     // Use addEventListener (not onmessage) to not interfere with PluginChannel's request handling
-    channel.getPort().addEventListener("message", (event: MessageEvent) => {
+    currentMessageHandler = (event: MessageEvent) => {
         const { type, spinner1_step_delta, spinner2_step_delta } = event.data;
         if (type === "spinners") {
             if (spinner1_step_delta !== 0) spinner1._update(spinner1_step_delta);
             if (spinner2_step_delta !== 0) spinner2._update(spinner2_step_delta);
         }
-    });
+    };
+    currentPort.addEventListener("message", currentMessageHandler);
 
     const config = await channel.request<{ step_resolution: number }>({ type: "get_config" });
     stepResolution = config.step_resolution;
@@ -67,7 +82,7 @@ export const STATUS = { connected: false };
 })();
 
 if (import.meta.hot) {
-    import.meta.hot.accept(() => {
-        (import.meta.hot as any).invalidate();
+    import.meta.hot.dispose(() => {
+        cleanup();
     });
 }
