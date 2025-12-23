@@ -94,6 +94,11 @@ export default class MenuPlugin implements Plugin {
             port.postMessage({ type: "game_load_finished", result });
         });
 
+        // @ts-ignore
+        environment.getWebContents().addListener("menu-key-pressed", () => {
+            port.postMessage({ type: "menu_key_pressed" });
+        });
+
         port.start();
     }
 

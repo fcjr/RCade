@@ -375,6 +375,7 @@ function createWindow(): void {
       mainWindow.webContents.send("input-activity");
       if (input.type === "keyDown" && input.code === "Escape" && !args.noExit && !args.manifest) {
         mainWindow.webContents.send("menu-key-pressed");
+        mainWindow.webContents.emit("menu-key-pressed");
       }
     }
   });

@@ -6,6 +6,7 @@
         getLastGame,
         onGameLoad,
         onGameQuit,
+        onMenuKey,
         playGame,
     } from "@rcade/plugin-menu";
     import { quartOut } from "svelte/easing";
@@ -23,6 +24,28 @@
         return (await getGames()).map((response: any) =>
             Game.fromApiResponse(response),
         );
+    }
+
+    async function refreshGames() {
+        const currentGameId = currentGame?.id();
+        const loadedGames = await loadGames();
+        games = loadedGames;
+
+        await tick();
+
+        // Try to stay on the same game after refresh
+        if (currentGameId && loadedGames.length > 0) {
+            const index = filteredGames.findIndex(
+                (game) => game.id() === currentGameId,
+            );
+            if (index !== -1) {
+                setPage(index);
+            }
+        }
+
+        updateVersionMasks();
+        updateFilterMasks();
+        updatePaginationState();
     }
 
     let screensaverActive = false;
@@ -131,6 +154,11 @@
         // Register input handlers
         const unsubPress = registerPressHandler();
         const unsubInputEnd = registerInputEndHandler();
+
+        // Subscribe to menu key to refresh games list
+        onMenuKey(() => {
+            refreshGames();
+        });
 
         preloadMenuSound();
 

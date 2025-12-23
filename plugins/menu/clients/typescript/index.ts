@@ -14,6 +14,10 @@ let channel: Promise<PluginChannel> | null = null;
             if (event.data.type === "game_load_finished") {
                 loadHandler?.(event.data.result);
             }
+
+            if (event.data.type === "menu_key_pressed") {
+                menuKeyHandler?.();
+            }
         })
     });
 })();
@@ -101,4 +105,9 @@ export function onGameQuit(handler: (quitOptions: QuitOptions) => void) {
 let loadHandler: ((result: any) => void) | undefined = undefined;
 export function onGameLoad(handler: (result: any) => void) {
     loadHandler = handler;
+}
+
+let menuKeyHandler: (() => void) | undefined = undefined;
+export function onMenuKey(handler: () => void) {
+    menuKeyHandler = handler;
 }
