@@ -19,6 +19,8 @@ let channel: Promise<PluginChannel> | null = null;
                 menuKeyHandler?.();
             }
         })
+
+        channel.getPort().start();
     });
 })();
 

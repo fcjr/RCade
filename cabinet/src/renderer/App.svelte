@@ -5,7 +5,7 @@
   import Screensaver from "./components/Screensaver.svelte";
 
   const route = $derived(getRoute());
-  const { isDev, forceScreensaver } = window.rcade.getArgs();
+  const { manifest, isDev, forceScreensaver } = window.rcade.getArgs();
 
   // Hide cursor in production mode
   $effect(() => {
@@ -22,10 +22,11 @@
   <Screensaver />
 {/if}
 
-<!-- TODO this is a hack to fix dev mode not loading a game, but we should fix this properly in the menugame -->
 {#if route.page === "game"}
   <GamePage game={route.game} />
-{:else}
+{/if}
+
+{#if manifest == null} 
   {#await window.rcade.getMenuGame() then menuGame}
     <div>
       <GamePage game={menuGame} />
