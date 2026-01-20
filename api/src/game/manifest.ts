@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { Categories } from "../categories";
 
-export const Permission = z.enum(["camera"]);
+export const Permission = z.enum(["camera", "microphone"]);
 export type Permission = z.infer<typeof Permission>;
 
 export const ManifestAuthor = z.object({

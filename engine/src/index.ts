@@ -83,7 +83,7 @@ export class RCadeWebEngine {
         iframe.style.width = "336px";
         iframe.style.height = "262px";
         iframe.style.border = "none";
-        iframe.allow = "camera";
+        iframe.allow = "camera; microphone";
         iframe.sandbox = "allow-scripts allow-same-origin";
 
         let loaded = this.move(logger, iframe, appUrl.toString());
