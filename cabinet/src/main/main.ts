@@ -359,10 +359,16 @@ function createWindow(): void {
 
   // Handle permissions for sandboxed iframe content based on game manifest
   session.defaultSession.setPermissionRequestHandler(
-    (_webContents, permission, callback) => {
-      // Map Electron permission names to our Permission type
-      if (permission === 'media' && currentGamePermissions.includes('camera')) {
-        callback(true);
+    (_webContents, permission, callback, details) => {
+      if (permission === 'media') {
+        const { mediaTypes } = details;
+        // Require all requested media types to have corresponding permissions
+        const allowed = mediaTypes?.every(type => {
+          if (type === 'video') return currentGamePermissions.includes('camera');
+          if (type === 'audio') return currentGamePermissions.includes('microphone');
+          return false;
+        });
+        callback(allowed ?? false);
         return;
       }
       callback(false);

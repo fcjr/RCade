@@ -72,7 +72,7 @@
     },
     "permission": {
       "type": "string",
-      "enum": ["camera"],
+      "enum": ["camera", "microphone"],
       "description": "Permission for hardware/system access"
     },
     "gameManifest": {
