@@ -41,7 +41,7 @@
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpmuAVPQUMOZhy+a/54Rh/vwbhx9j5HU2rnhyExw01r" # Rose Kodsi-Hall
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGhBgDfImfTT4FQX6feRvOtkFJWPswFo7EG5VGjYDOs4" # Frank Chiarulli Jr.
-    ]
+    ];
   };
 
   # Allow unfree packages (for stuff like vscode, discord, etc.)
