@@ -15,7 +15,6 @@
     rustfmt
 
     # C/C++ for Rust FFI and system programming
-    gcc
     clang
     llvm
     cmake
