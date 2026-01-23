@@ -29,9 +29,9 @@
   # Git configuration
   programs.git = {
     enable = true;
-    userName = "RCade";
-    userEmail = "rose@hall.ly";
-    extraConfig = {
+    settings = {
+      user.name = "RCade";
+      user.email = "rose@hall.ly";
       init.defaultBranch = "main";
       pull.rebase = true;
       push.autoSetupRemote = true;

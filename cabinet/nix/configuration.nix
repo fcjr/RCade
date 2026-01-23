@@ -59,7 +59,6 @@
     ripgrep
     fd
     bat
-    exa
     fzf
   ];
 
