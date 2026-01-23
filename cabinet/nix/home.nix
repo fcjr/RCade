@@ -8,7 +8,6 @@
   # Packages to install for this user
   home.packages = with pkgs; [
     # Rust toolchain
-    rustup
     cargo
     rustc
     rust-analyzer
