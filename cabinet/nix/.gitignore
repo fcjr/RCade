@@ -1,0 +1,10 @@
+# Hardware configuration is machine-specific
+hardware-configuration.nix
+
+# Nix build results
+result
+result-*
+
+# Direnv
+.direnv/
+.envrc
