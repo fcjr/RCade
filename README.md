@@ -243,6 +243,38 @@ npm run dev    # or: bun dev, pnpm dev
 
 This starts a local development server with hot reloading. Make changes and see them instantly.
 
+### Local Playtesting
+
+Keyboard Controls (@rcade/plugin-input-classic):
+
+| Key | Button equivalent   |  
+|-----|---------------------|
+| `1` | `SYSTEM.ONE_PLAYER` |
+| `2` | `SYSTEM.TWO_PLAYER` |
+| `w` | `PLAYER_1.DPAD.up` |
+| `a` | `PLAYER_1.DPAD.left` |
+| `s` | `PLAYER_1.DPAD.down` |
+| `d` | `PLAYER_1.DPAD.right` |
+| `f` | `PLAYER_1.A` |
+| `g` | `PLAYER_1.B` |
+| `i` | `PLAYER_2.DPAD.up` |
+| `j` | `PLAYER_2.DPAD.left` |
+| `k` | `PLAYER_2.DPAD.down` |
+| `l` | `PLAYER_2.DPAD.right` |
+| `;` | `PLAYER_2.A` |
+| `'` | `PLAYER_2.B` |
+
+
+Spinner Controls Emulation (@rcade/plugin-input-spinners)
+
+| Key | Action           |
+|-----|------------------|
+| `C`   | P1 Spinner Left  |
+| `V`   | P1 Spinner Right |
+| `.`   | P2 Spinner Left  |
+| `/`   | P2 Spinner Right |
+
+
 ### Deploy to RCade
 
 First, create a new repository on GitHub:
