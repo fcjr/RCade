@@ -199,7 +199,10 @@
       src={gameUrl}
       title={game.name}
       sandbox="allow-scripts allow-same-origin"
-      allow={game.permissions.includes("camera") ? "camera" : ""}
+      allow={[
+        game.permissions.includes("camera") ? "camera" : "",
+        game.permissions.includes("microphone") ? "microphone" : "",
+      ].filter(Boolean).join("; ")}
       onerror={(error) => {
         window.rcade.gameLoaded(game.id, game.name, game.latestVersion, {
           kind: "iframe",
