@@ -61,6 +61,42 @@ Just push to github. Don't forget to include the `<name>.opam` and `package-lock
 
 This template uses a binding to `@rcade/plugin-input-classic` for arcade input. See `ocaml-bindings/rcade.mli`.
 
+### Development Keyboard Controls
+
+When developing locally, keyboard inputs are mapped to arcade controls:
+
+**Classic Controls (`@rcade/plugin-input-classic`)**
+
+| Player   | Action           | Key |
+|----------|------------------|-----|
+| Player 1 | UP               | W   |
+| Player 1 | DOWN             | S   |
+| Player 1 | LEFT             | A   |
+| Player 1 | RIGHT            | D   |
+| Player 1 | A Button         | F   |
+| Player 1 | B Button         | G   |
+| Player 2 | UP               | I   |
+| Player 2 | DOWN             | K   |
+| Player 2 | LEFT             | J   |
+| Player 2 | RIGHT            | L   |
+| Player 2 | A Button         | ;   |
+| Player 2 | B Button         | '   |
+| System   | One Player Start | 1   |
+| System   | Two Player Start | 2   |
+
+**Spinner Controls (`@rcade/plugin-input-spinners`)**
+
+| Player   | Action        | Key |
+|----------|---------------|-----|
+| Player 1 | Spinner Left  | C   |
+| Player 1 | Spinner Right | V   |
+| Player 2 | Spinner Left  | .   |
+| Player 2 | Spinner Right | /   |
+
+Spinners repeat at ~60Hz while held.
+
+To add spinner support: `npm install @rcade/plugin-input-spinners`
+
 ## Deployment
 
 First, create a new repository on GitHub:

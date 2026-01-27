@@ -149,6 +149,56 @@ The plugin is automatically included in your `rcade.manifest.json`:
 }
 ```
 
+### Development Keyboard Controls
+
+When developing locally, keyboard inputs are mapped to arcade controls:
+
+**Classic Controls (`@rcade/plugin-input-classic`)**
+
+| Player   | Action           | Key |
+|----------|------------------|-----|
+| Player 1 | UP               | W   |
+| Player 1 | DOWN             | S   |
+| Player 1 | LEFT             | A   |
+| Player 1 | RIGHT            | D   |
+| Player 1 | A Button         | F   |
+| Player 1 | B Button         | G   |
+| Player 2 | UP               | I   |
+| Player 2 | DOWN             | K   |
+| Player 2 | LEFT             | J   |
+| Player 2 | RIGHT            | L   |
+| Player 2 | A Button         | ;   |
+| Player 2 | B Button         | '   |
+| System   | One Player Start | 1   |
+| System   | Two Player Start | 2   |
+
+**Spinner Controls (`@rcade/plugin-input-spinners`)**
+
+| Player   | Action        | Key |
+|----------|---------------|-----|
+| Player 1 | Spinner Left  | C   |
+| Player 1 | Spinner Right | V   |
+| Player 2 | Spinner Left  | .   |
+| Player 2 | Spinner Right | /   |
+
+Spinners repeat at ~60Hz while held.
+
+### Adding Spinner Support
+
+The spinner plugin is not included in templates by default. To add it to your game:
+
+**JavaScript/TypeScript/Python/OCaml:**
+```bash
+npm install @rcade/plugin-input-spinners
+```
+
+**Rust** (add to `Cargo.toml`):
+```toml
+rcade-plugin-input-spinners = "0.1.0"
+```
+
+Note: Spinner support for C++ is not yet available.
+
 ---
 
 ## The Sandbox: What Your Game Can (and Can't) Do
@@ -242,38 +292,6 @@ npm run dev    # or: bun dev, pnpm dev
 ```
 
 This starts a local development server with hot reloading. Make changes and see them instantly.
-
-### Local Playtesting
-
-Keyboard Controls (@rcade/plugin-input-classic):
-
-| Key | Button equivalent   |  
-|-----|---------------------|
-| `1` | `SYSTEM.ONE_PLAYER` |
-| `2` | `SYSTEM.TWO_PLAYER` |
-| `w` | `PLAYER_1.DPAD.up` |
-| `a` | `PLAYER_1.DPAD.left` |
-| `s` | `PLAYER_1.DPAD.down` |
-| `d` | `PLAYER_1.DPAD.right` |
-| `f` | `PLAYER_1.A` |
-| `g` | `PLAYER_1.B` |
-| `i` | `PLAYER_2.DPAD.up` |
-| `j` | `PLAYER_2.DPAD.left` |
-| `k` | `PLAYER_2.DPAD.down` |
-| `l` | `PLAYER_2.DPAD.right` |
-| `;` | `PLAYER_2.A` |
-| `'` | `PLAYER_2.B` |
-
-
-Spinner Controls Emulation (@rcade/plugin-input-spinners)
-
-| Key | Action           |
-|-----|------------------|
-| `C`   | P1 Spinner Left  |
-| `V`   | P1 Spinner Right |
-| `.`   | P2 Spinner Left  |
-| `/`   | P2 Spinner Right |
-
 
 ### Deploy to RCade
 
