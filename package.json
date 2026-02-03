@@ -39,13 +39,13 @@
     "build:cabinet-linux": "turbo build:cabinet-linux --filter=@rcade/client",
     "check": "turbo check",
     "prepare": "husky",
-    "nix:generate": "bun2nix || echo 'bun2nix not found - run from nix develop shell to generate bun.nix'"
+    "nix:generate": "bun2nix -o bun.nix || echo 'bun2nix not found - run from nix develop shell to generate bun.nix'"
   },
   "dependencies": {
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.4",
+    "@types/bun": "^1.3.8",
     "husky": "^9.1.7",
     "turbo": "^2.6.3"
   }
