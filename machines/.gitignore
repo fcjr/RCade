@@ -1,0 +1,6 @@
+# Ignore all machine configurations except template
+*
+!.gitignore
+!README.md
+!template/
+!template/**

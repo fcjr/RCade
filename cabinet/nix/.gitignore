@@ -1,7 +1,0 @@
-# Nix build results
-result
-result-*
-
-# Direnv
-.direnv/
-.envrc

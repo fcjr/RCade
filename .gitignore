@@ -28,3 +28,6 @@ vite.config.ts.timestamp-*
 
 # Rust
 target/*
+
+# Nix
+result
