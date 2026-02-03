@@ -14,7 +14,7 @@
 , electron
 , bun
 , nodejs_22
-, bun2nix
+, bun2nix  # bun2nix package from overlay (provides fetchBunDeps, hook via passthru)
 
   # Runtime dependencies for Electron on Linux
 , alsa-lib
@@ -104,12 +104,8 @@ let
   # Path to the generated bun.nix lockfile
   bunNixPath = ../../bun.nix;
 
-  # Get bun2nix helpers for this system
-  bun2nixPkgs = bun2nix.packages.${stdenv.hostPlatform.system};
-  bun2nixLib = bun2nix.lib.${stdenv.hostPlatform.system};
-
-  # Fetch bun dependencies using bun2nix
-  bunDeps = bun2nixLib.fetchBunDeps {
+  # Fetch bun dependencies using bun2nix v2 API (via overlay passthru)
+  bunDeps = bun2nix.fetchBunDeps {
     bunNix = bunNixPath;
   };
 
@@ -121,7 +117,7 @@ stdenv.mkDerivation {
     makeWrapper
     bun
     nodejs_22
-    bun2nixLib.bunInstallHook
+    bun2nix.hook
   ];
 
   # Pass bun dependencies to the hook

@@ -38,7 +38,7 @@
       # Get pkgs for a given system
       pkgsFor = system: import nixpkgs {
         inherit system;
-        overlays = [ fenix.overlays.default self.overlays.default ];
+        overlays = [ fenix.overlays.default bun2nix.overlays.default self.overlays.default ];
         config.allowUnfree = true;
       };
 
@@ -73,7 +73,7 @@
             # Nix settings
             nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-            nixpkgs.overlays = [ fenix.overlays.default self.overlays.default ];
+            nixpkgs.overlays = [ fenix.overlays.default bun2nix.overlays.default self.overlays.default ];
             nixpkgs.config.allowUnfree = true;
 
             system.stateVersion = "24.05";
@@ -89,9 +89,8 @@
         # Add RCade-specific packages here
         rcade = {
           # The cabinet Electron app package - built reproducibly via bun2nix
-          cabinet = final.callPackage ./nix/pkgs/cabinet.nix {
-            inherit bun2nix;
-          };
+          # bun2nix is available in pkgs via bun2nix.overlays.default
+          cabinet = final.callPackage ./nix/pkgs/cabinet.nix {};
         };
       };
 
@@ -134,7 +133,7 @@
             self.nixosModules.rcade-cabinet
             {
               services.rcade-cabinet.enable = true;
-              nixpkgs.overlays = [ fenix.overlays.default self.overlays.default ];
+              nixpkgs.overlays = [ fenix.overlays.default bun2nix.overlays.default self.overlays.default ];
             }
           ];
         };
