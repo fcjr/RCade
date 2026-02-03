@@ -124,6 +124,21 @@
           ];
         };
 
+	# Rose's Razer Laptop (Current Production Machine)
+	prod = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            ./machines/rcade-rose-laptop/configuration.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.extraSpecialArgs = { inherit inputs self; };
+            }
+          ];
+        };
+
         # VM for testing the cabinet
         rcade-vm = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
