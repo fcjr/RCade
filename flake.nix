@@ -19,9 +19,15 @@
     # Flake utilities
     flake-utils.url = "github:numtide/flake-utils";
 
+    # Bun packaging for Nix (reproducible builds)
+    bun2nix = {
+      url = "github:nix-community/bun2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
   };
 
-  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, ... }@inputs:
+  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, bun2nix, ... }@inputs:
     let
       # Systems we support for development
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -82,8 +88,10 @@
       overlays.default = final: prev: {
         # Add RCade-specific packages here
         rcade = {
-          # The cabinet Electron app package (placeholder - builds via bun/electron-builder)
-          cabinet = final.callPackage ./nix/pkgs/cabinet.nix { };
+          # The cabinet Electron app package - built reproducibly via bun2nix
+          cabinet = final.callPackage ./nix/pkgs/cabinet.nix {
+            inherit bun2nix;
+          };
         };
       };
 
@@ -159,6 +167,9 @@
 
               # Node.js (for electron-builder and some tooling)
               nodejs_22
+
+              # Nix tooling for reproducible builds
+              bun2nix.packages.${system}.default
 
               # Useful dev tools
               just  # Task runner

@@ -38,7 +38,8 @@
     "build:cabinet-win": "turbo build:cabinet-win --filter=@rcade/client",
     "build:cabinet-linux": "turbo build:cabinet-linux --filter=@rcade/client",
     "check": "turbo check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "nix:generate": "bun2nix || echo 'bun2nix not found - run from nix develop shell to generate bun.nix'"
   },
   "dependencies": {
     "zod": "^4.1.13"
