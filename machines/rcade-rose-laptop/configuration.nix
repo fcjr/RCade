@@ -36,6 +36,28 @@ in
   networking.hostName = "rcade";  # Change this for each machine
   networking.networkmanager.enable = true;
 
+  # ===
+  # Nvidia Graphics
+  # ===
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = false;
+    powerManagement.enable = true;
+    prime = {
+      offload.enable = false;
+      sync.enable = false;
+    };
+  };
+  boot.blacklistedKernelModules = [ "nouveau" ];
+  environment.sessionVariables = {
+    GBM_BACKEND = "nvidia-drm";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    WLR_NO_HARDWARE_CURSORS = "1";
+    __NV_PRIME_RENDER_OFFLOAD = "1";
+    WLR_RENDERER = "vulkan";
+  };
+
   # ===========================================================================
   # RCade Cabinet Service
   # ===========================================================================
@@ -70,6 +92,7 @@ in
     "rd.systemd.show_status=false"
     "rd.udev.log_level=3"
     "udev.log_priority=3"
+    "nvidia-drm.modeset=1"
   ];
 
   boot.consoleLogLevel = 0;
@@ -93,6 +116,8 @@ in
 
     # SSH keys for maintainers
     openssh.authorizedKeys.keys = rcadeLib.allMaintainerKeys;
+
+    password = "rcade";
   };
 
   # Allow admin user to use sudo without password (for remote maintenance)
