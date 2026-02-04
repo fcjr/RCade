@@ -29,6 +29,8 @@ let
     # Mesa GLX (works across Intel/AMD/software rendering)
     export __GLX_VENDOR_LIBRARY_NAME=mesa
 
+    ${cfg.preLaunchCommands}
+
     # Environment file for secrets (API keys, etc.)
     ${lib.optionalString (cfg.environmentFile != null) "source ${cfg.environmentFile}"}
 
@@ -40,6 +42,12 @@ in
 {
   options.services.rcade-cabinet = {
     enable = lib.mkEnableOption "RCade arcade cabinet";
+
+    preLaunchCommands = lib.mkOption {
+      type = lib.types.lines;
+      default = "";
+      description = "Shell commands to run inside Cage before starting the app (e.g. wlr-randr).";
+    };
 
     package = lib.mkOption {
       type = lib.types.package;
@@ -178,6 +186,7 @@ in
       # Graphics
       vulkan-tools
       mesa-demos
+      wlr-randr
 
       # Debug/admin tools (minimal)
       htop

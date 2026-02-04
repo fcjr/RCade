@@ -76,6 +76,14 @@ in
 
     # Vulkan/WebGPU support (default: true)
     enableVulkan = true;
+
+    preLaunchCommands = ''
+      # Disable the Laptop screen (eDP-1) so the game doesn't stretch
+      ${pkgs.wlr-randr}/bin/wlr-randr --output eDP-1 --off || true
+
+      # Force the VGA monitor to be the primary screen at 0,0
+      ${pkgs.wlr-randr}/bin/wlr-randr --output VGA-1 --on --pos 0,0 || true
+    '';
   };
 
   # ===========================================================================
