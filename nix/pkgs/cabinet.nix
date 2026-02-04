@@ -108,9 +108,7 @@ stdenv.mkDerivation {
     export HOME=$(mktemp -d)
 
     # ---- Install dependencies ----
-    pnpm run build --filter ...@rcade/client --filter !@rcade/client
-    pnpm run build:main --filter @rcade/client
-    pnpm run build:preload --filter @rcade/client
+    pnpm run build --filter ...@rcade/client
 
     # ---- Renderer (Svelte / Vite) ----
     cd cabinet
