@@ -188,6 +188,14 @@ stdenv.mkDerivation (finalAttrs: {
       mkdir -p $out/lib/rcade-cabinet/node_modules
       cp -rL node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
       cp -rL node_modules/pkg-prebuilds $out/lib/rcade-cabinet/node_modules/
+
+      # Remove prebuilds for other platforms/architectures. autoPatchelfHook
+      # would fail on musl and non-linux binaries it can't patch.
+      find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds \
+        -mindepth 1 -maxdepth 1 -type d \
+        ! -name 'HID_hidraw-linux-x64' \
+        ! -name 'HID-linux-x64' \
+        -exec rm -rf {} +
     fi
 
     # Launcher script
