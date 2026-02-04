@@ -125,13 +125,16 @@ stdenv.mkDerivation (finalAttrs: {
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
-    hash = "";  # Build once to get the correct hash from the error message
+    fetcherVersion = 1;
+    hash = "sha256-eqrEzFd7HiliHh5dMK3dXVXioao1CrXCoIjVnnpAcC0=";  # Build once to get the correct hash from the error message
   };
 
   buildPhase = ''
     runHook preBuild
 
     export HOME=$(mktemp -d)
+
+    pnpm build
 
     # Build main process (ESM, externalize electron)
     node_modules/.bin/esbuild cabinet/src/main/main.ts \

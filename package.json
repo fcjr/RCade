@@ -24,5 +24,15 @@
     "esbuild": "^0.24.0",
     "husky": "^9.1.7",
     "turbo": "^2.6.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "electron-winstaller",
+      "esbuild",
+      "node-hid",
+      "sharp",
+      "workerd"
+    ]
   }
 }
