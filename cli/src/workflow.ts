@@ -1,3 +1,4 @@
+import { YAML } from "bun";
 import mustache from "mustache";
 import fs from "node:fs";
 import yaml from "js-yaml";
@@ -28,10 +29,10 @@ jobs:
 `;
 
 export async function write_workflow(to_dir: string, data: any[]) {
-  await mkdir(path.join(to_dir, ".github/workflows"), { recursive: true });
-  const result = yaml.dump(data, { quotingType: "\"" }).slice(0, -1).split("\n").join("\n      ");
-  const render = mustache.render(DEPLOY, { step: result }, undefined, { escape: (v) => v });
-  fs.writeFileSync(path.join(to_dir, ".github/workflows/deploy.yaml"), render);
+    await mkdir(path.join(to_dir, ".github/workflows"), { recursive: true });
+    const result = yaml.dump(data, { quotingType: "\"" }).slice(0, -1).split("\n").join("\n      ");
+    const render = mustache.render(DEPLOY, { step: result }, undefined, { escape: (v) => v });
+    fs.writeFileSync(path.join(to_dir, ".github/workflows/deploy.yaml"), render);
 }
 
 
