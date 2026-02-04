@@ -31,3 +31,5 @@ target/*
 
 # Nix
 result
+
+*.qcow2
