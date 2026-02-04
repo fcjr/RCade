@@ -87,6 +87,10 @@ in
     '';
   };
 
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="56d5", ATTR{authorized}="0"
+  ''
+
   # ===========================================================================
   # Boot Configuration
   # ===========================================================================
