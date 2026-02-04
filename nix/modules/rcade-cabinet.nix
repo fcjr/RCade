@@ -172,11 +172,7 @@ in
     # =========================================================================
     # Enable udev rules for input devices (restricted to input group)
     services.udev.extraRules = ''
-      # Allow input group access to HID devices for arcade controllers
-      SUBSYSTEM=="hidraw", GROUP="input", MODE="0660"
-
-      # Ultimarc devices (arcade controller manufacturer)
-      SUBSYSTEM=="usb", ATTR{idVendor}=="d209", GROUP="input", MODE="0660"
+      SUBSYSTEM=="*", MODE="0660", GROUP="input"
     '';
 
     # =========================================================================
