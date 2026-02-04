@@ -134,7 +134,7 @@ stdenv.mkDerivation (finalAttrs: {
 
     export HOME=$(mktemp -d)
 
-    pnpm run build -- --filter="!{rcade,@rcade/web}"
+    pnpx turbo build --filter="!{rcade,@rcade/web}"
 
     # Build main process (ESM, externalize electron)
     node_modules/.bin/esbuild cabinet/src/main/main.ts \
