@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build --target=node --outfile dist/main.js ./src/index.ts"
+    "build": "esbuild ./src/index.ts --bundle --outfile=dist/main.js --platform=node"
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",

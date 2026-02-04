@@ -1,31 +1,7 @@
 {
   "name": "rcade-monorepo",
   "private": true,
-  "packageManager": "bun@1.3.3",
-  "workspaces": [
-    "web",
-    "cabinet",
-    "cli",
-    "create",
-    "action-deploy",
-    "api",
-    "runtime",
-    "sdk/frontend/typescript",
-    "sdk/backend",
-    "plugins/input-classic/clients/typescript",
-    "plugins/input-classic",
-    "plugins/input-spinners/clients/typescript",
-    "plugins/input-spinners",
-    "plugins/sleep/clients/typescript",
-    "plugins/sleep",
-    "plugins/menu/clients/typescript",
-    "plugins/menu",
-    "vite-plugins",
-    "web-content",
-    "engine",
-    "menu",
-    "log"
-  ],
+  "packageManager": "pnpm@10.4.1",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
@@ -45,7 +21,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.8",
+    "esbuild": "^0.24.0",
     "husky": "^9.1.7",
     "turbo": "^2.6.3"
   }

@@ -9,7 +9,7 @@ pattern = "usercontent.rcade.dev"
 custom_domain = true
 
 [build]
-command = "bun x vite build"
+command = "pnpm exec vite build"
 
 [assets]
 directory = ".svelte-kit/cloudflare/assets"

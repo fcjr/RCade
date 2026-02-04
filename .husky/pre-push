@@ -1,15 +1,15 @@
 #!/bin/sh
 
-bun install
+pnpm install
 
-bun run --cwd action-deploy build
+pnpm --filter @rcade/action-deploy run build
 
 if ! git diff --quiet action-deploy/dist/; then
   echo "Error: action-deploy/dist is out of date. The build has been run for you - please commit the changes."
   exit 1
 fi
 
-bun run --cwd web db:generate
+pnpm --filter @rcade/web run db:generate
 
 if ! git diff --quiet web/drizzle/migrations/; then
   echo "Error: drizzle migrations are out of date. The migrations have been generated for you - please commit the changes."

@@ -4,7 +4,7 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node"
+    "build": "esbuild index.ts --bundle --outdir=dist --platform=node"
   },
   "publishConfig": {
     "access": "public"
