@@ -169,6 +169,7 @@ in
 
   # Programs
   programs.zsh.enable = true;
+  programs.tailscale.enable = true;
 
   # ===========================================================================
   # Virtualization (optional - for running containers)
