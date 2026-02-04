@@ -3,12 +3,12 @@
   "version": "0.2.1",
   "private": true,
   "type": "module",
-  "main": "dist/main/main.cjs",
+  "main": "dist/main/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
-    "build:main": "bun build src/main/main.ts --outfile dist/main/main.cjs --target node --format cjs --external electron --external node-hid",
+    "build:main": "bun build src/main/main.ts --outfile dist/main/main.js --target node --external electron --external node-hid",
     "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron",
     "build": "bun run build:main && bun run build:preload && vite build && electron-builder",
     "build:cabinet-mac": "bun run build:main && bun run build:preload && vite build && electron-builder --mac",
@@ -31,7 +31,8 @@
     "hono": "^4.6.14",
     "semver": "^7.7.3",
     "tar": "^7.4.3",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "node-hid": "^3.1.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
