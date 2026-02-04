@@ -35,6 +35,7 @@ in
   # ===========================================================================
   networking.hostName = "rcade";  # Change this for each machine
   networking.networkmanager.enable = true;
+  services.tailscale.enable = true;
 
   # ===
   # Nvidia Graphics
@@ -169,7 +170,6 @@ in
 
   # Programs
   programs.zsh.enable = true;
-  programs.tailscale.enable = true;
 
   # ===========================================================================
   # Virtualization (optional - for running containers)
