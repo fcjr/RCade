@@ -8,7 +8,7 @@
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "pnpm run build:main && pnpm run build:preload && electron --trace-warnings .",
-    "build:main": "esbuild src/main/main.ts --bundle --out-extension:.js=.cjs --outdir=dist/main --platform=node --format=cjs --external:electron",
+    "build:main": "esbuild src/main/main.ts --bundle --out-extension:.js=.cjs --outdir=dist/main --platform=node --format=cjs --external:electron --external:node-hid",
     "build:preload": "esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron",
     "build": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder",
     "build:cabinet-mac": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac",
