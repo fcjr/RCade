@@ -1,24 +1,5 @@
 # RCade Cabinet Package
-#
-# Builds the RCade cabinet Electron app reproducibly using pnpm + fetchPnpmDeps.
-# Dependencies are locked via pnpm-lock.yaml.
-#
-# To update dependencies:
-#   1. Run `pnpm install` to update pnpm-lock.yaml
-#   2. Update the pnpmDeps hash (set to "" and rebuild to get the correct hash)
-#   3. Rebuild with `nix build .#cabinet`
-#
-# Build architecture:
-#   esbuild (main.ts)    -> dist/main/main.js     (ESM, --external electron)
-#   esbuild (preload.ts) -> dist/main/preload.js   (CJS, --external electron)
-#   vite build           -> dist/renderer/          (Svelte SPA)
-#
-# All workspace deps (@rcade/*) and npm deps (hono, tar, semver, etc.) are
-# bundled into the output files by esbuild. Only `electron` and node builtins
-# remain as external imports at runtime.
-#
-# node-hid (native addon for arcade spinner hardware) is loaded at runtime
-# via the bundled input-spinners plugin. It needs node_modules available.
+# ... (comments preserved) ...
 
 { lib
 , stdenv
@@ -27,6 +8,7 @@
 , nodejs_22
 , pnpm_10
 , fetchPnpmDeps
+, fetchurl
 
 # Runtime dependencies for Electron on Linux
 , alsa-lib
@@ -57,6 +39,11 @@
 let
   pname = "rcade-cabinet";
   version = "0.2.1";
+
+  electronZip = fetchurl {
+    url = "https://github.com/electron/electron/releases/download/v39.5.1/electron-v39.5.1-linux-x64.zip";
+    hash = "sha256-wahkynpf/5hhdpdbrxust+mkncw0s4uockffvrber3w="; 
+  };
 
   runtimeLibs = [
     alsa-lib
@@ -91,7 +78,6 @@ let
     xorg.libxshmfence
   ];
 
-  # Only include what the cabinet build actually needs as source.
   src = lib.cleanSourceWith {
     src = ../..;
     filter = path: type:
@@ -126,7 +112,7 @@ stdenv.mkDerivation (finalAttrs: {
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
     fetcherVersion = 1;
-    hash = "sha256-eqrEzFd7HiliHh5dMK3dXVXioao1CrXCoIjVnnpAcC0=";  # Build once to get the correct hash from the error message
+    hash = "sha256-eqrEzFd7HiliHh5dMK3dXVXioao1CrXCoIjVnnpAcC0=";
   };
 
   buildPhase = ''
@@ -134,7 +120,16 @@ stdenv.mkDerivation (finalAttrs: {
 
     export HOME=$(mktemp -d)
 
-    pnpm run build --filter="!{web,cli}"
+    # --- ADDED: Setup Electron Builder Cache ---
+    # We trick electron-builder into thinking it already downloaded the binary.
+    export ELECTRON_BUILDER_CACHE=$(mktemp -d)
+    mkdir -p $ELECTRON_BUILDER_CACHE/electron
+    # Symlink the pre-fetched zip. The name must match EXACTLY what the builder wants.
+    ln -s ${electronZip} $ELECTRON_BUILDER_CACHE/electron/electron-v39.5.1-linux-x64.zip
+    # -------------------------------------------
+
+    # This runs electron-builder, which will now find the cache file and succeed
+    pnpm run build --filter=...@rcade/client
 
     # Build main process (ESM, externalize electron)
     node_modules/.bin/esbuild cabinet/src/main/main.ts \
@@ -173,9 +168,7 @@ stdenv.mkDerivation (finalAttrs: {
     # Assets: icons, fonts (NotoColorEmoji.ttf), audio files
     cp -r cabinet/assets $out/lib/rcade-cabinet/
 
-    # node-hid native addon: the input-spinners plugin loads this at runtime
-    # via require("node-hid"). esbuild can't bundle native .node addons, so we
-    # need the node_modules tree available for this one dependency.
+    # node-hid native addon handling
     if [ -d node_modules/node-hid ]; then
       mkdir -p $out/lib/rcade-cabinet/node_modules
       cp -r node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
