@@ -23,6 +23,7 @@
 { lib
 , stdenv
 , makeWrapper
+, autoPatchelfHook
 , electron
 , nodejs_22
 , pnpm_10
@@ -44,6 +45,7 @@
 , gtk3
 , hidapi
 , libdrm
+, libusb1
 , libxkbcommon
 , mesa
 , nspr
@@ -123,10 +125,20 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     makeWrapper
+    autoPatchelfHook
     nodejs_22
     pnpmConfigHook
     pnpm_10
     jq
+  ];
+
+  # Libraries needed by the node-hid native addon (.node prebuild).
+  # autoPatchelfHook patches the RPATH of ELF binaries in $out to point here.
+  buildInputs = [
+    hidapi
+    libusb1
+    systemd       # libudev
+    stdenv.cc.cc  # libstdc++
   ];
 
   pnpmDeps = fetchPnpmDeps {
