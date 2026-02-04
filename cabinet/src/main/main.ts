@@ -40,15 +40,11 @@ if (process.platform === 'linux') {
   // WebGPU via Vulkan/ANGLE
 
   app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
-  app.commandLine.appendSwitch('ignore-gpu-blocklist');
   // Enable audio output via ALSA (required for some Linux systems)
   app.commandLine.appendSwitch('alsa-output-device', 'default');
 
-  // Disable Cursor in production only
   if (!isDev) {
-    app.commandLine.appendSwitch('use-angle', 'vulkan');
-    app.commandLine.appendSwitch('use-gl', 'egl');
-    app.commandLine.appendSwitch('enable-features', 'Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,WaylandWindowDecorations,SharedArrayBuffer');
+    app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
     app.commandLine.appendSwitch('enable-unsafe-webgpu');
 
     app.commandLine.appendSwitch('cursor', 'none');
