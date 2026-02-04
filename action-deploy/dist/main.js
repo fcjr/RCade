@@ -6975,7 +6975,7 @@ var require_client = __commonJS({
       channels.connectError = { hasSubscribers: false };
       channels.connected = { hasSubscribers: false };
     }
-    var Client2 = class extends DispatcherBase {
+    var Client = class extends DispatcherBase {
       /**
        *
        * @param {string|URL} url
@@ -8566,7 +8566,7 @@ ${len.toString(16)}\r
         client.emit("error", err2);
       }
     }
-    module2.exports = Client2;
+    module2.exports = Client;
   }
 });
 
@@ -8825,7 +8825,7 @@ var require_pool = __commonJS({
       kAddClient,
       kGetDispatcher
     } = require_pool_base();
-    var Client2 = require_client();
+    var Client = require_client();
     var {
       InvalidArgumentError
     } = require_errors();
@@ -8836,7 +8836,7 @@ var require_pool = __commonJS({
     var kConnections = Symbol("connections");
     var kFactory = Symbol("factory");
     function defaultFactory(origin, opts) {
-      return new Client2(origin, opts);
+      return new Client(origin, opts);
     }
     var Pool = class extends PoolBase {
       constructor(origin, {
@@ -9089,7 +9089,7 @@ var require_agent = __commonJS({
     var { kClients, kRunning, kClose, kDestroy, kDispatch, kInterceptors } = require_symbols();
     var DispatcherBase = require_dispatcher_base();
     var Pool = require_pool();
-    var Client2 = require_client();
+    var Client = require_client();
     var util = require_util();
     var createRedirectInterceptor = require_redirectInterceptor();
     var { WeakRef: WeakRef2, FinalizationRegistry: FinalizationRegistry2 } = require_dispatcher_weakref()();
@@ -9102,7 +9102,7 @@ var require_agent = __commonJS({
     var kFinalizer = Symbol("finalizer");
     var kOptions = Symbol("options");
     function defaultFactory(origin, opts) {
-      return opts && opts.connections === 1 ? new Client2(origin, opts) : new Pool(origin, opts);
+      return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
     }
     var Agent = class extends DispatcherBase {
       constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
@@ -10752,7 +10752,7 @@ var require_mock_client = __commonJS({
   "../node_modules/.pnpm/undici@5.29.0/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
     var { promisify } = require("util");
-    var Client2 = require_client();
+    var Client = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
       kDispatches,
@@ -10766,7 +10766,7 @@ var require_mock_client = __commonJS({
     var { MockInterceptor } = require_mock_interceptor();
     var Symbols = require_symbols();
     var { InvalidArgumentError } = require_errors();
-    var MockClient = class extends Client2 {
+    var MockClient = class extends Client {
       constructor(origin, opts) {
         super(origin, opts);
         if (!opts || !opts.agent || typeof opts.agent.dispatch !== "function") {
@@ -17154,7 +17154,7 @@ var require_websocket = __commonJS({
 var require_undici = __commonJS({
   "../node_modules/.pnpm/undici@5.29.0/node_modules/undici/index.js"(exports2, module2) {
     "use strict";
-    var Client2 = require_client();
+    var Client = require_client();
     var Dispatcher = require_dispatcher();
     var errors = require_errors();
     var Pool = require_pool();
@@ -17183,7 +17183,7 @@ var require_undici = __commonJS({
     }
     Object.assign(Dispatcher.prototype, api);
     module2.exports.Dispatcher = Dispatcher;
-    module2.exports.Client = Client2;
+    module2.exports.Client = Client;
     module2.exports.Pool = Pool;
     module2.exports.BalancedPool = BalancedPool;
     module2.exports.Agent = Agent;
@@ -27059,7 +27059,7 @@ var require_client2 = __commonJS({
     function getPipelining(client) {
       return client[kPipelining] ?? client[kHTTPContext]?.defaultPipelining ?? 1;
     }
-    var Client2 = class extends DispatcherBase {
+    var Client = class extends DispatcherBase {
       /**
        *
        * @param {string|URL} url
@@ -27487,7 +27487,7 @@ var require_client2 = __commonJS({
         }
       }
     }
-    module2.exports = Client2;
+    module2.exports = Client;
   }
 });
 
@@ -27746,7 +27746,7 @@ var require_pool2 = __commonJS({
       kAddClient,
       kGetDispatcher
     } = require_pool_base2();
-    var Client2 = require_client2();
+    var Client = require_client2();
     var {
       InvalidArgumentError
     } = require_errors2();
@@ -27757,7 +27757,7 @@ var require_pool2 = __commonJS({
     var kConnections = Symbol("connections");
     var kFactory = Symbol("factory");
     function defaultFactory(origin, opts) {
-      return new Client2(origin, opts);
+      return new Client(origin, opts);
     }
     var Pool = class extends PoolBase {
       constructor(origin, {
@@ -27978,7 +27978,7 @@ var require_agent2 = __commonJS({
     var { kClients, kRunning, kClose, kDestroy, kDispatch, kInterceptors } = require_symbols6();
     var DispatcherBase = require_dispatcher_base2();
     var Pool = require_pool2();
-    var Client2 = require_client2();
+    var Client = require_client2();
     var util = require_util9();
     var createRedirectInterceptor = require_redirect_interceptor();
     var kOnConnect = Symbol("onConnect");
@@ -27989,7 +27989,7 @@ var require_agent2 = __commonJS({
     var kFactory = Symbol("factory");
     var kOptions = Symbol("options");
     function defaultFactory(origin, opts) {
-      return opts && opts.connections === 1 ? new Client2(origin, opts) : new Pool(origin, opts);
+      return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool(origin, opts);
     }
     var Agent = class extends DispatcherBase {
       constructor({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
@@ -28078,7 +28078,7 @@ var require_proxy_agent2 = __commonJS({
     var DispatcherBase = require_dispatcher_base2();
     var { InvalidArgumentError, RequestAbortedError, SecureProxyConnectionError } = require_errors2();
     var buildConnector = require_connect2();
-    var Client2 = require_client2();
+    var Client = require_client2();
     var kAgent = Symbol("proxy agent");
     var kClient = Symbol("proxy client");
     var kProxyHeaders = Symbol("proxy headers");
@@ -28096,7 +28096,7 @@ var require_proxy_agent2 = __commonJS({
     };
     function defaultAgentFactory(origin, opts) {
       if (opts.connections === 1) {
-        return new Client2(origin, opts);
+        return new Client(origin, opts);
       }
       return new Pool(origin, opts);
     }
@@ -28111,7 +28111,7 @@ var require_proxy_agent2 = __commonJS({
         if (factory) {
           this.#client = factory(proxyUrl, { connect });
         } else {
-          this.#client = new Client2(proxyUrl, { connect });
+          this.#client = new Client(proxyUrl, { connect });
         }
       }
       [kDispatch](opts, handler) {
@@ -30433,7 +30433,7 @@ var require_mock_client2 = __commonJS({
   "../node_modules/.pnpm/undici@6.23.0/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
     var { promisify } = require("node:util");
-    var Client2 = require_client2();
+    var Client = require_client2();
     var { buildMockDispatch } = require_mock_utils2();
     var {
       kDispatches,
@@ -30447,7 +30447,7 @@ var require_mock_client2 = __commonJS({
     var { MockInterceptor } = require_mock_interceptor2();
     var Symbols = require_symbols6();
     var { InvalidArgumentError } = require_errors2();
-    var MockClient = class extends Client2 {
+    var MockClient = class extends Client {
       constructor(origin, opts) {
         super(origin, opts);
         if (!opts || !opts.agent || typeof opts.agent.dispatch !== "function") {
@@ -38006,7 +38006,7 @@ var require_eventsource = __commonJS({
 var require_undici2 = __commonJS({
   "../node_modules/.pnpm/undici@6.23.0/node_modules/undici/index.js"(exports2, module2) {
     "use strict";
-    var Client2 = require_client2();
+    var Client = require_client2();
     var Dispatcher = require_dispatcher2();
     var Pool = require_pool2();
     var BalancedPool = require_balanced_pool2();
@@ -38030,7 +38030,7 @@ var require_undici2 = __commonJS({
     var createRedirectInterceptor = require_redirect_interceptor();
     Object.assign(Dispatcher.prototype, api);
     module2.exports.Dispatcher = Dispatcher;
-    module2.exports.Client = Client2;
+    module2.exports.Client = Client;
     module2.exports.Pool = Pool;
     module2.exports.BalancedPool = BalancedPool;
     module2.exports.Agent = Agent;
@@ -38940,14 +38940,16 @@ var require_auth2 = __commonJS({
 });
 
 // src/index.ts
-var index_exports2 = {};
-__export(index_exports2, {
+var index_exports = {};
+__export(index_exports, {
   run: () => run
 });
-module.exports = __toCommonJS(index_exports2);
+module.exports = __toCommonJS(index_exports);
 var core3 = __toESM(require_core(), 1);
 
 // ../api/dist/index.js
+var fs = __toESM(require("fs"), 1);
+var path = __toESM(require("path"), 1);
 var __create2 = Object.create;
 var __defProp2 = Object.defineProperty;
 var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
@@ -38977,7 +38979,6 @@ var __toESM2 = (mod, isNodeMode, target) => (target = mod != null ? __create2(__
   isNodeMode || !mod || !mod.__esModule ? __defProp2(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __toCommonJS2 = (mod) => __copyProps2(__defProp2({}, "__esModule", { value: true }), mod);
 var require_constants6 = __commonJS2({
   "../node_modules/.pnpm/semver@7.7.3/node_modules/semver/internal/constants.js"(exports2, module2) {
     "use strict";
@@ -41920,23 +41921,6 @@ var require_lib2 = __commonJS2({
     module2.exports = JSON52;
   }
 });
-var index_exports = {};
-__export2(index_exports, {
-  Client: () => Client,
-  Game: () => Game,
-  GameManifest: () => Manifest,
-  GameManifestAuthor: () => ManifestAuthor,
-  GameResponse: () => GameResponse,
-  GameVersion: () => GameVersion,
-  GameVersionResponse: () => GameVersionResponse,
-  GamesResponse: () => GamesResponse,
-  Permission: () => Permission,
-  PluginDetector: () => PluginDetector,
-  PluginManifest: () => Manifest2,
-  PluginManifestAuthor: () => ManifestAuthor2,
-  pluginManifests: () => pluginManifests
-});
-module.exports = __toCommonJS2(index_exports);
 var external_exports = {};
 __export2(external_exports, {
   $brand: () => $brand,
@@ -52645,7 +52629,7 @@ function _stringbool(Classes, _params) {
     type: "pipe",
     in: stringSchema,
     out: booleanSchema,
-    transform: (input, payload) => {
+    transform: ((input, payload) => {
       let data = input;
       if (params.case !== "sensitive")
         data = data.toLowerCase();
@@ -52664,14 +52648,14 @@ function _stringbool(Classes, _params) {
         });
         return {};
       }
-    },
-    reverseTransform: (input, _payload) => {
+    }),
+    reverseTransform: ((input, _payload) => {
       if (input === true) {
         return truthyArray[0] || "true";
       } else {
         return falsyArray[0] || "false";
       }
-    },
+    }),
     error: params.error
   });
   return codec2;
@@ -53979,10 +53963,10 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.with = inst.check;
   inst.clone = (def2, params) => clone(inst, def2, params);
   inst.brand = () => inst;
-  inst.register = (reg, meta32) => {
+  inst.register = ((reg, meta32) => {
     reg.add(inst, meta32);
     return inst;
-  };
+  });
   inst.parse = (data, params) => parse2(inst, data, params, { callee: inst.parse });
   inst.safeParse = (data, params) => safeParse2(inst, data, params);
   inst.parseAsync = async (data, params) => parseAsync2(inst, data, params, { callee: inst.parseAsync });
@@ -55593,96 +55577,6 @@ var Manifest = object({
   permissions: array(Permission).optional()
 });
 var import_semver = __toESM2(require_semver2(), 1);
-var GameVersion = class _GameVersion {
-  constructor(game_id, apiResponse) {
-    this.game_id = game_id;
-    this.apiResponse = apiResponse;
-  }
-  static fromApiResponse(game_id, response) {
-    return new _GameVersion(game_id, response);
-  }
-  version() {
-    return this.apiResponse.version;
-  }
-  contentUrl() {
-    if (!("contents" in this.apiResponse))
-      return void 0;
-    const now = Date.now();
-    if (now > this.apiResponse.contents.expires)
-      return void 0;
-    return this.apiResponse.contents.url;
-  }
-  thumbnailUrl() {
-    if (!("contents" in this.apiResponse))
-      return void 0;
-    const now = Date.now();
-    if (now > this.apiResponse.contents.expires)
-      return void 0;
-    return this.apiResponse.contents.thumbnail_url;
-  }
-  dependencies() {
-    return this.apiResponse.dependencies;
-  }
-  authors() {
-    return this.apiResponse.authors;
-  }
-  displayName() {
-    return this.apiResponse.displayName;
-  }
-  description() {
-    return this.apiResponse.description;
-  }
-  visibility() {
-    return this.apiResponse.visibility;
-  }
-  permissions() {
-    return this.apiResponse.permissions ?? [];
-  }
-  createdAt() {
-    if (this.apiResponse.createdAt == void 0) {
-      return void 0;
-    }
-    return new Date(this.apiResponse.createdAt);
-  }
-  categories() {
-    return this.apiResponse.categories ?? [];
-  }
-};
-var Game = class _Game {
-  constructor(apiResponse) {
-    this.apiResponse = apiResponse;
-    this._versions = apiResponse.versions.map((version22) => GameVersion.fromApiResponse(this.id(), version22));
-  }
-  static fromApiResponse(response) {
-    return new _Game(response);
-  }
-  _versions;
-  name() {
-    return this.apiResponse.name;
-  }
-  id() {
-    return this.apiResponse.id;
-  }
-  versions() {
-    return this._versions;
-  }
-  lockReason() {
-    return this.apiResponse.admin_lock_reason;
-  }
-  latest() {
-    const latest = import_semver.default.sort(this._versions.map((v) => v.version())).pop();
-    return this._versions.find((v) => v.version() == latest);
-  }
-  gitHttps() {
-    return this.apiResponse.git.https;
-  }
-  gitSsh() {
-    return this.apiResponse.git.ssh;
-  }
-  intoApiResponse() {
-    return this.apiResponse;
-  }
-};
 var GameAuthorResponse = external_exports.object({
   display_name: external_exports.string(),
   recurse_id: external_exports.number().nullable().optional()
@@ -55737,38 +55631,6 @@ var GameResponse = external_exports.object({
   versions: external_exports.array(GameVersionResponse)
 });
 var GamesResponse = external_exports.array(GameResponse);
-var Client = class _Client {
-  constructor(api_key) {
-    this.api_key = api_key;
-  }
-  static new() {
-    return new _Client(void 0);
-  }
-  static newKeyed(cabinet_api_key) {
-    return new _Client(cabinet_api_key);
-  }
-  baseUrl = "https://rcade.dev/api/v1";
-  withBaseUrl(baseUrl) {
-    this.baseUrl = baseUrl;
-    return this;
-  }
-  get headers() {
-    return this.api_key ? { Authorization: `Bearer ${this.api_key}` } : void 0;
-  }
-  async getAllGames() {
-    const response = await fetch(`${this.baseUrl}/games`, {
-      headers: this.headers
-    });
-    const list2 = GamesResponse.parse(await response.json());
-    return list2.map((g) => Game.fromApiResponse(g));
-  }
-  async getGame(gameId) {
-    const response = await fetch(`${this.baseUrl}/games/${gameId}`, {
-      headers: this.headers
-    });
-    return Game.fromApiResponse(await response.json());
-  }
-};
 var ManifestAuthor2 = object({
   display_name: string2(),
   recurse_id: number2().optional()
@@ -55870,8 +55732,6 @@ var pluginManifests = [
   rcade_manifest_default,
   rcade_manifest_default2
 ];
-var fs = __toESM2(require("fs"), 1);
-var path = __toESM2(require("path"), 1);
 function isNothing(subject) {
   return typeof subject === "undefined" || subject === null;
 }
@@ -70667,11 +70527,11 @@ async function run() {
     const manifestPath = core3.getInput("manifestPath", { required: true });
     core3.info(`Checking for manifest file at ${manifestPath}...`);
     const rawManifest = fs13.readFileSync(manifestPath, "utf-8");
-    const manifest = (void 0).parse(JSON.parse(rawManifest));
+    const manifest = Manifest.parse(JSON.parse(rawManifest));
     const artifactPath = core3.getInput("artifactPath", { required: true });
     const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
     core3.startGroup("\u{1F50C} Detecting plugins");
-    const detector2 = new (void 0)();
+    const detector2 = new PluginDetector();
     const detectedDeps = detector2.generateDependencies(workspace);
     if (detectedDeps.length > 0) {
       core3.info(`Detected ${detectedDeps.length} plugin(s):`);
@@ -70767,237 +70627,13 @@ js-yaml/dist/js-yaml.mjs:
   (*! js-yaml 4.1.1 https://github.com/nodeca/js-yaml @license MIT *)
 
 smol-toml/dist/error.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/util.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/date.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/primitive.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/extract.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/struct.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/parse.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/stringify.js:
-  (*!
-   * Copyright (c) Squirrel Chat et al., All rights reserved.
-   * SPDX-License-Identifier: BSD-3-Clause
-   *
-   * Redistribution and use in source and binary forms, with or without
-   * modification, are permitted provided that the following conditions are met:
-   *
-   * 1. Redistributions of source code must retain the above copyright notice, this
-   *    list of conditions and the following disclaimer.
-   * 2. Redistributions in binary form must reproduce the above copyright notice,
-   *    this list of conditions and the following disclaimer in the
-   *    documentation and/or other materials provided with the distribution.
-   * 3. Neither the name of the copyright holder nor the names of its contributors
-   *    may be used to endorse or promote products derived from this software without
-   *    specific prior written permission.
-   *
-   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-   * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-   * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-   * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-   * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-   * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-   * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-   * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   *)
-
 smol-toml/dist/index.js:
   (*!
    * Copyright (c) Squirrel Chat et al., All rights reserved.
