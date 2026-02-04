@@ -175,6 +175,7 @@ in
     # Enable udev rules for input devices (restricted to input group)
     services.udev.extraRules = ''
       SUBSYSTEM=="input", MODE="0660", GROUP="input"
+      SUBSYSTEM=="usb", MODE="0660", GROUP="input"
     '';
 
     # =========================================================================
