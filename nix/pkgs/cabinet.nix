@@ -108,7 +108,7 @@ stdenv.mkDerivation {
     export HOME=$(mktemp -d)
 
     # ---- Renderer (Svelte / Vite) ----
-    node_modules/.bin/vite build --config cabinet/vite.config.ts --root cabinet
+    node_modules/.bin/vite build cabinet
 
     # ---- Main process (ESM) ----
     node_modules/.bin/esbuild cabinet/src/main/main.ts \
