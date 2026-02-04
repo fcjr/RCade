@@ -109,11 +109,11 @@ stdenv.mkDerivation {
 
     # ---- Install dependencies ----
     pnpm run build --filter ...@rcade/client --filter !@rcade/client
-    
+    pnpm run build:main --filter @rcade/client
+    pnpm run build:preload --filter @rcade/client
+
     # ---- Renderer (Svelte / Vite) ----
     cd cabinet
-    pnpm run build:preload
-    pnpm run build:main
     ../node_modules/.bin/vite build --config vite.config.ts
     cd ..
 
