@@ -35,7 +35,8 @@ let
     ${lib.optionalString (cfg.environmentFile != null) "source ${cfg.environmentFile}"}
 
     # Launch the cabinet app
-    exec ${cabinetPackage}/bin/rcade-cabinet ${lib.escapeShellArgs cfg.extraArgs}
+    exec ${cabinetPackage}/bin/rcade-cabinet ${lib.escapeShellArgs cfg.extraArgs} \
+      2>&1 | ${pkgs.systemd}/bin/systemd-cat -t rcade-cabinet
   '';
 
 in
