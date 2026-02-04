@@ -28,6 +28,6 @@ export default class PluginSleep implements Plugin {
 
     stop(): void {
         this.environment?.getWebContents().ipc.removeListener("screensaver-started", this.startHandler);
-        this.environment?.getWebContents().ipc.removeListener("screensaver-started", this.stopHandler);
+        this.environment?.getWebContents().ipc.removeListener("screensaver-stopped", this.stopHandler);
     }
 }

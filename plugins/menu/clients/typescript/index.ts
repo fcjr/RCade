@@ -15,8 +15,8 @@ let channel: Promise<PluginChannel> | null = null;
                 loadHandler?.(event.data.result);
             }
 
-            if (event.data.type === "menu_key_pressed") {
-                menuKeyHandler?.();
+            if (event.data.type === "menu_requested") {
+                menuRequestHandler?.();
             }
         })
 
@@ -109,7 +109,7 @@ export function onGameLoad(handler: (result: any) => void) {
     loadHandler = handler;
 }
 
-let menuKeyHandler: (() => void) | undefined = undefined;
-export function onMenuKey(handler: () => void) {
-    menuKeyHandler = handler;
+let menuRequestHandler: (() => void) | undefined = undefined;
+export function onMenuRequested(handler: () => void) {
+    menuRequestHandler = handler;
 }

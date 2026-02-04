@@ -95,8 +95,8 @@ export default class MenuPlugin implements Plugin {
         });
 
         // @ts-ignore
-        environment.getWebContents().addListener("menu-key-pressed", () => {
-            port.postMessage({ type: "menu_key_pressed" });
+        environment.getWebContents().addListener("menu-requested", () => {
+            port.postMessage({ type: "menu_requested" });
         });
 
         port.start();

@@ -3,18 +3,20 @@
   import octopusImg from "/octopus.png";
   import type { ScreensaverConfig } from "@rcade/plugin-sleep";
 
-  const IDLE_TIMEOUT_MS = 30_000;
   const LOGO_SIZE = 60;
   const SPEED = 0.05;
   const DEFAULT_CONFIG: Required<ScreensaverConfig> = {
     transparent: false,
     visible: true,
+    timeBeforeActive: 30_000,
+    timeBeforeForcedExit: 60_000,
   };
 
   let config: Required<ScreensaverConfig> = $state(DEFAULT_CONFIG);
 
   let isIdle = $state(false);
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
+  let exitTimer: ReturnType<typeof setTimeout> | undefined;
 
   let logoX = $state(100);
   let logoY = $state(100);
@@ -23,7 +25,16 @@
   let animationFrame: number | undefined;
   let lastTime: number | undefined;
 
+  function resetExitTimer(start: boolean) {
+    if (exitTimer) clearTimeout(exitTimer);
+    if (!start || config.timeBeforeForcedExit == Infinity) return;
+
+    exitTimer = setTimeout(() => {
+      window.rcade.exitToMenu();
+    }, config.timeBeforeForcedExit);
+  }
   function resetIdleTimer() {
+    resetExitTimer(false);
     if (idleTimer) clearTimeout(idleTimer);
     if (isIdle) {
       isIdle = false;
@@ -33,6 +44,7 @@
       }
       lastTime = undefined;
     }
+    if (config.timeBeforeActive == Infinity) return;
     idleTimer = setTimeout(() => {
       isIdle = true;
       // randomize starting position
@@ -44,7 +56,8 @@
       velocityY = SPEED * (0.7 + Math.random() * 0.2);
       lastTime = undefined;
       animateLogo(performance.now());
-    }, IDLE_TIMEOUT_MS);
+      resetExitTimer(true);
+    }, config.timeBeforeActive);
   }
 
   function animateLogo(currentTime: number) {
@@ -87,8 +100,38 @@
     else window.rcade.screensaverStopped();
   });
 
+  function normalizeTime(value: number | undefined): number | undefined {
+    if (value == undefined) return;
+    // infinite times mean a disabled timer
+    if (value === Infinity) return Infinity;
+    // NaN values are invalid, they are removed from the config downstream
+    if (isNaN(value)) return NaN;
+
+    // clamp the value
+    if (value >= 2 ** 31) return 2 ** 31 - 1;
+    if (value < 1) return 1;
+
+    return value;
+  }
+
   function screensaverConfigChanged(newConfig: ScreensaverConfig) {
+    newConfig.timeBeforeActive = normalizeTime(newConfig.timeBeforeActive);
+    if (isNaN(newConfig.timeBeforeActive ?? 0))
+      delete newConfig.timeBeforeActive;
+
+    newConfig.timeBeforeForcedExit = normalizeTime(
+      newConfig.timeBeforeForcedExit,
+    );
+    if (isNaN(newConfig.timeBeforeForcedExit ?? 0))
+      delete newConfig.timeBeforeForcedExit;
+
+    const needsTimerUpdate =
+      newConfig.timeBeforeActive != config.timeBeforeActive ||
+      newConfig.timeBeforeForcedExit != config.timeBeforeForcedExit;
+
     config = Object.assign(config, newConfig);
+
+    if (needsTimerUpdate) resetIdleTimer();
   }
 
   let unsubscribeInputActivity: (() => void) | undefined;
@@ -106,6 +149,7 @@
 
   onDestroy(() => {
     if (idleTimer) clearTimeout(idleTimer);
+    if (exitTimer) clearTimeout(exitTimer);
     if (animationFrame) cancelAnimationFrame(animationFrame);
     window.removeEventListener("keydown", resetIdleTimer, true);
     window.removeEventListener("keyup", resetIdleTimer, true);

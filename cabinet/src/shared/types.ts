@@ -58,11 +58,12 @@ export interface RcadeAPI {
   unloadGame: (gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions) => Promise<void>;
   gameLoaded: (gameId: string | undefined, gameName: string, version: string | undefined, result: any) => Promise<void>;
   onUnloadGame: (callback: () => void) => () => void;
-  onMenuKey: (callback: () => void) => () => void;
+  onMenuRequested: (callback: () => void) => () => void;
   onInputActivity: (callback: () => void) => () => void;
   onScreensaverConfigChanged: (callback: (config: ScreensaverConfig) => void) => () => void;
   screensaverStarted: () => void;
   screensaverStopped: () => void;
   acquirePlugin: (name: string, version: string, gameInstance: string) => Promise<{ nonce: string, name: string, version: string }>;
   onRoute: (callback: (route: Route) => void) => () => void;
+  exitToMenu: () => void;
 }

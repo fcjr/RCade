@@ -6,7 +6,7 @@
         getLastGame,
         onGameLoad,
         onGameQuit,
-        onMenuKey,
+        onMenuRequested,
         playGame,
     } from "@rcade/plugin-menu";
     import { quartOut } from "svelte/easing";
@@ -170,7 +170,7 @@
         const unsubInputEnd = registerInputEndHandler();
 
         // Subscribe to menu key to refresh games list
-        onMenuKey(() => {
+        onMenuRequested(() => {
             refreshGames();
         });
 
