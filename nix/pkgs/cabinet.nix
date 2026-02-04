@@ -109,7 +109,7 @@ stdenv.mkDerivation {
 
     # ---- Renderer (Svelte / Vite) ----
     cd cabinet
-    node_modules/.bin/vite build --config cabinet/vite.config.ts
+    ../node_modules/.bin/vite build --config vite.config.ts
     cd ..
 
     # ---- Main process (ESM) ----
