@@ -107,7 +107,7 @@ export default class InputSpinnersPlugin implements Plugin {
                 this.hidDevice = undefined;
             });
         } catch (err) {
-            console.log("[input-spinners] USB HID device not found");
+            console.log("[input-spinners] USB HID device not found. Error:", err);
         }
     }
 
