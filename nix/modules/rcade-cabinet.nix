@@ -176,6 +176,7 @@ in
     services.udev.extraRules = ''
       SUBSYSTEM=="input", MODE="0660", GROUP="input"
       SUBSYSTEM=="usb", MODE="0660", GROUP="input"
+      SUBSYSTEM=="hidraw", MODE="0660", GROUP="input"
     '';
 
     # =========================================================================
