@@ -93,6 +93,8 @@ in
     "rd.udev.log_level=3"
     "udev.log_priority=3"
     "nvidia-drm.modeset=1"
+    "apci_osi=!"
+    "acpi_osi=\"Windows 2020\""
   ];
 
   boot.consoleLogLevel = 0;
