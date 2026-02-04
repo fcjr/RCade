@@ -34,7 +34,7 @@ function splitArgs(argsString: string): string[] {
 export function parseCliArgs(): CliOptions {
     const args = process.env.RCADE_CABINET_ARGS
         ? splitArgs(process.env.RCADE_CABINET_ARGS)
-        : app.isPackaged ? process.argv.slice(1) : process.argv.slice(3);
+        : app.isPackaged && !Boolean(process.env.RCADE_NIX) ? process.argv.slice(1) : process.argv.slice(3);
 
     const { values, positionals } = parseArgs({
         args,

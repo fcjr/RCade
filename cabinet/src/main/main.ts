@@ -17,8 +17,7 @@ import { setTimeout } from 'timers/promises';
 
 const args = parseCliArgs();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(__filename ?? fileURLToPath(import.meta.url));
 const isDev = !app.isPackaged || args.dev;
 
 // Icon path - in dev mode use assets folder, in production it's bundled
