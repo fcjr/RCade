@@ -67,8 +67,8 @@
             transparent: true,
             blending: THREE.AdditiveBlending,
             uniforms: {
-                uBaseColor: { value: new THREE.Color(0xfacc15) },
-                uGlowColor: { value: new THREE.Color(0xfde047) },
+                uBaseColor: { value: new THREE.Color(0xf9b615) },
+                uGlowColor: { value: new THREE.Color(0xfcd34d) },
                 uSize: { value: TILE_WIDTH },
                 uTime: { value: 0.0 },
                 uFadeDistance: { value: 150.0 },
