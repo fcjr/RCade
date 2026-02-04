@@ -42,6 +42,7 @@
 , gdk-pixbuf
 , glib
 , gtk3
+, hidapi
 , libdrm
 , libxkbcommon
 , mesa
@@ -72,6 +73,7 @@ let
     gdk-pixbuf
     glib
     gtk3
+    hidapi
     libdrm
     libxkbcommon
     libGL
@@ -169,9 +171,11 @@ stdenv.mkDerivation (finalAttrs: {
     # node-hid native addon: the input-spinners plugin loads this at runtime
     # via require("node-hid"). esbuild can't bundle native .node addons, so we
     # need the node_modules tree available for this one dependency.
+    # pkg-prebuilds is also required (node-hid uses it to locate .node binaries).
     if [ -d node_modules/node-hid ]; then
       mkdir -p $out/lib/rcade-cabinet/node_modules
       cp -rL node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
+      cp -rL node_modules/pkg-prebuilds $out/lib/rcade-cabinet/node_modules/
     fi
 
     # Launcher script
