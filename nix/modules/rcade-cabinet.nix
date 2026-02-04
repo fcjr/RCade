@@ -173,7 +173,7 @@ in
     # =========================================================================
     # Enable udev rules for input devices (restricted to input group)
     services.udev.extraRules = ''
-      SUBSYSTEM=="*", MODE="0660", GROUP="input"
+      SUBSYSTEM=="input", MODE="0660", GROUP="input"
     '';
 
     # =========================================================================
