@@ -42,7 +42,7 @@ let
 
   electronZip = fetchurl {
     url = "https://github.com/electron/electron/releases/download/v39.5.1/electron-v39.5.1-linux-x64.zip";
-    hash = "sha256-wahkynpf/5hhdpdbrxust+mkncw0s4uockffvrber3w="; 
+    hash = "sha256-wahKYnpf/5hHdPDBRxUsT+Mkncw0S4uOCKffvrbeR3w="; 
   };
 
   runtimeLibs = [
