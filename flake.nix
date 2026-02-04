@@ -19,15 +19,9 @@
     # Flake utilities
     flake-utils.url = "github:numtide/flake-utils";
 
-    # Bun packaging for Nix (reproducible builds)
-    bun2nix = {
-      url = "github:nix-community/bun2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
   };
 
-  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, bun2nix, ... }@inputs:
+  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, ... }@inputs:
     let
       # Systems we support for development
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -38,7 +32,7 @@
       # Get pkgs for a given system
       pkgsFor = system: import nixpkgs {
         inherit system;
-        overlays = [ fenix.overlays.default bun2nix.overlays.default self.overlays.default ];
+        overlays = [ fenix.overlays.default self.overlays.default ];
         config.allowUnfree = true;
       };
 
@@ -73,7 +67,7 @@
             # Nix settings
             nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-            nixpkgs.overlays = [ fenix.overlays.default bun2nix.overlays.default self.overlays.default ];
+            nixpkgs.overlays = [ fenix.overlays.default self.overlays.default ];
             nixpkgs.config.allowUnfree = true;
 
             system.stateVersion = "24.05";
@@ -88,8 +82,7 @@
       overlays.default = final: prev: {
         # Add RCade-specific packages here
         rcade = {
-          # The cabinet Electron app package - built reproducibly via bun2nix
-          # bun2nix is available in pkgs via bun2nix.overlays.default
+          # The cabinet Electron app package
           cabinet = final.callPackage ./nix/pkgs/cabinet.nix {};
         };
       };
@@ -148,7 +141,7 @@
             self.nixosModules.rcade-cabinet
             {
               services.rcade-cabinet.enable = true;
-              nixpkgs.overlays = [ fenix.overlays.default bun2nix.overlays.default self.overlays.default ];
+              nixpkgs.overlays = [ fenix.overlays.default self.overlays.default ];
             }
           ];
         };
@@ -176,14 +169,9 @@
               openssl
               pkg-config
 
-              # JavaScript runtime
-              bun
-
-              # Node.js (for electron-builder and some tooling)
+              # JavaScript runtime & package manager
               nodejs_22
-
-              # Nix tooling for reproducible builds
-              bun2nix.packages.${system}.default
+              pnpm_10
 
               # Useful dev tools
               just  # Task runner
@@ -213,7 +201,7 @@
               echo "🕹️  RCade development environment"
               echo ""
               echo "Available commands:"
-              echo "  bun install    - Install dependencies"
+              echo "  pnpm install   - Install dependencies"
               echo "  turbo dev      - Start development servers"
               echo "  turbo build    - Build all packages"
               echo ""
@@ -223,7 +211,7 @@
           # Minimal shell for CI/quick tasks
           ci = pkgs.mkShell {
             name = "rcade-ci";
-            buildInputs = with pkgs; [ bun nodejs_22 ];
+            buildInputs = with pkgs; [ nodejs_22 pnpm_10 ];
           };
         }
       );
