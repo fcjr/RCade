@@ -107,9 +107,6 @@ stdenv.mkDerivation {
     runHook preBuild
     export HOME=$(mktemp -d)
 
-    # ---- Install dependencies ----
-    pnpm run build --filter ...@rcade/client
-
     # ---- Renderer (Svelte / Vite) ----
     cd cabinet
     ../node_modules/.bin/vite build --config vite.config.ts
