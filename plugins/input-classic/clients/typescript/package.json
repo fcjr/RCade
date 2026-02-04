@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "esbuild index.ts --bundle --outdir=dist --platform=node"
+    "build": "esbuild index.ts --bundle --outdir=dist --format=esm"
   },
   "files": [
     "dist",
