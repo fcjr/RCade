@@ -7,6 +7,18 @@
 #   1. Run `bun install` to update bun.lock
 #   2. Run `bun2nix` to regenerate bun.nix
 #   3. Rebuild with `nix build .#cabinet`
+#
+# Build architecture:
+#   bun build (main.ts)    → dist/main/main.js     (ESM, --external electron)
+#   bun build (preload.ts) → dist/main/preload.js   (CJS, --external electron)
+#   vite build             → dist/renderer/          (Svelte SPA)
+#
+# All workspace deps (@rcade/*) and npm deps (hono, tar, semver, etc.) are
+# bundled into the output files by bun. Only `electron` and node builtins
+# remain as external imports at runtime.
+#
+# node-hid (native addon for arcade spinner hardware) is loaded at runtime
+# via the bundled input-spinners plugin. It needs node_modules available.
 
 { lib
 , stdenv
@@ -14,9 +26,9 @@
 , electron
 , bun
 , nodejs_22
-, bun2nix  # bun2nix package from overlay (provides fetchBunDeps, hook via passthru)
+, bun2nix
 
-  # Runtime dependencies for Electron on Linux
+# Runtime dependencies for Electron on Linux
 , alsa-lib
 , at-spi2-atk
 , at-spi2-core
@@ -46,7 +58,6 @@ let
   pname = "rcade-cabinet";
   version = "0.2.1";
 
-  # Runtime library dependencies for Electron
   runtimeLibs = [
     alsa-lib
     at-spi2-atk
@@ -80,14 +91,15 @@ let
     xorg.libxshmfence
   ];
 
-  # Source filtering - exclude build artifacts and unnecessary files
+  # Only include what the cabinet build actually needs as source.
+  # The full repo is required because bun2nix resolves workspace packages
+  # (via copyPathToStore in bun.nix) relative to the repo root.
   src = lib.cleanSourceWith {
     src = ../..;
     filter = path: type:
       let
         baseName = baseNameOf path;
       in
-      # Exclude build artifacts, caches, and unnecessary files
       !(
         baseName == "node_modules" ||
         baseName == ".git" ||
@@ -96,17 +108,14 @@ let
         baseName == ".turbo" ||
         baseName == ".svelte-kit" ||
         baseName == ".vite" ||
+        baseName == ".claude" ||
         lib.hasPrefix "result" baseName ||
         lib.hasSuffix ".log" baseName
       );
   };
 
-  # Path to the generated bun.nix lockfile
-  bunNixPath = ../../bun.nix;
-
-  # Fetch bun dependencies using bun2nix v2 API (via overlay passthru)
   bunDeps = bun2nix.fetchBunDeps {
-    bunNix = bunNixPath;
+    bunNix = ../../bun.nix;
   };
 
 in
@@ -120,61 +129,36 @@ stdenv.mkDerivation {
     bun2nix.hook
   ];
 
-  # Pass bun dependencies to the hook
   inherit bunDeps;
 
-  configurePhase = ''
-    runHook preConfigure
-
-    # The bun2nix hook sets up node_modules automatically via bunDeps
-    # Link workspace packages (bun2nix creates placeholders for workspace:* deps)
-    # We need to replace them with actual local packages
-    ${lib.concatStringsSep "\n" (map (ws: ''
-      if [ -d "${ws}" ] && [ -d "node_modules/@rcade" ]; then
-        pkg_name=$(${nodejs_22}/bin/node -p "require('./${ws}/package.json').name" 2>/dev/null || true)
-        if [ -n "$pkg_name" ] && [ -d "node_modules/$pkg_name" ]; then
-          echo "Linking workspace package: $pkg_name -> ${ws}"
-          rm -rf "node_modules/$pkg_name"
-          cp -r "${ws}" "node_modules/$pkg_name"
-          chmod -R u+w "node_modules/$pkg_name"
-        fi
-      fi
-    '') [
-      "api"
-      "sdk/frontend/typescript"
-      "sdk/backend"
-      "plugins/input-classic"
-      "plugins/input-classic/clients/typescript"
-      "plugins/input-spinners"
-      "plugins/input-spinners/clients/typescript"
-      "plugins/sleep"
-      "plugins/sleep/clients/typescript"
-      "plugins/menu"
-      "plugins/menu/clients/typescript"
-      "runtime"
-      "log"
-      "engine"
-      "vite-plugins"
-    ])}
-
-    runHook postConfigure
-  '';
+  # bun2nix hook sets up node_modules from bunDeps automatically.
+  # We skip the hook's default build phase since we have custom build steps.
+  dontUseBunBuild = true;
 
   buildPhase = ''
     runHook preBuild
 
     export HOME=$(mktemp -d)
 
-    # Build the cabinet app
-    echo "Building cabinet main process..."
     cd cabinet
-    ${bun}/bin/bun build src/main/main.ts --outdir dist/main --target node --external electron
 
-    echo "Building cabinet preload script..."
-    ${bun}/bin/bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron
+    # Main process: bundles all workspace + npm deps, externalizes electron
+    ${bun}/bin/bun build src/main/main.ts \
+      --outdir dist/main \
+      --target node \
+      --external electron
 
-    echo "Building cabinet renderer (vite)..."
-    ${nodejs_22}/bin/npx vite build
+    # Preload script: must be CJS (electron requirement)
+    ${bun}/bin/bun build src/main/preload.ts \
+      --outdir dist/main \
+      --target node \
+      --format cjs \
+      --external electron
+
+    # Renderer: Svelte SPA via vite
+    # node_modules is at the repo root (bun workspace hoisting), not in cabinet/
+    ../node_modules/.bin/vite build
+
     cd ..
 
     runHook postBuild
@@ -183,31 +167,34 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    # Create output directories
-    mkdir -p $out/lib/rcade-cabinet
-    mkdir -p $out/bin
+    mkdir -p $out/lib/rcade-cabinet $out/bin
 
-    # Copy the built cabinet app
+    # Built artifacts
     cp -r cabinet/dist $out/lib/rcade-cabinet/
+
+    # package.json is required — electron uses "main" field to find the entry point
     cp cabinet/package.json $out/lib/rcade-cabinet/
 
-    # Copy assets if they exist
-    if [ -d cabinet/assets ]; then
-      cp -r cabinet/assets $out/lib/rcade-cabinet/
+    # Assets: icons, fonts (NotoColorEmoji.ttf), audio files
+    cp -r cabinet/assets $out/lib/rcade-cabinet/
+
+    # node-hid native addon: the input-spinners plugin loads this at runtime
+    # via require("node-hid"). bun can't bundle native .node addons, so we
+    # need the node_modules tree available for this one dependency.
+    if [ -d node_modules/node-hid ]; then
+      mkdir -p $out/lib/rcade-cabinet/node_modules
+      cp -r node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
     fi
 
-    # Create wrapper script that launches electron with the app
-    cat > $out/bin/rcade-cabinet << 'LAUNCHER'
+    # Launcher script
+    cat > $out/bin/rcade-cabinet <<'LAUNCHER'
 #!/usr/bin/env bash
 set -euo pipefail
-
 APP_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")/lib/rcade-cabinet"
-
 exec electron "$APP_DIR" "$@"
 LAUNCHER
     chmod +x $out/bin/rcade-cabinet
 
-    # Wrap with runtime library paths and electron
     wrapProgram $out/bin/rcade-cabinet \
       --prefix PATH : "${lib.makeBinPath [ electron ]}" \
       --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}" \

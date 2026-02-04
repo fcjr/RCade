@@ -10,7 +10,7 @@
 # Usage in your configuration.nix:
 #   services.rcade-cabinet = {
 #     enable = true;
-#     apiKey = "your-cabinet-api-key";  # Optional
+#     environmentFile = "/run/secrets/rcade.env";  # Optional, for API keys
 #   };
 
 { self }:
