@@ -26,8 +26,9 @@ let
   launchScript = pkgs.writeShellScript "rcade-launch" ''
     export ELECTRON_OZONE_PLATFORM_HINT=wayland
 
-    # Mesa GLX (works across Intel/AMD/software rendering)
-    export __GLX_VENDOR_LIBRARY_NAME=mesa
+    # Prepend the NixOS hardware driver path so the system's active GPU driver
+    # (nvidia, mesa, etc.) is found before any bundled mesa libs in the package wrapper.
+    export LD_LIBRARY_PATH="/run/opengl-driver/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
     ${cfg.preLaunchCommands}
 
