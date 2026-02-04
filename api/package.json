@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "esbuild index.ts --bundle --outdir=dist --platform=node && tsc -p tsconfig.build.json --emitDeclarationOnly"
+    "build": "esbuild index.ts --bundle --format=esm --outdir=dist --platform=node && tsc -p tsconfig.build.json --emitDeclarationOnly"
   },
   "files": [
     "dist"

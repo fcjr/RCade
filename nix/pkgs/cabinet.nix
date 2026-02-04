@@ -26,7 +26,9 @@
 , electron
 , nodejs_22
 , pnpm_10
+, pnpmConfigHook
 , fetchPnpmDeps
+, jq
 
 # Runtime dependencies for Electron on Linux
 , alsa-lib
@@ -108,7 +110,8 @@ let
         baseName == ".vite" ||
         baseName == ".claude" ||
         lib.hasPrefix "result" baseName ||
-        lib.hasSuffix ".log" baseName
+        lib.hasSuffix ".log" baseName ||
+        lib.hasInfix "cli/templates" path
       );
   };
 
@@ -119,39 +122,32 @@ stdenv.mkDerivation (finalAttrs: {
   nativeBuildInputs = [
     makeWrapper
     nodejs_22
-    pnpm_10.configHook
+    pnpmConfigHook
     pnpm_10
+    jq
   ];
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
-    hash = "";  # Build once to get the correct hash from the error message
+    fetcherVersion = 2;
+    hash = "sha256-bqOgSwyBrMx9G7FEB4pb5VAlr1Ua21bxheu5C/x6lg4=";  # Build once to get the correct hash from the error message
   };
 
   buildPhase = ''
     runHook preBuild
 
     export HOME=$(mktemp -d)
+    
+    node_modules/.bin/turbo build --filter="@rcade/api" --filter="@rcade/input-classic" --filter="@rcade/input-spinners" --filter="@rcade/sleep" --filter="@rcade/plugin-sleep" --filter="@rcade/plugin-menu-backend" --filter="@rcade/sdk" --filter="@rcade/sdk-plugin"
 
-    # Build main process (ESM, externalize electron)
-    node_modules/.bin/esbuild cabinet/src/main/main.ts \
-      --bundle \
-      --outdir=cabinet/dist/main \
-      --platform=node \
-      --format=esm \
-      --banner:js="import { createRequire } from 'module';const require = createRequire(import.meta.url);" \
-      --external:electron
-
-    # Build preload script (CJS, electron requirement)
-    node_modules/.bin/esbuild cabinet/src/main/preload.ts \
-      --bundle \
-      --outdir=cabinet/dist/main \
-      --platform=node \
-      --format=cjs \
-      --external:electron
+    cd cabinet
+    pnpm run build:main
+    pnpm run build:preload
 
     # Build renderer (Svelte SPA via vite)
-    node_modules/.bin/vite build cabinet
+    node_modules/.bin/vite build
+
+    cd ..
 
     runHook postBuild
   '';
@@ -165,7 +161,7 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r cabinet/dist $out/lib/rcade-cabinet/
 
     # package.json is required - electron uses "main" field to find the entry point
-    cp cabinet/package.json $out/lib/rcade-cabinet/
+    cp cabinet/package.json $out/lib/rcade-cabinet/package.json
 
     # Assets: icons, fonts (NotoColorEmoji.ttf), audio files
     cp -r cabinet/assets $out/lib/rcade-cabinet/
@@ -175,7 +171,7 @@ stdenv.mkDerivation (finalAttrs: {
     # need the node_modules tree available for this one dependency.
     if [ -d node_modules/node-hid ]; then
       mkdir -p $out/lib/rcade-cabinet/node_modules
-      cp -r node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
+      cp -rL node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
     fi
 
     # Launcher script
@@ -190,7 +186,9 @@ LAUNCHER
     wrapProgram $out/bin/rcade-cabinet \
       --prefix PATH : "${lib.makeBinPath [ electron ]}" \
       --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}" \
-      --set ELECTRON_DISABLE_SECURITY_WARNINGS "true"
+      --set ELECTRON_DISABLE_SECURITY_WARNINGS "true" \
+      --set ELECTRON_FORCE_IS_PACKAGED "1" \
+      --set RCADE_NIX "true"
 
     runHook postInstall
   '';

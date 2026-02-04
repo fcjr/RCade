@@ -21,3 +21,11 @@ packages:
   - engine
   - menu
   - log
+
+onlyBuiltDependencies:
+  - electron
+  - electron-winstaller
+  - esbuild
+  - node-hid
+  - sharp
+  - workerd
