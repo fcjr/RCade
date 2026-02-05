@@ -193,7 +193,10 @@ g.addEventListener("message", async (event) => {
         CURRENT_PORT = port;
 
         port.addEventListener("message", handlePortMessage);
-        port.postMessage({ type: "PORT_INIT", content: { game: JSON.parse((await read("CURRENT_GAME"))!) } });
+
+        const currentGameData = await read("CURRENT_GAME");
+        const game = currentGameData !== undefined ? JSON.parse(currentGameData) : null;
+        port.postMessage({ type: "PORT_INIT", content: { game } });
 
         return;
     }

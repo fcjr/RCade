@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "esbuild bin.ts --bundle --outdir=dist --platform=node"
+    "build": "bun build bin.ts --outdir dist --target node"
   },
   "dependencies": {
     "commander": "^14.0.2",

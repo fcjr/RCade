@@ -14,7 +14,7 @@
         }
     },
     "scripts": {
-        "build": "esbuild ./src/index.ts --bundle --outdir=./dist --platform=node && pnpm run build:types",
+        "build": "bun build ./src/index.ts --outdir ./dist --target node && bun run build:types",
         "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist"
     },
     "dependencies": {

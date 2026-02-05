@@ -12,7 +12,7 @@ custom_domain = true
 BUCKET_S3_ENDPOINT = "https://9aee291c8fc8a03f6dacc66454177c60.r2.cloudflarestorage.com/rcade"
 
 [build]
-command = "pnpm exec vite build"
+command = "bun x vite build"
 
 [assets]
 directory = ".svelte-kit/cloudflare/assets"

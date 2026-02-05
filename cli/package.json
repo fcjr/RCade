@@ -24,7 +24,7 @@
     "templates"
   ],
   "scripts": {
-    "build": "esbuild bin.ts index.ts --bundle --outdir=dist --platform=node"
+    "build": "bun build bin.ts index.ts --outdir dist --target node"
   },
   "type": "module",
   "dependencies": {

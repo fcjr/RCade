@@ -149,6 +149,7 @@
     },
     "root": {
       "inputs": {
+        "bun2nix": "bun2nix",
         "fenix": "fenix",
         "flake-utils": "flake-utils",
         "home-manager": "home-manager",
