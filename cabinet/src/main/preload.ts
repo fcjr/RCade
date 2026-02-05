@@ -47,10 +47,10 @@ const rcadeAPI: RcadeAPI = {
     ipcRenderer.on('unload-game', listener);
     return () => ipcRenderer.removeListener('unload-game', listener);
   },
-  onMenuKey: (callback: () => void) => {
+  onMenuRequested: (callback: () => void) => {
     const listener = () => callback();
-    ipcRenderer.on('menu-key-pressed', listener);
-    return () => ipcRenderer.removeListener('menu-key-pressed', listener);
+    ipcRenderer.on('menu-requested', listener);
+    return () => ipcRenderer.removeListener('menu-requested', listener);
   },
   onInputActivity: (callback: () => void) => {
     const listener = () => callback();
@@ -95,7 +95,8 @@ const rcadeAPI: RcadeAPI = {
     const listener = (_: any, route: Route) => callback(route);
     ipcRenderer.on('route-move', listener);
     return () => ipcRenderer.removeListener('route-move', listener);
-  }
+  },
+  exitToMenu: () => ipcRenderer.invoke("exit-to-menu")
 };
 
 contextBridge.exposeInMainWorld('rcade', rcadeAPI);

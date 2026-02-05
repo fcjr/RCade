@@ -2,7 +2,7 @@
   "name": "@rcade/plugin-sleep",
   "module": "index.ts",
   "main": "./dist/index.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "types": "./index.ts",
   "exports": {

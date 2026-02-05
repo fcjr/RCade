@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import type { GameInfo } from '../../shared/types';
-  import { navigateToGame, getLastPlayedGame } from '../router.svelte';
-  import { Fireworks, type FireworksOptions } from '@fireworks-js/svelte'
+  import { onMount, onDestroy } from "svelte";
+  import type { GameInfo } from "../../shared/types";
+  import { navigateToGame, getLastPlayedGame } from "../router.svelte";
+  import { Fireworks, type FireworksOptions } from "@fireworks-js/svelte";
 
   let games = $state<GameInfo[]>([]);
   let currentIndex = $state(0);
@@ -11,20 +11,31 @@
 
   let fireworksComponent: Fireworks;
 
-  const p2DirKeys: Record<string, string> = { i: 'up', k: 'down', j: 'left', l: 'right' };
+  const p2DirKeys: Record<string, string> = {
+    i: "up",
+    k: "down",
+    j: "left",
+    l: "right",
+  };
   let p2Pressed = $state<Set<string>>(new Set());
-  const tiltX = $derived(p2Pressed.has('up') ? 15 : p2Pressed.has('down') ? -15 : 0);
-  const tiltY = $derived(p2Pressed.has('right') ? 15 : p2Pressed.has('left') ? -15 : 0);
+  const tiltX = $derived(
+    p2Pressed.has("up") ? 15 : p2Pressed.has("down") ? -15 : 0,
+  );
+  const tiltY = $derived(
+    p2Pressed.has("right") ? 15 : p2Pressed.has("left") ? -15 : 0,
+  );
 
   const currentGame = $derived(games.length > 0 ? games[currentIndex] : null);
 
   function gamesMatch(a: GameInfo, b: GameInfo): boolean {
-    return (a.id != null && a.id === b.id) ||
-      (a.id == null && a.name === b.name && a.latestVersion === b.latestVersion);
+    return (
+      (a.id != null && a.id === b.id) ||
+      (a.id == null && a.name === b.name && a.latestVersion === b.latestVersion)
+    );
   }
 
   function findGameIndex(gameList: GameInfo[], game: GameInfo): number {
-    return gameList.findIndex(g => gamesMatch(g, game));
+    return gameList.findIndex((g) => gamesMatch(g, game));
   }
 
   async function fetchGames() {
@@ -55,31 +66,31 @@
         games = newGames;
       }
     } catch (e) {
-      console.error('Failed to fetch games:', e);
+      console.error("Failed to fetch games:", e);
     }
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    console.log('keydown:', event.key, event.code);
+    console.log("keydown:", event.key, event.code);
     const hasGames = !(games.length === 0);
 
-    const startKeys = ['f', 'g', '1', '2'];
+    const startKeys = ["f", "g", "1", "2"];
     const key = event.key.toLowerCase();
-    if (key === 'd' && hasGames) {
+    if (key === "d" && hasGames) {
       currentIndex = (currentIndex + 1) % games.length;
-    } else if (key === 'a' && hasGames) {
+    } else if (key === "a" && hasGames) {
       currentIndex = (currentIndex - 1 + games.length) % games.length;
     } else if (startKeys.includes(key) && currentGame && hasGames) {
       navigateToGame(currentGame);
     } else if (p2DirKeys[key]) {
       p2Pressed = new Set([...p2Pressed, p2DirKeys[key]]);
-    } else if ((key === ';' || key === '\'') && !event.repeat) {
+    } else if ((key === ";" || key === "'") && !event.repeat) {
       fireworksComponent?.fireworksInstance()?.launch(1);
     }
   }
 
   function handleKeyUp(event: KeyboardEvent) {
-    console.log('keyup:', event.key, event.code);
+    console.log("keyup:", event.key, event.code);
     const key = event.key.toLowerCase();
     if (p2DirKeys[key]) {
       const next = new Set(p2Pressed);
@@ -93,54 +104,61 @@
     const len = project.length;
 
     for (let i = 0; i < len; i++) {
-        const char = project.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
+      const char = project.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
     }
     const angle = Math.abs(hash) % 361;
-    return `hsl(${angle}, 50%, 25%)`
+    return `hsl(${angle}, 50%, 25%)`;
   }
 
   onMount(() => {
     fetchGames();
     if (window.rcade) {
-      unsubscribeMenuKey = window.rcade.onMenuKey(fetchGames);
+      unsubscribeMenuKey = window.rcade.onMenuRequested(fetchGames);
     }
-    window.addEventListener('keydown', handleKeydown);
-    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("keyup", handleKeyUp);
   });
 
   onDestroy(() => {
     unsubscribeMenuKey?.();
-    window.removeEventListener('keydown', handleKeydown);
-    window.removeEventListener('keyup', handleKeyUp);
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("keyup", handleKeyUp);
   });
 
   const fireworkOptions: FireworksOptions = {
     sound: {
       enabled: true,
-      files: [
-        'explosion0.mp3',
-        'explosion1.mp3',
-        'explosion2.mp3'
-      ],
-    }
-  }
+      files: ["explosion0.mp3", "explosion1.mp3", "explosion2.mp3"],
+    },
+  };
 </script>
 
 <div class="carousel" style:--tilt-x="{tiltX}deg" style:--tilt-y="{tiltY}deg">
-  <Fireworks class="fireworks" options={fireworkOptions} bind:this={fireworksComponent} autostart={false} />
+  <Fireworks
+    class="fireworks"
+    options={fireworkOptions}
+    bind:this={fireworksComponent}
+    autostart={false}
+  />
   {#if currentGame}
     <div class="game-card">
       <h1 class="game-name">{currentGame.displayName ?? currentGame.name}</h1>
       <p class="game-version">v{currentGame.latestVersion}</p>
       {#if currentGame.authors.length > 0}
-        <p class="game-authors">by {currentGame.authors.map(a => a.display_name).join(', ')}</p>
+        <p class="game-authors">
+          by {currentGame.authors.map((a) => a.display_name).join(", ")}
+        </p>
       {/if}
     </div>
     <div class="pagination">
       {#each games as game, i}
-        <span class="dot" class:active={i === currentIndex} style="background-color: {projectToColor(game.id!)};"></span>
+        <span
+          class="dot"
+          class:active={i === currentIndex}
+          style="background-color: {projectToColor(game.id!)};"
+        ></span>
       {/each}
     </div>
   {:else}
@@ -165,7 +183,8 @@
     min-height: 100vh;
     padding: 8px;
     text-align: center;
-    transform: perspective(400px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
+      rotateY(var(--tilt-y, 0deg));
   }
 
   .game-card {

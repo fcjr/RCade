@@ -1,20 +1,40 @@
 import { PluginChannel } from "@rcade/sdk";
 
+/** 
+ * Configures the screensaver's visuals and timers.
+ * 
+ * You should take care to avoid CRT burn-in when modifying these.
+ */
 export type ScreensaverConfig = {
+    /** Whether the background of the screensaver will be visible. */
     transparent?: boolean,
+    /** Whether the screensaver will be visible while it is active. */
     visible?: boolean,
+    /**
+     * The duration in milliseconds before the screensaver activates.
+     * 
+     * Setting this to Infinity will disable this timer.
+     */
+    timeBeforeActive?: number,
+    /**
+     * The duration in milliseconds before the app is terminated and returns to the menu
+     * after the screensaver activates.
+     * 
+     * Setting this to Infinity will disable this timer.
+     */
+    timeBeforeForcedExit?: number,
 };
 
 let resolvers: (() => void)[] = [];
 let channel: PluginChannel | undefined;
 export function preventSleep() {
-    channel?.getPort().postMessage({ type: "prevent_sleep" })
+    channel?.getPort().postMessage({ type: "prevent_sleep" });
 }
 
 type ScreensaverEvents = {
     "started": void,
     "stopped": void
-}
+};
 
 class Screensaver extends EventTarget {
     constructor() {
@@ -23,6 +43,7 @@ class Screensaver extends EventTarget {
 
     async updateScreensaver(config: ScreensaverConfig) {
         if (channel === undefined) await new Promise<void>(res => resolvers.push(res));
+
 
         channel?.getPort().postMessage({ type: "update_screensaver", config });
     }

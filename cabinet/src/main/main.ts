@@ -17,7 +17,7 @@ import { setTimeout } from 'timers/promises';
 
 const args = parseCliArgs();
 
-const __dirname = path.dirname(__filename ?? fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = !app.isPackaged || args.dev;
 
 // Icon path - in dev mode use assets folder, in production it's bundled
@@ -307,6 +307,11 @@ async function startGameServer(gameId: string, version: string, controller: Abor
   return url;
 }
 
+function exitToMenu(webContents: Electron.WebContents) {
+  webContents.send("menu-requested");
+  webContents.emit("menu-requested");
+}
+
 const fullscreen = !isDev;
 
 function createWindow(): void {
@@ -375,8 +380,7 @@ function createWindow(): void {
     if (input.type === "keyDown") {
       mainWindow.webContents.send("input-activity");
       if (input.type === "keyDown" && input.code === "Escape" && !args.noExit && !args.manifest) {
-        mainWindow.webContents.send("menu-key-pressed");
-        mainWindow.webContents.emit("menu-key-pressed");
+        exitToMenu(mainWindow.webContents)
       }
     }
   });
@@ -514,6 +518,8 @@ app.whenReady().then(async () => {
         overrideName = `${game.name}@${latestVersion}`
       }
 
+      console.log(`[GameServer] Attempting to load override ${overrideName}`);
+
       const override = args.overrides.get(overrideName);
 
       if (override != undefined) {
@@ -567,6 +573,10 @@ app.whenReady().then(async () => {
 
   ipcMain.handle("game-load-finished", async (event, result) => {
     event.sender.emit("game-load-finished", result);
+  });
+
+  ipcMain.handle("exit-to-menu", (event) => {
+    exitToMenu(event.sender);
   })
 
   createWindow();

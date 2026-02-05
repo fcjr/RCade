@@ -1178,7 +1178,7 @@ dependencies = [
 
 [[package]]
 name = "rcade-plugin-sleep"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "js-sys",
  "rcade-sdk 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,10 +1,10 @@
 [package]
 homepage = "https://rcade.recurse.com"
 name = "rcade-plugin-sleep"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
-description = "The Recurse RCade Spinners Sleep"
+description = "The Recurse RCade Sleep Plugin"
 repository = "https://github.com/fcjr/RCade"
 
 [dependencies]

@@ -58,7 +58,7 @@
 
   onMount(() => {
     if (window.rcade && game.name !== "menu") {
-      unsubscribeMenuKey = window.rcade.onMenuKey(() =>
+      unsubscribeMenuKey = window.rcade.onMenuRequested(() =>
         closeGame({ type: "return-to-menu" }),
       );
     }
@@ -202,7 +202,9 @@
       allow={[
         game.permissions.includes("camera") ? "camera" : "",
         game.permissions.includes("microphone") ? "microphone" : "",
-      ].filter(Boolean).join("; ")}
+      ]
+        .filter(Boolean)
+        .join("; ")}
       onerror={(error) => {
         window.rcade.gameLoaded(game.id, game.name, game.latestVersion, {
           kind: "iframe",

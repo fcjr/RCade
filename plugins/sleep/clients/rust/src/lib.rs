@@ -47,6 +47,7 @@ impl Sleep {
                 _ => {}
             }
         }) as Box<dyn FnMut(&MessageEvent)>);
+
         rc.channel
             .get_port()
             .add_event_listener_with_callback("message", handler.as_ref().unchecked_ref())
@@ -92,6 +93,22 @@ impl Sleep {
             )
             .unwrap();
         }
+        if let Some(time_before_active) = config.time_before_active {
+            Reflect::set(
+                &config_object,
+                &JsValue::from_str("timeBeforeActive"),
+                &JsValue::from_f64(time_before_active),
+            )
+            .unwrap();
+        }
+        if let Some(time_before_forced_exit) = config.time_before_forced_exit {
+            Reflect::set(
+                &config_object,
+                &JsValue::from_str("timeBeforeForcedExit"),
+                &JsValue::from_f64(time_before_forced_exit),
+            )
+            .unwrap();
+        }
         Reflect::set(
             &message,
             &JsValue::from_str("config"),
@@ -116,25 +133,69 @@ impl Sleep {
     }
 }
 
+/// Configures the screensaver's visuals and timers.
+/// 
+/// You should take care to avoid CRT burn-in when modifying these.
 #[derive(Default)]
 pub struct ScreensaverConfig {
     transparent: Option<bool>,
     visible: Option<bool>,
+    time_before_active: Option<f64>,
+    time_before_forced_exit: Option<f64>,
+}
+
+/// Describes the duration of a timer.
+pub struct TimerDuration(f64);
+
+impl TimerDuration {
+    /// Enables the timer.
+    ///
+    /// This will panic if `value` is greater than i32::MAX,
+    pub fn enabled(value: u32) -> Self {
+        if value > i32::MAX as u32 {
+            panic!("value cannot be larger than i32::MAX");
+        }
+
+        Self(value as f64)
+    }
+
+    /// Disables the timer.
+    pub fn disabled() -> Self {
+        Self(f64::INFINITY)
+    }
 }
 
 impl ScreensaverConfig {
+    /// Creates a new screensaver config.
     pub fn new() -> Self {
         Self::default()
     }
-
+    /// Sets whether the background of the screensaver will be visible.
     pub fn with_transparent(mut self, value: bool) -> ScreensaverConfig {
         self.transparent.replace(value);
 
         self
     }
 
+    /// Sets whether the screensaver will be visible while it is active.
     pub fn with_visible(mut self, value: bool) -> ScreensaverConfig {
         self.visible.replace(value);
+
+        self
+    }
+    /// The duration the screensaver will wait before becoming active,
+    /// measured in milliseconds.
+    pub fn with_time_before_active(mut self, time_before_active: TimerDuration) -> Self {
+        self.time_before_active.replace(time_before_active.0);
+
+        self
+    }
+
+    /// Sets the duration after the scrensaver becomes active before the app is killed and
+    /// returns to the menu, measured in milliseconds.
+    pub fn with_time_before_forced_exit(mut self, time_before_forced_exit: TimerDuration) -> Self {
+        self.time_before_forced_exit
+            .replace(time_before_forced_exit.0);
 
         self
     }
