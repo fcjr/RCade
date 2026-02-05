@@ -60,7 +60,11 @@
     });
 
     const DELTA_EPSILON = 10;
+    const DELTA_DECAY = 0.92; // Exponential decay factor per frame
+    const SLIDE_SCALE = 3; // How much accumulatedDelta affects slide (pixels per unit)
+    const MAX_SLIDE = 50; // Maximum slide distance in pixels
     let accumulatedDelta = 0;
+    let slideOffset = 0; // Current visual slide of the page
 
     // run consume deltas every frame
     function frameLoop() {
@@ -71,6 +75,16 @@
 
         // Read spinner delta (resets after read) and accumulate
         accumulatedDelta += SPINNERS_P1.SPINNER.consume_step_delta();
+
+        // Apply exponential decay to accumulatedDelta
+        if (Math.abs(accumulatedDelta) > 0.01) {
+            accumulatedDelta *= DELTA_DECAY;
+        } else {
+            accumulatedDelta = 0;
+        }
+
+        // Calculate slide offset based on accumulated delta (clamped)
+        slideOffset = Math.max(-MAX_SLIDE, Math.min(MAX_SLIDE, accumulatedDelta * SLIDE_SCALE));
 
         // for every DELTA_EPSILON in delta, emit left/right move
         while (Math.abs(accumulatedDelta) >= DELTA_EPSILON) {
@@ -687,6 +701,7 @@
         class:show-bottom={viewportState === "show-bottom"}
         style:--tilt-x="{tiltX}deg"
         style:--tilt-y="{tiltY}deg"
+        style:--slide-offset="{slideOffset}px"
     >
         <div class="filter-drawer">
             <div class="drawer-header">FILTER_SYSTEM</div>
@@ -989,17 +1004,21 @@
         will-change: transform;
         transition: transform 0.3s var(--ease-snappy);
         transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
-            rotateY(var(--tilt-y, 0deg));
+            rotateY(var(--tilt-y, 0deg))
+            translateX(var(--slide-offset, 0px));
     }
 
     .shifting-viewport.show-bottom {
         transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
             rotateY(var(--tilt-y, 0deg))
+            translateX(var(--slide-offset, 0px))
             translateY(calc(var(--drawer-height) * -1));
     }
     .shifting-viewport.show-top {
         transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
-            rotateY(var(--tilt-y, 0deg)) translateY(var(--filter-drawer-height));
+            rotateY(var(--tilt-y, 0deg))
+            translateX(var(--slide-offset, 0px))
+            translateY(var(--filter-drawer-height));
     }
 
     .bg-layer {
