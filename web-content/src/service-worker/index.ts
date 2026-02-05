@@ -100,7 +100,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
     try {
         return event.respondWith(
             read("CURRENT_GAME").then(async (data) => {
-                if (data === undefined) {
+                if (data === undefined || String(data) == "undefined" || String(data) == "") {
                     return new Response("NO GAME LOADED", { status: 404 });
                 }
 
