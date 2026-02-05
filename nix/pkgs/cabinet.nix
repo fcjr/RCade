@@ -153,9 +153,26 @@ stdenv.mkDerivation {
   # - #73: Cache copied from nix store is read-only; bun needs write access
   # - #77: bun2nix only creates flat cache entries (pkg@ver@@@1) but bun also
   #   expects hierarchical entries (pkg/ver@@@1) to resolve packages
+  # Additionally, the upstream hook uses `cp -r` which preserves symlinks
+  # instead of `cp -rL` which dereferences them. We re-copy with -rL so
+  # bun sees real directories instead of dangling symlink chains.
   postBunSetInstallCacheDirPhase = ''
+    echo "=== bun2nix cache workaround ==="
+    echo "BUN_INSTALL_CACHE_DIR=$BUN_INSTALL_CACHE_DIR"
+    echo "bunDeps=$bunDeps"
+
+    # Re-copy the cache with dereferenced symlinks so bun sees real
+    # directories instead of symlink chains into the nix store.
+    # Upstream hook uses cp -r (preserves symlinks); we need cp -rL.
+    local cache_tmp
+    cache_tmp=$(mktemp -d)
+    cp -rL "$bunDeps"/share/bun-cache/. "$cache_tmp"/
+    rm -rf "$BUN_INSTALL_CACHE_DIR"
+    mv "$cache_tmp" "$BUN_INSTALL_CACHE_DIR"
     chmod -R u+rwx "$BUN_INSTALL_CACHE_DIR"
 
+    # Create hierarchical directory entries (bun2nix issue #77)
+    # bun expects both pkg@ver@@@1 (flat) and pkg/ver@@@1 (hierarchical)
     find "$BUN_INSTALL_CACHE_DIR" -maxdepth 2 -name '*@@@1' | while read -r flat_entry; do
       rel_path="''${flat_entry#$BUN_INSTALL_CACHE_DIR/}"
       pkg="" ver=""
@@ -173,6 +190,12 @@ stdenv.mkDerivation {
         fi
       fi
     done
+
+    echo "Cache entries (flat): $(find "$BUN_INSTALL_CACHE_DIR" -maxdepth 2 -name '*@@@1' -not -type l | wc -l)"
+    echo "Cache entries (hierarchical links): $(find "$BUN_INSTALL_CACHE_DIR" -maxdepth 3 -name '*@@@1' -type l | wc -l)"
+    ls -d "$BUN_INSTALL_CACHE_DIR"/typescript* 2>/dev/null || echo "no typescript flat entry"
+    ls -d "$BUN_INSTALL_CACHE_DIR"/typescript/*  2>/dev/null || echo "no typescript hierarchical entry"
+    echo "=== end cache workaround ==="
   '';
 
   buildPhase = ''
