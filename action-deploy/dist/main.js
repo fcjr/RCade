@@ -21373,7 +21373,7 @@ var require_parse22 = __commonJS2((exports, module) => {
   var token;
   var key;
   var root;
-  module.exports = function parse(text, reviver) {
+  module.exports = function parse5(text, reviver) {
     source = String(text);
     parseState = "start";
     stack = [];

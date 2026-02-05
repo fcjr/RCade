@@ -212,6 +212,11 @@ stdenv.mkDerivation {
 
     bun build src/main/main.ts --outfile dist/main/main.cjs --target node --format cjs --external electron --external node-hid
     bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron
+
+    # bun build hardcodes __dirname/__filename to the build-time path.
+    # Replace with CJS's native __dirname so paths resolve at runtime.
+    substituteInPlace dist/main/main.cjs \
+      --replace-quiet 'var __dirname2 = ' 'var __dirname2 = __dirname; var __dirname_unused = '
     node_modules/.bin/vite build
 
     cd ..
