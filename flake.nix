@@ -88,10 +88,8 @@
       overlays.default = final: prev: {
         # Add RCade-specific packages here
         rcade = {
-          # The cabinet Electron app package - built reproducibly via bun2nix
-          cabinet = final.callPackage ./nix/pkgs/cabinet.nix {
-            inherit bun2nix;
-          };
+          # The cabinet Electron app package
+          cabinet = final.callPackage ./nix/pkgs/cabinet.nix {};
         };
       };
 
