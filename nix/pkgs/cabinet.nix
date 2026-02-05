@@ -149,6 +149,32 @@ stdenv.mkDerivation {
   dontUseBunBuild = true;
   dontUseBunCheck = true;
 
+  # Workaround for bun2nix issues #73 and #77:
+  # - #73: Cache copied from nix store is read-only; bun needs write access
+  # - #77: bun2nix only creates flat cache entries (pkg@ver@@@1) but bun also
+  #   expects hierarchical entries (pkg/ver@@@1) to resolve packages
+  postBunSetInstallCacheDirPhase = ''
+    chmod -R u+rwx "$BUN_INSTALL_CACHE_DIR"
+
+    find "$BUN_INSTALL_CACHE_DIR" -maxdepth 2 -name '*@@@1' | while read -r flat_entry; do
+      rel_path="''${flat_entry#$BUN_INSTALL_CACHE_DIR/}"
+      pkg="" ver=""
+      if [[ "$rel_path" =~ ^(@[^@/]+/[^@]+)@([0-9].*)$ ]]; then
+        pkg="''${BASH_REMATCH[1]}"
+        ver="''${BASH_REMATCH[2]}"
+      elif [[ "$rel_path" =~ ^([^@]+)@([0-9].*)$ ]]; then
+        pkg="''${BASH_REMATCH[1]}"
+        ver="''${BASH_REMATCH[2]}"
+      fi
+      if [ -n "$pkg" ] && [ -n "$ver" ]; then
+        mkdir -p "$BUN_INSTALL_CACHE_DIR/$pkg"
+        if [ ! -e "$BUN_INSTALL_CACHE_DIR/$pkg/$ver" ]; then
+          ln -s "$flat_entry" "$BUN_INSTALL_CACHE_DIR/$pkg/$ver"
+        fi
+      fi
+    done
+  '';
+
   buildPhase = ''
     runHook preBuild
 
