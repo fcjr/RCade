@@ -60,7 +60,7 @@
     });
 
     const DELTA_EPSILON = 10;
-    const DELTA_DECAY = 0.92; // Exponential decay factor per frame
+    const DELTA_DECAY = 0.97; // Exponential decay factor per frame
     const SLIDE_SCALE = 1.5; // How much accumulatedDelta affects slide (pixels per unit)
     const MAX_SLIDE = 20; // Maximum slide distance in pixels
     let accumulatedDelta = 0;
@@ -83,8 +83,9 @@
             accumulatedDelta = 0;
         }
 
-        // Calculate slide offset based on accumulated delta (clamped)
-        slideOffset = Math.max(-MAX_SLIDE, Math.min(MAX_SLIDE, accumulatedDelta * SLIDE_SCALE));
+        // Smoothly interpolate slideOffset toward target (avoids jitter from delta jumps)
+        const targetSlide = Math.max(-MAX_SLIDE, Math.min(MAX_SLIDE, accumulatedDelta * SLIDE_SCALE));
+        slideOffset += (targetSlide - slideOffset) * 0.15;
 
         // for every DELTA_EPSILON in delta, emit left/right move
         while (Math.abs(accumulatedDelta) >= DELTA_EPSILON) {
@@ -739,7 +740,7 @@
         </div>
 
         <div class="bg-layer">
-            <BackgroundOverlay events={moveEvents} />
+            <BackgroundOverlay events={moveEvents} {slideOffset} />
         </div>
 
         <div class="ui-layer" class:screensaver={screensaverActive}>

@@ -4,7 +4,7 @@
     import { SCREENSAVER } from "@rcade/plugin-sleep";
     import { onMount } from "svelte";
 
-    let { events }: { events: EventEmitter } = $props();
+    let { events, slideOffset = 0 }: { events: EventEmitter; slideOffset?: number } = $props();
 
     // todo: get canvas size from sdk instead of hardcoding resolution
     const canvasWidth = 336;
@@ -168,7 +168,7 @@
             } else {
                 gridMaterial.uniforms.uOpacity.value = 0.7;
             }
-            camera.position.x = currentCameraX % TILE_WIDTH;
+            camera.position.x = (currentCameraX % TILE_WIDTH) + slideOffset * 0.05;
 
             gridMaterial.uniforms.uCameraPos.value.copy(camera.position);
             gridMaterial.uniforms.uTime.value = elapsedTime;
