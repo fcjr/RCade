@@ -61,8 +61,8 @@
 
     const DELTA_EPSILON = 10;
     const DELTA_DECAY = 0.92; // Exponential decay factor per frame
-    const SLIDE_SCALE = 3; // How much accumulatedDelta affects slide (pixels per unit)
-    const MAX_SLIDE = 50; // Maximum slide distance in pixels
+    const SLIDE_SCALE = 1.5; // How much accumulatedDelta affects slide (pixels per unit)
+    const MAX_SLIDE = 20; // Maximum slide distance in pixels
     let accumulatedDelta = 0;
     let slideOffset = 0; // Current visual slide of the page
 
@@ -1004,20 +1004,17 @@
         will-change: transform;
         transition: transform 0.3s var(--ease-snappy);
         transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
-            rotateY(var(--tilt-y, 0deg))
-            translateX(var(--slide-offset, 0px));
+            rotateY(var(--tilt-y, 0deg));
     }
 
     .shifting-viewport.show-bottom {
         transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
             rotateY(var(--tilt-y, 0deg))
-            translateX(var(--slide-offset, 0px))
             translateY(calc(var(--drawer-height) * -1));
     }
     .shifting-viewport.show-top {
         transform: perspective(400px) rotateX(var(--tilt-x, 0deg))
             rotateY(var(--tilt-y, 0deg))
-            translateX(var(--slide-offset, 0px))
             translateY(var(--filter-drawer-height));
     }
 
@@ -1241,6 +1238,7 @@
         align-items: end;
         overflow: hidden;
         width: 100%;
+        transform: translateX(var(--slide-offset, 0px));
     }
 
     .slide-container {
