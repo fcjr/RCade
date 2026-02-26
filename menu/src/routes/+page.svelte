@@ -65,6 +65,8 @@
     const MAX_SLIDE = 20; // Maximum slide distance in pixels
     let accumulatedDelta = 0;
     let slideOffset = 0; // Current visual slide of the page
+    let decayLocked = false;
+    let decayLockTimer: ReturnType<typeof setTimeout> | null = null;
 
     // run consume deltas every frame
     function frameLoop() {
@@ -74,13 +76,25 @@
         }
 
         // Read spinner delta (resets after read) and accumulate
-        accumulatedDelta += SPINNERS_P1.SPINNER.consume_step_delta();
+        const spinnerDelta = SPINNERS_P1.SPINNER.consume_step_delta();
+        accumulatedDelta += spinnerDelta;
 
-        // Apply exponential decay to accumulatedDelta
-        if (Math.abs(accumulatedDelta) > 0.01) {
-            accumulatedDelta *= DELTA_DECAY;
-        } else {
-            accumulatedDelta = 0;
+        // Lock decay while spinner is active; unlock after 500ms of inactivity
+        if (spinnerDelta !== 0) {
+            decayLocked = true;
+            if (decayLockTimer) clearTimeout(decayLockTimer);
+            decayLockTimer = setTimeout(() => {
+                decayLocked = false;
+            }, 500);
+        }
+
+        // Apply exponential decay to accumulatedDelta (only when unlocked)
+        if (!decayLocked) {
+            if (Math.abs(accumulatedDelta) > 0.01) {
+                accumulatedDelta *= DELTA_DECAY;
+            } else {
+                accumulatedDelta = 0;
+            }
         }
 
         // Smoothly interpolate slideOffset toward target (avoids jitter from delta jumps)
@@ -1239,7 +1253,7 @@
         align-items: end;
         overflow: hidden;
         width: 100%;
-        transform: translateX(var(--slide-offset, 0px));
+        transform: translateX(calc(-1 * var(--slide-offset, 0px)));
     }
 
     .slide-container {
