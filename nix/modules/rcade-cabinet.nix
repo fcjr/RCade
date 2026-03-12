@@ -134,23 +134,28 @@ in
       settings = {
         default_session = {
           command = "${pkgs.writeShellScript "cage-wrapper" ''
-            # Find the DRM card with a connected VGA output (USB display adapter),
-            # falling back to all cards if none found.
-            VGA_CARD=""
-            for status in /sys/class/drm/card*-VGA-*/status; do
-              if [ -f "$status" ] && [ "$(cat "$status")" = "connected" ]; then
-                VGA_CARD="/dev/dri/$(echo "$status" | sed 's|.*/\(card[0-9]*\)-.*|\1|')"
-                break
-              fi
+            # Wait for the USB display (gud driver) to appear, then use it.
+            # Device order is not stable across boots, so detect by driver name.
+            GUD_CARD=""
+            for i in $(seq 1 30); do
+              for card in /sys/class/drm/card[0-9]; do
+                driver=$(basename "$(readlink "$card/device/driver")" 2>/dev/null)
+                if [ "$driver" = "gud" ]; then
+                  GUD_CARD="/dev/dri/$(basename "$card")"
+                  break 2
+                fi
+              done
+              sleep 1
             done
-            if [ -n "$VGA_CARD" ]; then
-              export WLR_DRM_DEVICES="$VGA_CARD"
+
+            if [ -n "$GUD_CARD" ]; then
+              export WLR_DRM_DEVICES="$GUD_CARD"
             else
               export WLR_DRM_DEVICES="$(echo /dev/dri/card* | tr ' ' ':')"
             fi
             # Use software renderer for USB display adapters (gud driver)
             export WLR_RENDERER=pixman
-            exec ${pkgs.cage}/bin/cage -d -s -- ${launchScript}
+            exec ${pkgs.cage}/bin/cage -D -d -s -- ${launchScript} 2>/tmp/cage-debug.log
           ''}";
           user = cfg.user;
         };
