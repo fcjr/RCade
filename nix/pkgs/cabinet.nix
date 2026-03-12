@@ -125,7 +125,7 @@ let
           baseName == "bun.lock";
   };
 
-  bunModulesHash = "sha256-YEE3v8Rf+gVw7Dt+9Tx2LxzRUNzf/3spISwdj8a47bE=";
+  bunModulesHash = "sha256-OsvHFw+a/mKORQN3uGo+eKXJFJxNnbNZD+1YRhttHSc=";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
   bunModules = stdenv.mkDerivation {

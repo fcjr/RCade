@@ -123,7 +123,7 @@
           ];
         };
 
-	# Rose's Razer Laptop (Current Production Machine)
+	# Rose's Razer Laptop
 	prod = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
@@ -148,6 +148,21 @@
             {
               services.rcade-cabinet.enable = true;
               nixpkgs.overlays = [ fenix.overlays.default self.overlays.default ];
+            }
+          ];
+        };
+
+        # Updated nuc for cabinet (Current Production Machine)
+        intel-nuc = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            ./machines/intel-nuc/configuration.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.extraSpecialArgs = { inherit inputs self; };
             }
           ];
         };
