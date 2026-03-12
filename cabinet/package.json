@@ -47,7 +47,7 @@
     "vite": "^6.0.0"
   },
   "build": {
-    "beforePack": "./scripts/deref-native-modules.js",
+    "beforePack": "./scripts/deref-native-modules.cjs",
     "npmRebuild": false,
     "appId": "com.frankchiarulli.rcade.client",
     "productName": "rcade",
