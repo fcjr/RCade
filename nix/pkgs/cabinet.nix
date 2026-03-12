@@ -231,6 +231,14 @@ stdenv.mkDerivation {
 
     cp -r cabinet/dist $out/lib/rcade-cabinet/
     cp cabinet/package.json $out/lib/rcade-cabinet/package.json
+    # Point main to the CJS build (needed for __dirname fix; source uses ESM .js)
+    ${nodejs_22}/bin/node -e "
+      const fs = require('fs');
+      const p = '$out/lib/rcade-cabinet/package.json';
+      const pkg = JSON.parse(fs.readFileSync(p));
+      pkg.main = 'dist/main/main.cjs';
+      fs.writeFileSync(p, JSON.stringify(pkg, null, 2) + '\n');
+    "
     cp -r cabinet/assets $out/lib/rcade-cabinet/
 
     # node-hid native addon (can't be bundled by bun build).

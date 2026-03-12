@@ -116,6 +116,8 @@ in
         "audio"
         "input"
         "render"
+        "seat"
+        "tty"
       ] ++ lib.optionals config.services.pulseaudio.enable [ "pulse" ]
         ++ lib.optionals config.services.pipewire.enable [ "pipewire" ];
 
@@ -131,11 +133,32 @@ in
       enable = true;
       settings = {
         default_session = {
-          command = "${pkgs.cage}/bin/cage -d -s -- ${launchScript}";
+          command = "${pkgs.writeShellScript "cage-wrapper" ''
+            # Find the DRM card with a connected VGA output (USB display adapter),
+            # falling back to all cards if none found.
+            VGA_CARD=""
+            for status in /sys/class/drm/card*-VGA-*/status; do
+              if [ -f "$status" ] && [ "$(cat "$status")" = "connected" ]; then
+                VGA_CARD="/dev/dri/$(echo "$status" | sed 's|.*/\(card[0-9]*\)-.*|\1|')"
+                break
+              fi
+            done
+            if [ -n "$VGA_CARD" ]; then
+              export WLR_DRM_DEVICES="$VGA_CARD"
+            else
+              export WLR_DRM_DEVICES="$(echo /dev/dri/card* | tr ' ' ':')"
+            fi
+            # Use software renderer for USB display adapters (gud driver)
+            export WLR_RENDERER=pixman
+            exec ${pkgs.cage}/bin/cage -d -s -- ${launchScript}
+          ''}";
           user = cfg.user;
         };
       };
     };
+
+    # Seat management (required by cage/greetd for device access)
+    services.seatd.enable = true;
 
     # Disable other display managers
     services.xserver.displayManager.lightdm.enable = lib.mkForce false;
