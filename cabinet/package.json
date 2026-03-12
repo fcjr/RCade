@@ -47,13 +47,20 @@
     "vite": "^6.0.0"
   },
   "build": {
+    "beforePack": "./scripts/deref-native-modules.js",
     "npmRebuild": false,
     "appId": "com.frankchiarulli.rcade.client",
     "productName": "rcade",
     "artifactName": "rcade-cabinet-${os}-${arch}.${ext}",
     "files": [
       "dist/**/*",
-      "assets/**/*"
+      "assets/**/*",
+      "node_modules/node-hid/**/*",
+      "node_modules/pkg-prebuilds/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/node-hid/**/*",
+      "node_modules/pkg-prebuilds/**/*"
     ],
     "directories": {
       "output": "release",
