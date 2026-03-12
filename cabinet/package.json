@@ -8,8 +8,8 @@
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
-    "build:main": "bun build src/main/main.ts --outfile dist/main/main.js --target node --external electron --external node-hid",
-    "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron",
+    "build:main": "esbuild src/main/main.ts --bundle --outdir=dist/main --platform=node --format=esm --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\" --external:electron",
+    "build:preload": "esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron",
     "build": "bun run build:main && bun run build:preload && vite build && electron-builder",
     "build:cabinet-mac": "bun run build:main && bun run build:preload && vite build && electron-builder --mac",
     "build:cabinet-mac-x64": "bun run build:main && bun run build:preload && vite build && electron-builder --mac --x64",
@@ -31,8 +31,7 @@
     "hono": "^4.6.14",
     "semver": "^7.7.3",
     "tar": "^7.4.3",
-    "zod": "^4.1.13",
-    "node-hid": "^3.1.0"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -44,23 +43,17 @@
     "electron-builder": "^26.0.12",
     "svelte": "^5.0.0",
     "typescript": "^5.6.0",
+    "esbuild": "^0.25.0",
     "vite": "^6.0.0"
   },
   "build": {
-    "beforePack": "./scripts/deref-native-modules.cjs",
     "npmRebuild": false,
     "appId": "com.frankchiarulli.rcade.client",
     "productName": "rcade",
     "artifactName": "rcade-cabinet-${os}-${arch}.${ext}",
     "files": [
       "dist/**/*",
-      "assets/**/*",
-      "node_modules/node-hid/**/*",
-      "node_modules/pkg-prebuilds/**/*"
-    ],
-    "asarUnpack": [
-      "node_modules/node-hid/**/*",
-      "node_modules/pkg-prebuilds/**/*"
+      "assets/**/*"
     ],
     "directories": {
       "output": "release",

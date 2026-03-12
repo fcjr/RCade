@@ -210,13 +210,8 @@ stdenv.mkDerivation {
 
     cd cabinet
 
-    bun build src/main/main.ts --outfile dist/main/main.cjs --target node --format cjs --external electron --external node-hid
-    bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron
-
-    # bun build hardcodes __dirname/__filename to the build-time path.
-    # Replace with CJS's native __dirname so paths resolve at runtime.
-    substituteInPlace dist/main/main.cjs \
-      --replace-quiet 'var __dirname2 = ' 'var __dirname2 = __dirname; var __dirname_unused = '
+    node_modules/.bin/esbuild src/main/main.ts --bundle --outdir=dist/main --platform=node --format=esm --banner:js="import { createRequire } from 'module';const require = createRequire(import.meta.url);" --external:electron
+    node_modules/.bin/esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron
     node_modules/.bin/vite build
 
     cd ..
@@ -231,54 +226,7 @@ stdenv.mkDerivation {
 
     cp -r cabinet/dist $out/lib/rcade-cabinet/
     cp cabinet/package.json $out/lib/rcade-cabinet/package.json
-    # Point main to the CJS build (needed for __dirname fix; source uses ESM .js)
-    ${nodejs_22}/bin/node -e "
-      const fs = require('fs');
-      const p = '$out/lib/rcade-cabinet/package.json';
-      const pkg = JSON.parse(fs.readFileSync(p));
-      pkg.main = 'dist/main/main.cjs';
-      fs.writeFileSync(p, JSON.stringify(pkg, null, 2) + '\n');
-    "
     cp -r cabinet/assets $out/lib/rcade-cabinet/
-
-    # node-hid native addon (can't be bundled by bun build).
-    # Location varies depending on bun's hoisting decisions.
-    NODE_HID=""
-    for nhid_dir in \
-      node_modules/node-hid \
-      node_modules/.bun/node_modules/node-hid \
-      plugins/input-spinners/node_modules/node-hid \
-      plugins/input-classic/node_modules/node-hid; do
-      if [ -d "$nhid_dir" ]; then
-        NODE_HID="$nhid_dir"
-        break
-      fi
-    done
-    PKG_PREBUILDS=""
-    for pb_dir in \
-      node_modules/pkg-prebuilds \
-      node_modules/.bun/node_modules/pkg-prebuilds \
-      plugins/input-spinners/node_modules/pkg-prebuilds; do
-      if [ -d "$pb_dir" ]; then
-        PKG_PREBUILDS="$pb_dir"
-        break
-      fi
-    done
-
-    if [ -n "$NODE_HID" ]; then
-      mkdir -p $out/lib/rcade-cabinet/node_modules
-      cp -rL "$NODE_HID" $out/lib/rcade-cabinet/node_modules/node-hid
-      if [ -n "$PKG_PREBUILDS" ]; then
-        cp -rL "$PKG_PREBUILDS" $out/lib/rcade-cabinet/node_modules/pkg-prebuilds
-      fi
-
-      # Keep only linux-x64 prebuilds (autoPatchelfHook can't patch others).
-      find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds \
-        -mindepth 1 -maxdepth 1 -type d \
-        ! -name 'HID_hidraw-linux-x64' \
-        ! -name 'HID-linux-x64' \
-        -exec rm -rf {} +
-    fi
 
     cat > $out/bin/rcade-cabinet <<'LAUNCHER'
 #!/usr/bin/env bash

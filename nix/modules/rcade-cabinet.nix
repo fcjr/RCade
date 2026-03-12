@@ -153,8 +153,9 @@ in
             else
               export WLR_DRM_DEVICES="$(echo /dev/dri/card* | tr ' ' ':')"
             fi
-            # Use software renderer for USB display adapters (gud driver)
+            # Use software renderer and disable hardware cursors for USB display
             export WLR_RENDERER=pixman
+            export WLR_NO_HARDWARE_CURSORS=1
             exec ${pkgs.cage}/bin/cage -D -d -s -- ${launchScript} 2>/tmp/cage-debug.log
           ''}";
           user = cfg.user;
