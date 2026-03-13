@@ -58,7 +58,7 @@ async function validateThumbnail(pathOrUrl: string, isUrl: boolean): Promise<Buf
 
 export async function run(): Promise<void> {
   try {
-    core.info("Aquiring id token");
+    core.info("Acquiring id token");
     const idToken = await getIdToken();
 
     const manifestPath = core.getInput("manifestPath", { required: true });
