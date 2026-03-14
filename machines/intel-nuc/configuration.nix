@@ -35,6 +35,7 @@ in
   # ===========================================================================
   networking.hostName = "rcade-nuc";  # Change this for each machine
   networking.networkmanager.enable = true;
+  services.tailscale.enable = true;
 
   # ===========================================================================
   # RCade Cabinet Service
