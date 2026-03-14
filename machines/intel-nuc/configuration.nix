@@ -62,6 +62,18 @@ in
 
     # Vulkan/WebGPU support (default: true)
     enableVulkan = true;
+
+    # Set audio volume to max on startup
+    preLaunchCommands = ''
+      # Wait for PipeWire sink to appear (up to 5 seconds)
+      for i in $(seq 1 10); do
+        if ${pkgs.wireplumber}/bin/wpctl get-volume @DEFAULT_AUDIO_SINK@ >/dev/null 2>&1; then
+          ${pkgs.wireplumber}/bin/wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.0
+          break
+        fi
+        sleep 0.5
+      done
+    '';
   };
 
   # ===========================================================================
@@ -147,6 +159,9 @@ in
       lm_sensors
       pciutils
       usbutils
+
+      # Audio
+      alsa-utils
 
       # Shell
       zsh
