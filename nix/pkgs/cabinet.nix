@@ -221,7 +221,7 @@ stdenv.mkDerivation {
 
     cd cabinet
 
-    node_modules/.bin/esbuild src/main/main.ts --bundle --outdir=dist/main --platform=node --format=esm --banner:js="import { createRequire } from 'module';const require = createRequire(import.meta.url);" --external:electron --external:node-hid
+    node_modules/.bin/esbuild src/main/main.ts --bundle --outfile=dist/main/main.cjs --platform=node --format=cjs --define:import.meta.url=import_meta_url --banner:js="var import_meta_url=require('url').pathToFileURL(__filename).href;" --external:electron --external:node-hid
     node_modules/.bin/esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron
     node_modules/.bin/vite build
 
