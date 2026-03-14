@@ -71,5 +71,5 @@ This package is a thin wrapper around the `rcade` CLI package.
 ### Build
 
 ```bash
-bun run build
+pnpm run build
 ```

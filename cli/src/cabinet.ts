@@ -156,7 +156,7 @@ export async function downloadAsset(
     throw new Error(
       `Failed to find release cabinet-v${version}. ` +
         `Make sure the cabinet has been released for this version.\n` +
-        `You can build and release it by running: bun run build:mac (or build:win/build:linux) in the cabinet directory.`,
+        `You can build and release it by running: pnpm run build:mac (or build:win/build:linux) in the cabinet directory.`,
     );
   }
 

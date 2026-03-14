@@ -117,5 +117,5 @@ const cancel = once("spin", (data) => { /* ... */ });
 ## Development
 
 ```bash
-bun install
+pnpm install
 ```

@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "esbuild ./src/index.ts --outfile=dist/main.js --platform=node --format=esm --bundle"
+    "build": "esbuild ./src/index.ts --outfile=dist/main.js --platform=node --format=esm --bundle --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\""
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",

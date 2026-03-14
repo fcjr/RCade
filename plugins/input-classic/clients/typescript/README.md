@@ -46,5 +46,5 @@ function gameLoop() {
 ## Development
 
 ```bash
-bun install
+pnpm install
 ```
