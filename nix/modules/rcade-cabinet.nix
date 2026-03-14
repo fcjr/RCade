@@ -150,12 +150,12 @@ in
 
             if [ -n "$GUD_CARD" ]; then
               export WLR_DRM_DEVICES="$GUD_CARD"
+              # USB displays (gud) don't support GPU rendering or hardware cursors
+              export WLR_RENDERER=pixman
+              export WLR_NO_HARDWARE_CURSORS=1
             else
               export WLR_DRM_DEVICES="$(echo /dev/dri/card* | tr ' ' ':')"
             fi
-            # Use software renderer and disable hardware cursors for USB display
-            export WLR_RENDERER=pixman
-            export WLR_NO_HARDWARE_CURSORS=1
             exec ${pkgs.cage}/bin/cage -D -d -s -- ${launchScript} 2>/tmp/cage-debug.log
           ''}";
           user = cfg.user;
