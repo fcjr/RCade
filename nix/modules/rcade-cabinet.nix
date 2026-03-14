@@ -149,9 +149,24 @@ in
             done
 
             if [ -n "$GUD_CARD" ]; then
-              export WLR_DRM_DEVICES="$GUD_CARD"
-              # USB displays (gud) don't support GPU rendering or hardware cursors
-              export WLR_RENDERER=pixman
+              # Find a real GPU to use for rendering (first non-gud card)
+              RENDER_GPU=""
+              for card in /sys/class/drm/card[0-9]; do
+                driver=$(basename "$(readlink "$card/device/driver")" 2>/dev/null)
+                if [ "$driver" != "gud" ]; then
+                  RENDER_GPU="/dev/dri/$(basename "$card")"
+                  break
+                fi
+              done
+
+              if [ -n "$RENDER_GPU" ]; then
+                # Render on the real GPU, output frames to the USB display
+                export WLR_DRM_DEVICES="$RENDER_GPU:$GUD_CARD"
+              else
+                # No real GPU, fall back to software rendering on the USB display
+                export WLR_DRM_DEVICES="$GUD_CARD"
+                export WLR_RENDERER=pixman
+              fi
               export WLR_NO_HARDWARE_CURSORS=1
             else
               export WLR_DRM_DEVICES="$(echo /dev/dri/card* | tr ' ' ':')"
