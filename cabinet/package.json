@@ -3,19 +3,19 @@
   "version": "0.2.1",
   "private": true,
   "type": "module",
-  "main": "dist/main/main.js",
+  "main": "dist/main/main.cjs",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
-    "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
-    "build:main": "esbuild src/main/main.ts --bundle --outdir=dist/main --platform=node --format=esm --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\" --external:electron",
+    "dev:electron": "pnpm run build:main && pnpm run build:preload && electron --trace-warnings .",
+    "build:main": "esbuild src/main/main.ts --outfile=dist/main/main.cjs --platform=node --format=cjs --bundle --external:electron --define:import.meta.url=import_meta_url --banner:js=\"var import_meta_url=require('url').pathToFileURL(__filename).href;\"",
     "build:preload": "esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron",
-    "build": "bun run build:main && bun run build:preload && vite build && electron-builder",
-    "build:cabinet-mac": "bun run build:main && bun run build:preload && vite build && electron-builder --mac",
-    "build:cabinet-mac-x64": "bun run build:main && bun run build:preload && vite build && electron-builder --mac --x64",
-    "build:cabinet-mac-arm64": "bun run build:main && bun run build:preload && vite build && electron-builder --mac --arm64",
-    "build:cabinet-win": "bun run build:main && bun run build:preload && vite build && electron-builder --win",
-    "build:cabinet-linux": "bun run build:main && bun run build:preload && vite build && electron-builder --linux"
+    "build": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder",
+    "build:cabinet-mac": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac",
+    "build:cabinet-mac-x64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac --x64",
+    "build:cabinet-mac-arm64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac --arm64",
+    "build:cabinet-win": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --win",
+    "build:cabinet-linux": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --linux"
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",

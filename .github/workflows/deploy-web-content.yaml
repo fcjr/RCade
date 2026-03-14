@@ -11,7 +11,7 @@ on:
       - 'runtime/**'
       - 'engine/**'
       - 'log/**'
-      - 'bun.lock'
+      - 'pnpm-lock.yaml'
       - 'package.json'
 
 env:
@@ -26,19 +26,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: "1.3.3"
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install Dependencies
-        run: bun install
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: bun run build --filter=web-content^...
+        run: pnpm run build --filter=web-content^...
 
       - name: Deploy
-        run: bun run deploy
+        run: pnpm run deploy
         working-directory: web-content
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

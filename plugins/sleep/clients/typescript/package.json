@@ -8,20 +8,17 @@
   "exports": {
     ".": {
       "types": "./index.ts",
-      "bun": "./index.ts",
       "import": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node"
+    "build": "esbuild index.ts --outdir=dist --platform=node --format=esm --bundle"
   },
   "files": [
     "dist",
     "index.ts"
   ],
-  "devDependencies": {
-    "@types/bun": "^1.3.8"
-  },
+  "devDependencies": {},
   "dependencies": {
     "@rcade/sdk": "^0.2.2"
   },

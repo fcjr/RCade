@@ -19,15 +19,9 @@
     # Flake utilities
     flake-utils.url = "github:numtide/flake-utils";
 
-    # Bun packaging for Nix (reproducible builds)
-    bun2nix = {
-      url = "github:nix-community/bun2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+};
 
-  };
-
-  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, bun2nix, ... }@inputs:
+  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, ... }@inputs:
     let
       # Systems we support for development
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -191,11 +185,8 @@
               pkg-config
 
               # JavaScript runtime & package manager
-              bun
+              pnpm_9
               nodejs_22
-
-              # Nix tooling for reproducible builds
-              bun2nix.packages.${system}.default
 
               # Useful dev tools
               just  # Task runner
@@ -225,7 +216,7 @@
               echo "🕹️  RCade development environment"
               echo ""
               echo "Available commands:"
-              echo "  bun install    - Install dependencies"
+              echo "  pnpm install   - Install dependencies"
               echo "  turbo dev      - Start development servers"
               echo "  turbo build    - Build all packages"
               echo ""
@@ -235,7 +226,7 @@
           # Minimal shell for CI/quick tasks
           ci = pkgs.mkShell {
             name = "rcade-ci";
-            buildInputs = with pkgs; [ bun nodejs_22 ];
+            buildInputs = with pkgs; [ pnpm_9 nodejs_22 ];
           };
         }
       );

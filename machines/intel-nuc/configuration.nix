@@ -15,7 +15,14 @@
 # Deploy with:
 #   nixos-rebuild switch --flake .#my-cabinet
 
-{ config, pkgs, lib, inputs, self, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  self,
+  ...
+}:
 
 let
   # Import shared utilities
@@ -89,7 +96,14 @@ in
   users.users.admin = {
     isNormalUser = true;
     description = "RCade Admin";
-    extraGroups = [ "networkmanager" "wheel" "docker" "video" "audio" "input" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker"
+      "video"
+      "audio"
+      "input"
+    ];
     shell = pkgs.zsh;
 
     # SSH keys for maintainers
@@ -101,7 +115,10 @@ in
     {
       users = [ "admin" ];
       commands = [
-        { command = "ALL"; options = [ "NOPASSWD" ]; }
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
       ];
     }
   ];
@@ -113,25 +130,27 @@ in
     enable = true;
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = false;  # Key-only authentication
+      PasswordAuthentication = false; # Key-only authentication
     };
   };
 
   # ===========================================================================
   # System Packages
   # ===========================================================================
-  environment.systemPackages = rcadeLib.baseSystemPackages pkgs ++ (with pkgs; [
-    # Networking tools
-    networkmanagerapplet
+  environment.systemPackages =
+    rcadeLib.baseSystemPackages pkgs
+    ++ (with pkgs; [
+      # Networking tools
+      networkmanagerapplet
 
-    # System monitoring
-    lm_sensors
-    pciutils
-    usbutils
+      # System monitoring
+      lm_sensors
+      pciutils
+      usbutils
 
-    # Shell
-    zsh
-  ]);
+      # Shell
+      zsh
+    ]);
 
   # Programs
   programs.zsh.enable = true;
@@ -149,40 +168,42 @@ in
   # ===========================================================================
   # Home Manager Configuration
   # ===========================================================================
-  home-manager.users.admin = { pkgs, ... }: {
-    home.username = "admin";
-    home.homeDirectory = "/home/admin";
+  home-manager.users.admin =
+    { pkgs, ... }:
+    {
+      home.username = "admin";
+      home.homeDirectory = "/home/admin";
 
-    # Git configuration
-    programs.git = {
-      enable = true;
-      settings = {
-        user.name = "RCade Admin";
-        user.email = "admin@rcade.local";
-        init.defaultBranch = "main";
-        pull.rebase = true;
-        push.autoSetupRemote = true;
+      # Git configuration
+      programs.git = {
+        enable = true;
+        settings = {
+          user.name = "RCade Admin";
+          user.email = "admin@rcade.local";
+          init.defaultBranch = "main";
+          pull.rebase = true;
+          push.autoSetupRemote = true;
+        };
       };
-    };
 
-    # Zsh configuration
-    programs.zsh = {
-      enable = true;
-      autosuggestion.enable = true;
-      syntaxHighlighting.enable = true;
+      # Zsh configuration
+      programs.zsh = {
+        enable = true;
+        autosuggestion.enable = true;
+        syntaxHighlighting.enable = true;
 
-      shellAliases = {
-        ll = "ls -la";
-        rebuild = "sudo nixos-rebuild switch --flake /etc/nixos";
-        update = "sudo nix flake update /etc/nixos";
+        shellAliases = {
+          ll = "ls -la";
+          rebuild = "sudo nixos-rebuild switch --flake /etc/nixos";
+          update = "sudo nix flake update /etc/nixos";
+        };
       };
+
+      # Let Home Manager manage itself
+      programs.home-manager.enable = true;
+
+      home.stateVersion = "24.05";
     };
-
-    # Let Home Manager manage itself
-    programs.home-manager.enable = true;
-
-    home.stateVersion = "24.05";
-  };
 
   # ===========================================================================
   # System State Version

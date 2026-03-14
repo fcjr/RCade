@@ -1,20 +1,21 @@
 # RCade Cabinet Package
 #
 # Dependencies are fetched via a fixed-output derivation (FOD) that
-# runs `bun install` with network access, working around bun2nix#71.
+# runs `pnpm install` with network access.
 #
 # To update dependencies:
-#   1. Run `bun install` to update bun.lock
+#   1. Run `pnpm install` to update pnpm-lock.yaml
 #   2. Rebuild with `nix build .#cabinet`
-#   3. Update `bunModulesHash` with the hash from the error
+#   3. Update `pnpmModulesHash` with the hash from the error
 
 { lib
 , stdenv
 , makeWrapper
 , autoPatchelfHook
 , electron
-, bun
+, pnpm_9
 , nodejs_22
+, cacert
 , alsa-lib
 , at-spi2-atk
 , at-spi2-core
@@ -36,8 +37,15 @@
 , pango
 , systemd
 , vulkan-loader
-, xorg
 , libGL
+, libx11
+, libxcomposite
+, libxdamage
+, libxext
+, libxfixes
+, libxrandr
+, libxcb
+, libxshmfence
 , pipewire
 , libpulseaudio
 }:
@@ -70,14 +78,14 @@ let
     libpulseaudio
     systemd
     vulkan-loader
-    xorg.libX11
-    xorg.libXcomposite
-    xorg.libXdamage
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libXrandr
-    xorg.libxcb
-    xorg.libxshmfence
+    libx11
+    libxcomposite
+    libxdamage
+    libxext
+    libxfixes
+    libxrandr
+    libxcb
+    libxshmfence
   ];
 
   src = lib.cleanSourceWith {
@@ -101,7 +109,7 @@ let
       );
   };
 
-  # Only package.json + bun.lock so code changes don't invalidate the FOD hash.
+  # Only package.json + pnpm-lock.yaml so code changes don't invalidate the FOD hash.
   depsSrc = lib.cleanSourceWith {
     src = ../..;
     filter = path: type:
@@ -122,33 +130,35 @@ let
           )
         else
           baseName == "package.json" ||
-          baseName == "bun.lock";
+          baseName == "pnpm-lock.yaml" ||
+          baseName == "pnpm-workspace.yaml" ||
+          baseName == ".npmrc";
   };
 
-  bunModulesHash = "sha256-OsvHFw+a/mKORQN3uGo+eKXJFJxNnbNZD+1YRhttHSc=";
+  pnpmModulesHash = "sha256-aYcxJyi3NIIacknF7+Uxr5I592dDJXgsDzMNkWTCk5s=";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
-  bunModules = stdenv.mkDerivation {
-    name = "rcade-bun-modules.tar.gz";
+  pnpmModules = stdenv.mkDerivation {
+    name = "rcade-pnpm-modules.tar.gz";
     src = depsSrc;
 
-    nativeBuildInputs = [ bun ];
+    nativeBuildInputs = [ nodejs_22 pnpm_9 cacert ];
 
     outputHashAlgo = "sha256";
     outputHashMode = "flat";
-    outputHash = bunModulesHash;
+    outputHash = pnpmModulesHash;
 
     # Prevent patchShebangs from adding store-path references to the FOD output.
     dontFixup = true;
 
     buildPhase = ''
       export HOME=$(mktemp -d)
-      bun install --frozen-lockfile --ignore-scripts
+      export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+      pnpm install --frozen-lockfile --ignore-scripts
     '';
 
     installPhase = ''
       # Remove workspace symlinks (point to source dirs, invalid after extraction).
-      # Keep bun internal symlinks (contain "node_modules" in target path).
       find . -name 'node_modules' -type d -prune | while read -r nm_dir; do
         find "$nm_dir" -type l | while read -r link; do
           target=$(readlink "$link")
@@ -170,7 +180,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     makeWrapper
     autoPatchelfHook
-    bun
+    pnpm_9
     nodejs_22
   ];
 
@@ -186,7 +196,7 @@ stdenv.mkDerivation {
 
     export HOME=$(mktemp -d)
 
-    tar xzf ${bunModules}
+    tar xzf ${pnpmModules}
 
     # FOD skips patchShebangs (dontFixup), so we patch here instead.
     patchShebangs node_modules
@@ -195,7 +205,8 @@ stdenv.mkDerivation {
     done
 
     # Recreate workspace symlinks removed from the FOD.
-    workspaces=$(${nodejs_22}/bin/node -p "require('./package.json').workspaces.join('\n')")
+    # Parse workspace dirs from pnpm-workspace.yaml (simple "  - dir" format)
+    workspaces=$(grep '^ *- ' pnpm-workspace.yaml | sed 's/^ *- //')
     for ws_dir in $workspaces; do
       if [ -f "$ws_dir/package.json" ]; then
         pkg_name=$(${nodejs_22}/bin/node -p "require('./$ws_dir/package.json').name" 2>/dev/null || true)
@@ -210,7 +221,7 @@ stdenv.mkDerivation {
 
     cd cabinet
 
-    node_modules/.bin/esbuild src/main/main.ts --bundle --outdir=dist/main --platform=node --format=esm --banner:js="import { createRequire } from 'module';const require = createRequire(import.meta.url);" --external:electron
+    node_modules/.bin/esbuild src/main/main.ts --bundle --outdir=dist/main --platform=node --format=esm --banner:js="import { createRequire } from 'module';const require = createRequire(import.meta.url);" --external:electron --external:node-hid
     node_modules/.bin/esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron
     node_modules/.bin/vite build
 

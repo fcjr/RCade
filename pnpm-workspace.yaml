@@ -1,0 +1,23 @@
+packages:
+  - web
+  - cabinet
+  - cli
+  - create
+  - action-deploy
+  - api
+  - runtime
+  - sdk/frontend/typescript
+  - sdk/backend
+  - plugins/input-classic/clients/typescript
+  - plugins/input-classic
+  - plugins/input-spinners/clients/typescript
+  - plugins/input-spinners
+  - plugins/sleep/clients/typescript
+  - plugins/sleep
+  - plugins/menu/clients/typescript
+  - plugins/menu
+  - vite-plugins
+  - web-content
+  - engine
+  - menu
+  - log

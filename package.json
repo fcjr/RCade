@@ -1,7 +1,29 @@
 {
   "name": "rcade-monorepo",
   "private": true,
-  "packageManager": "bun@1.3.3",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=@rcade/web",
+    "dev:menu": "turbo dev --filter=@rcade/menu",
+    "dev:cabinet": "turbo dev --filter=@rcade/client",
+    "build:cabinet-mac": "turbo build:cabinet-mac --filter=@rcade/client",
+    "build:cabinet-mac-x64": "turbo build:cabinet-mac-x64 --filter=@rcade/client",
+    "build:cabinet-mac-arm64": "turbo build:cabinet-mac-arm64 --filter=@rcade/client",
+    "build:cabinet-win": "turbo build:cabinet-win --filter=@rcade/client",
+    "build:cabinet-linux": "turbo build:cabinet-linux --filter=@rcade/client",
+    "check": "turbo check",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "husky": "^9.1.7",
+    "turbo": "^2.6.3"
+  },
   "workspaces": [
     "web",
     "cabinet",
@@ -25,28 +47,5 @@
     "engine",
     "menu",
     "log"
-  ],
-  "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "dev:web": "turbo dev --filter=@rcade/web",
-    "dev:menu": "turbo dev --filter=@rcade/menu",
-    "dev:cabinet": "turbo dev --filter=@rcade/client",
-    "build:cabinet-mac": "turbo build:cabinet-mac --filter=@rcade/client",
-    "build:cabinet-mac-x64": "turbo build:cabinet-mac-x64 --filter=@rcade/client",
-    "build:cabinet-mac-arm64": "turbo build:cabinet-mac-arm64 --filter=@rcade/client",
-    "build:cabinet-win": "turbo build:cabinet-win --filter=@rcade/client",
-    "build:cabinet-linux": "turbo build:cabinet-linux --filter=@rcade/client",
-    "check": "turbo check",
-    "prepare": "husky",
-    "nix:generate": "bun2nix -o bun.nix || echo 'bun2nix not found - run from nix develop shell to generate bun.nix'"
-  },
-  "dependencies": {
-    "zod": "^4.1.13"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.3.8",
-    "husky": "^9.1.7",
-    "turbo": "^2.6.3"
-  }
+  ]
 }
