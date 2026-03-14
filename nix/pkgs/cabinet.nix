@@ -239,6 +239,15 @@ stdenv.mkDerivation {
     cp cabinet/package.json $out/lib/rcade-cabinet/package.json
     cp -r cabinet/assets $out/lib/rcade-cabinet/
 
+    # Copy native modules that are --external in the esbuild bundle.
+    # With pnpm, node-hid may be hoisted to the root or symlinked under cabinet.
+    mkdir -p $out/lib/rcade-cabinet/node_modules
+    if [ -e cabinet/node_modules/node-hid ]; then
+      cp -rL cabinet/node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
+    elif [ -e node_modules/node-hid ]; then
+      cp -rL node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
+    fi
+
     cat > $out/bin/rcade-cabinet <<'LAUNCHER'
 #!/usr/bin/env bash
 set -euo pipefail
