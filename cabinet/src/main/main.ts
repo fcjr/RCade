@@ -41,13 +41,16 @@ const scaleFactor = args.scale ?? (isDev ? 2 : 1);
 app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
 
 if (process.platform === 'linux') {
-  // WebGPU via Vulkan/ANGLE
-
   app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
   // Enable audio output via ALSA (required for some Linux systems)
   app.commandLine.appendSwitch('alsa-output-device', 'default');
-  // Software rendering fallback for GPUs without ES3 support (e.g. Raspberry Pi)
-  app.commandLine.appendSwitch('disable-gpu');
+
+  // Check if a GPU render node exists (e.g. /dev/dri/renderD128).
+  // Devices without one (e.g. Raspberry Pi) need software rendering.
+  const hasRenderNode = existsSync('/dev/dri/renderD128');
+  if (!hasRenderNode) {
+    app.commandLine.appendSwitch('disable-gpu');
+  }
 
   if (!isDev) {
     app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
