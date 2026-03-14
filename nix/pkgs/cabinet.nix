@@ -242,6 +242,9 @@ stdenv.mkDerivation {
     # Copy native modules that are --external in the esbuild bundle.
     mkdir -p $out/lib/rcade-cabinet/node_modules
     cp -rL node_modules/.pnpm/node-hid@*/node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
+    # Remove musl and non-x64 prebuilds to avoid autoPatchelfHook failures
+    find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds -name '*musl*' -delete
+    find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds -type d -name '*arm*' -exec rm -rf {} + 2>/dev/null || true
 
     cat > $out/bin/rcade-cabinet <<'LAUNCHER'
 #!/usr/bin/env bash
