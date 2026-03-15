@@ -33,7 +33,7 @@ let
     ${cfg.preLaunchCommands}
 
     # Environment file for secrets (API keys, etc.)
-    ${lib.optionalString (cfg.environmentFile != null) "source ${cfg.environmentFile}"}
+    ${lib.optionalString (cfg.environmentFile != null) "set -a; source ${cfg.environmentFile}; set +a"}
 
     # Launch the cabinet app
     exec ${cabinetPackage}/bin/rcade-cabinet ${lib.escapeShellArgs cfg.extraArgs} \
