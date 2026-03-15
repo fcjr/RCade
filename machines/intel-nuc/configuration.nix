@@ -52,7 +52,7 @@ in
 
     # Secrets file for API keys (create this on the target machine)
     # Format: CABINET_API_KEY=your-api-key-here
-    # environmentFile = "/etc/rcade/secrets.env";
+    environmentFile = "/etc/rcade/secrets.env";
 
     # Extra arguments for the cabinet app
     extraArgs = [ ];
