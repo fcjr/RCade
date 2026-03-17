@@ -228,7 +228,23 @@ in
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
     serviceConfig = {
-      ExecStart = "${pkgs.mediamtx}/bin/mediamtx ${pkgs.writeText "mediamtx.yml" ''
+      ExecStart = "${pkgs.writeShellScript "mediamtx-launch" ''
+        set -eu
+
+        DEFAULT_IFACE="$(${pkgs.iproute2}/bin/ip -4 route show default | ${pkgs.gawk}/bin/awk 'NR == 1 { print $5 }')"
+        if [ -z "$DEFAULT_IFACE" ]; then
+          echo "No default IPv4 interface found for MediaMTX WebRTC host advertisement" >&2
+          exit 1
+        fi
+
+        LAN_IP="$(${pkgs.iproute2}/bin/ip -4 -o addr show dev "$DEFAULT_IFACE" scope global | ${pkgs.gawk}/bin/awk 'NR == 1 { split($4, a, "/"); print a[1] }')"
+        if [ -z "$LAN_IP" ]; then
+          echo "No global IPv4 address found on interface $DEFAULT_IFACE" >&2
+          exit 1
+        fi
+
+        export MTX_WEBRTCADDITIONALHOSTS="$LAN_IP"
+        exec ${pkgs.mediamtx}/bin/mediamtx ${pkgs.writeText "mediamtx.yml" ''
         # RTSP remains the local ingest path from ffmpeg.
         # Remote viewers should connect with a browser over WebRTC:
         #   http://<cabinet-ip>:8889/stream
@@ -238,11 +254,25 @@ in
 
         paths:
           all: {}
+      ''}
       ''}";
       Restart = "always";
       RestartSec = 5;
     };
   };
+
+  networking.networkmanager.dispatcherScripts = [
+    {
+      type = "basic";
+      source = pkgs.writeText "restart-mediamtx-on-dhcp-change" ''
+        if [ "$2" != "up" ] && [ "$2" != "dhcp4-change" ]; then
+          exit 0
+        fi
+
+        ${pkgs.systemd}/bin/systemctl try-restart mediamtx.service
+      '';
+    }
+  ];
 
   systemd.services.rtsp-capture = {
     description = "FFmpeg RTSP capture of GUD display";
@@ -274,10 +304,12 @@ in
       echo "Capturing from $GUD_CARD"
       exec ${pkgs.ffmpeg}/bin/ffmpeg \
         -fflags nobuffer -flags low_delay \
+        -framerate 60 \
         -f kmsgrab -device "$GUD_CARD" -i - \
         -vf 'hwdownload,format=bgr0' \
         -c:v libx264 -preset ultrafast -tune zerolatency \
         -pix_fmt yuv420p -profile:v baseline \
+        -b:v 8M -maxrate 8M -bufsize 1M \
         -g 15 -keyint_min 15 -sc_threshold 0 -bf 0 \
         -x264-params "slice-max-size=1200:sync-lookahead=0:rc-lookahead=0" \
         -f rtsp -rtsp_transport udp rtsp://localhost:8554/stream
