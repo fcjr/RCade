@@ -221,6 +221,73 @@ in
     };
 
   # ===========================================================================
+  # RTSP Stream (capture GUD display via kmsgrab)
+  # ===========================================================================
+  systemd.services.mediamtx = {
+    description = "MediaMTX RTSP server";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.mediamtx}/bin/mediamtx ${pkgs.writeText "mediamtx.yml" ''
+        paths:
+          all: {}
+      ''}";
+      Restart = "always";
+      RestartSec = 5;
+    };
+  };
+
+  systemd.services.rtsp-capture = {
+    description = "FFmpeg RTSP capture of GUD display";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "mediamtx.service" "greetd.service" ];
+    requires = [ "mediamtx.service" ];
+    script = ''
+      # Wait for greetd to start
+      sleep 5
+
+      # Find the GUD card dynamically
+      GUD_CARD=""
+      for i in $(seq 1 30); do
+        for card in /sys/class/drm/card[0-9]; do
+          driver=$(basename "$(readlink "$card/device/driver")" 2>/dev/null)
+          if [ "$driver" = "gud" ]; then
+            GUD_CARD="/dev/dri/$(basename "$card")"
+            break 2
+          fi
+        done
+        sleep 1
+      done
+
+      if [ -z "$GUD_CARD" ]; then
+        echo "No GUD display found, exiting"
+        exit 1
+      fi
+
+      echo "Capturing from $GUD_CARD"
+      exec ${pkgs.ffmpeg}/bin/ffmpeg \
+        -fflags nobuffer -flags low_delay \
+        -f kmsgrab -device "$GUD_CARD" -i - \
+        -vf 'hwdownload,format=bgr0' \
+        -c:v libx264 -tune zerolatency -preset ultrafast \
+        -g 15 -bf 0 \
+        -f rtsp -rtsp_transport udp rtsp://localhost:8554/stream
+    '';
+    serviceConfig = {
+      Restart = "always";
+      RestartSec = 5;
+      SupplementaryGroups = [ "video" "render" ];
+      AmbientCapabilities = [ "CAP_SYS_ADMIN" ];
+    };
+  };
+
+  # ===========================================================================
+  # Firewall
+  # ===========================================================================
+  networking.firewall.allowedTCPPorts = [ 22 8554 ];
+  networking.firewall.allowedUDPPorts = [ 8000 8001 ];
+
+  # ===========================================================================
   # System State Version
   # ===========================================================================
   # This should match the NixOS version you initially installed
