@@ -122,23 +122,23 @@
             } else if (viewportState === "show-top") {
                 if (accumulatedDelta > 0) {
                     const newIndex = Math.min(
-                        uniqueTags.length - 1,
-                        filterCursorIndex + 1,
+                        KEYBOARD_KEYS.length - 1,
+                        keyboardCursorIndex + 1,
                     );
-                    filterCursorIndex = newIndex;
+                    keyboardCursorIndex = newIndex;
                     triggerScroll(
-                        filtersContainer,
-                        filterCursorIndex,
+                        keyboardContainer,
+                        keyboardCursorIndex,
                         false,
                         updateFilterMasks,
                     );
                     accumulatedDelta -= DELTA_EPSILON;
                 } else if (accumulatedDelta < 0) {
-                    const newIndex = Math.max(0, filterCursorIndex - 1);
-                    filterCursorIndex = newIndex;
+                    const newIndex = Math.max(0, keyboardCursorIndex - 1);
+                    keyboardCursorIndex = newIndex;
                     triggerScroll(
-                        filtersContainer,
-                        filterCursorIndex,
+                        keyboardContainer,
+                        keyboardCursorIndex,
                         false,
                         updateFilterMasks,
                     );
@@ -222,30 +222,46 @@
         };
     });
 
-    // --- FILTER LOGIC ---
-    $: uniqueTags = [
-        ...new Set(
-            games.flatMap((g) =>
-                g
-                    .latest()
-                    .categories()
-                    .map((c) => c.name),
-            ),
-        ),
-    ].sort();
+    // --- FILTER LOGIC (Alphabet Keyboard) ---
+    const KEYBOARD_KEYS = ["CLR", "DEL", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+    let keyboardCursorIndex = 0;
+    let searchText = "";
 
-    let selectedTags: string[] = [];
-    let filterCursorIndex = 0;
+    function fuzzyMatch(text: string, query: string): boolean {
+        const lower = text.toLowerCase();
+        const q = query.toLowerCase();
+        let qi = 0;
+        for (let i = 0; i < lower.length && qi < q.length; i++) {
+            if (lower[i] === q[qi]) qi++;
+        }
+        return qi === q.length;
+    }
+
+    function handleKeyPress(key: string) {
+        if (key === "DEL") {
+            searchText = searchText.slice(0, -1);
+        } else if (key === "CLR") {
+            searchText = "";
+        } else {
+            searchText += key;
+        }
+        activePage = 0;
+        tick().then(updatePaginationState);
+    }
 
     $: filteredGames =
-        selectedTags.length === 0
+        searchText.length === 0
             ? games
-            : games.filter((g) =>
-                  g
-                      .latest()
-                      .categories()
-                      .some((c) => selectedTags.includes(c.name)),
-              );
+            : games.filter((g) => {
+                  const v = g.latest();
+                  return [
+                      v.displayName(),
+                      g.name(),
+                      v.description(),
+                      ...v.authors().map((a: any) => a.display_name),
+                      ...v.categories().map((c: any) => c.name),
+                  ].some((field) => field && fuzzyMatch(field, searchText));
+              });
 
     $: totalPages = filteredGames.length;
 
@@ -258,14 +274,14 @@
     SCREENSAVER.updateScreensaver({ transparent: true });
 
     let versionsContainer: HTMLDivElement;
-    let filtersContainer: HTMLDivElement;
+    let keyboardContainer: HTMLDivElement;
     let paginationContainer: HTMLDivElement;
 
     // Mask Variables
     let maskLeftSize = "0px";
     let maskRightSize = "0px";
-    let filterMaskLeft = "0px";
-    let filterMaskRight = "0px";
+    let keyboardMaskLeft = "0px";
+    let keyboardMaskRight = "0px";
 
     // Pagination specific variables
     let paginationMaskLeft = "0px";
@@ -316,10 +332,10 @@
     }
 
     function updateFilterMasks() {
-        if (!filtersContainer) return;
-        const { scrollLeft, scrollWidth, clientWidth } = filtersContainer;
-        filterMaskLeft = scrollLeft > 10 ? "20px" : "0px";
-        filterMaskRight =
+        if (!keyboardContainer) return;
+        const { scrollLeft, scrollWidth, clientWidth } = keyboardContainer;
+        keyboardMaskLeft = scrollLeft > 10 ? "20px" : "0px";
+        keyboardMaskRight =
             scrollWidth - clientWidth - scrollLeft > 10 ? "20px" : "0px";
     }
 
@@ -428,16 +444,6 @@
         activePage = index;
     }
 
-    function toggleFilter(tag: string) {
-        if (selectedTags.includes(tag)) {
-            selectedTags = selectedTags.filter((t) => t !== tag);
-        } else {
-            selectedTags = [...selectedTags, tag];
-        }
-        activePage = 0;
-        tick().then(updatePaginationState);
-    }
-
     let gameLoading = false;
     let gameError: string | undefined = undefined;
 
@@ -501,8 +507,8 @@
                     viewportState = "show-top";
                     tick().then(() =>
                         triggerScroll(
-                            filtersContainer,
-                            filterCursorIndex,
+                            keyboardContainer,
+                            keyboardCursorIndex,
                             true,
                             updateFilterMasks,
                         ),
@@ -515,9 +521,7 @@
                 e.player == 1 &&
                 viewportState === "show-top"
             ) {
-                if (uniqueTags.length === 0) return;
-
-                toggleFilter(uniqueTags[filterCursorIndex]);
+                handleKeyPress(KEYBOARD_KEYS[keyboardCursorIndex]);
             }
 
             if (
@@ -534,10 +538,12 @@
                 e.player == 1 &&
                 viewportState === "neutral"
             ) {
-                startGame(
-                    currentGame.intoApiResponse(),
-                    currentVersion.version(),
-                );
+                if (currentGame && currentVersion) {
+                    startGame(
+                        currentGame.intoApiResponse(),
+                        currentVersion.version(),
+                    );
+                }
             }
 
             if (
@@ -545,10 +551,22 @@
                 e.player == 1 &&
                 viewportState === "neutral"
             ) {
-                startGame(
-                    currentGame.intoApiResponse(),
-                    currentVersion.version(),
-                );
+                if (searchText.length > 0) {
+                    searchText = "";
+                    activePage = 0;
+                    tick().then(updatePaginationState);
+                } else if (currentGame && currentVersion) {
+                    startGame(
+                        currentGame.intoApiResponse(),
+                        currentVersion.version(),
+                    );
+                }
+            } else if (e.button === "B" && e.player == 1 && viewportState === "show-top") {
+                if (searchText.length > 0) {
+                    handleKeyPress("DEL");
+                } else {
+                    viewportState = "neutral";
+                }
             } else if (e.button === "B" && e.player == 1) {
                 viewportState = "neutral";
             }
@@ -578,11 +596,11 @@
                         updateVersionMasks,
                     );
                 } else if (viewportState === "show-top") {
-                    const newIndex = Math.max(0, filterCursorIndex - 1);
-                    filterCursorIndex = newIndex;
+                    const newIndex = Math.max(0, keyboardCursorIndex - 1);
+                    keyboardCursorIndex = newIndex;
                     triggerScroll(
-                        filtersContainer,
-                        filterCursorIndex,
+                        keyboardContainer,
+                        keyboardCursorIndex,
                         false,
                         updateFilterMasks,
                     );
@@ -608,13 +626,13 @@
                     );
                 } else if (viewportState === "show-top") {
                     const newIndex = Math.min(
-                        uniqueTags.length - 1,
-                        filterCursorIndex + 1,
+                        KEYBOARD_KEYS.length - 1,
+                        keyboardCursorIndex + 1,
                     );
-                    filterCursorIndex = newIndex;
+                    keyboardCursorIndex = newIndex;
                     triggerScroll(
-                        filtersContainer,
-                        filterCursorIndex,
+                        keyboardContainer,
+                        keyboardCursorIndex,
                         false,
                         updateFilterMasks,
                     );
@@ -719,37 +737,34 @@
         style:--slide-offset="{slideOffset}px"
     >
         <div class="filter-drawer">
-            <div class="drawer-header">FILTER_SYSTEM</div>
+            <div class="keyboard-header">
+                <div class="drawer-header">SEARCH</div>
+                <div class="search-display">
+                    <span class="search-text">{searchText || ""}</span><span class="search-cursor">_</span>
+                </div>
+            </div>
 
             <div
-                class="chips-container"
-                bind:this={filtersContainer}
+                class="chips-container keyboard-row"
+                bind:this={keyboardContainer}
                 on:scroll={updateFilterMasks}
-                style="--mask-left: {filterMaskLeft}; --mask-right: {filterMaskRight};"
+                style="--mask-left: {keyboardMaskLeft}; --mask-right: {keyboardMaskRight};"
             >
-                {#each uniqueTags as tag, i}
+                {#each KEYBOARD_KEYS as key, i}
                     <div
-                        class="version-chip filter-chip"
-                        class:cursor-active={i === filterCursorIndex}
-                        class:selected={selectedTags.includes(tag)}
+                        class="keyboard-key"
+                        class:cursor-active={i === keyboardCursorIndex}
+                        class:special-key={key === "DEL" || key === "CLR"}
                         on:click={() => {
-                            filterCursorIndex = i;
-                            toggleFilter(tag);
+                            keyboardCursorIndex = i;
+                            handleKeyPress(key);
                         }}
                         role="button"
                         tabindex="0"
                     >
-                        <span class="filter-check"
-                            >[{selectedTags.includes(tag) ? "X" : " "}]</span
-                        >
-                        <span class="chip-text">#{tag}</span>
+                        {key}
                     </div>
                 {/each}
-                {#if uniqueTags.length === 0}
-                    <div class="no-filters">
-                        <span>NO_FILTERS_AVAILABLE</span>
-                    </div>
-                {/if}
             </div>
         </div>
 
@@ -762,16 +777,23 @@
                 <div class="empty-state">
                     <span>LOADING_GAMES...</span>
                 </div>
-            {:else if selectedTags.length > 0}
+            {/if}
+            {#if !loading && viewportState !== "show-top"}
                 <div
                     class="filter-hud-static"
                     transition:slide|local={{ duration: 250, axis: "y" }}
                 >
                     <div class="hud-inner">
-                        <span class="hud-icon">FILTER_SYSTEM :: ACTIVE</span>
-                        <span class="hud-msg"
-                            >Use <span class="key">▲</span> to modify</span
-                        >
+                        {#if searchText.length > 0}
+                            <span class="hud-icon">SEARCH :: "{searchText}"</span>
+                            <span class="hud-msg"
+                                ><span class="key">▲</span> modify · <span class="key">B</span> clear</span
+                            >
+                        {:else}
+                            <span class="hud-msg"
+                                >Use <span class="key">▲</span> to search</span
+                            >
+                        {/if}
                     </div>
                 </div>
             {/if}
@@ -810,16 +832,6 @@
                         </div>
                     </div>
 
-                    {#if currentVersion.categories().length > 0}
-                        <div class="category-strip">
-                            {#each currentVersion.categories() as category}
-                                <span class="category-tag">
-                                    <span class="tag-hash">#</span
-                                    >{category.name}
-                                </span>
-                            {/each}
-                        </div>
-                    {/if}
                 </div>
 
                 <div class="content-stage">
@@ -1200,40 +1212,78 @@
         font-weight: 700;
     }
 
-    .filter-check {
-        margin-right: 6px;
-        opacity: 0.5;
-        font-weight: 400;
+    .keyboard-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding-right: 16px;
     }
 
-    .filter-chip.cursor-active {
-        border-color: #fff;
+    .search-display {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--color-primary);
+        letter-spacing: 0.05em;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .search-text {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .search-cursor {
+        animation: blink 1s step-end infinite;
+        color: var(--color-primary);
+    }
+
+    .keyboard-row {
+        gap: 3px;
+    }
+
+    .keyboard-key {
+        height: 26px;
+        min-width: 26px;
+        padding: 0 6px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: #666;
+        background: #111;
+        border: 1px solid #333;
+        cursor: pointer;
+        transition: all 0.1s ease;
+        user-select: none;
+    }
+
+    .keyboard-key:hover {
         background: #222;
         color: #fff;
+        border-color: #555;
     }
 
-    .filter-chip.selected {
-        background: rgba(250, 204, 21, 0.15);
-        color: var(--color-primary);
-        border-color: rgba(250, 204, 21, 0.5);
-    }
-
-    .filter-chip.cursor-active.selected {
+    .keyboard-key.cursor-active {
         background: var(--color-primary);
         color: #000;
         border-color: var(--color-primary);
-    }
-    .filter-chip.cursor-active.selected .filter-check {
-        opacity: 1;
-        color: #000;
+        box-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
     }
 
-    .no-filters {
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        color: #aaa;
-        padding: 4px 0;
-        font-weight: bold;
+    .keyboard-key.special-key {
+        font-size: 0.45rem;
+        color: #888;
+        letter-spacing: 0.02em;
+    }
+
+    .keyboard-key.special-key.cursor-active {
+        color: #000;
     }
 
     .top-section {
@@ -1365,38 +1415,6 @@
         box-shadow:
             0 0 6px var(--color-primary),
             0 0 10px var(--color-primary);
-    }
-
-    .category-strip {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        justify-content: center;
-    }
-
-    .category-tag {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.5);
-        font-family: var(--font-mono);
-        font-size: 0.5rem;
-        text-transform: uppercase;
-        font-weight: 500;
-        line-height: 1;
-        letter-spacing: 0.02em;
-        transition: all 0.2s ease;
-        cursor: default;
-    }
-
-    .tag-hash {
-        color: var(--color-primary);
-        margin-right: 4px;
-        opacity: 0.4;
-        font-size: 0.9em;
     }
 
     .header-group {

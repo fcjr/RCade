@@ -24,7 +24,7 @@
     "templates"
   ],
   "scripts": {
-    "build": "esbuild bin.ts index.ts --outdir=dist --platform=node --format=esm --bundle"
+    "build": "esbuild bin.ts index.ts --outdir=dist --platform=node --format=esm --bundle --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
   },
   "type": "module",
   "dependencies": {
