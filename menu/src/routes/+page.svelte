@@ -13,6 +13,7 @@
     import { tick, onMount } from "svelte";
     import { Game } from "@rcade/api";
     import { on as onInput } from "@rcade/plugin-input-classic";
+    import Fuse from "fuse.js";
     import { PLAYER_1 as SPINNERS_P1 } from "@rcade/plugin-input-spinners";
     import { SCREENSAVER } from "@rcade/plugin-sleep";
     import EventEmitter from "events";
@@ -227,15 +228,17 @@
     let keyboardCursorIndex = 0;
     let searchText = "";
 
-    function fuzzyMatch(text: string, query: string): boolean {
-        const lower = text.toLowerCase();
-        const q = query.toLowerCase();
-        let qi = 0;
-        for (let i = 0; i < lower.length && qi < q.length; i++) {
-            if (lower[i] === q[qi]) qi++;
-        }
-        return qi === q.length;
-    }
+    $: fuse = new Fuse(games, {
+        keys: [
+            { name: "displayName", getFn: (g) => g.latest().displayName() ?? "" },
+            { name: "name", getFn: (g) => g.name() ?? "" },
+            { name: "description", getFn: (g) => g.latest().description() ?? "" },
+            { name: "authors", getFn: (g) => g.latest().authors().map((a: any) => a.display_name).join(" ") },
+            { name: "categories", getFn: (g) => g.latest().categories().map((c: any) => c.name).join(" ") },
+        ],
+        threshold: 0.4,
+        ignoreLocation: true,
+    });
 
     function handleKeyPress(key: string) {
         if (key === "DEL") {
@@ -249,19 +252,16 @@
         tick().then(updatePaginationState);
     }
 
+    $: sortedGames = [...games].sort((a, b) =>
+        (a.latest().displayName() ?? a.name()).localeCompare(
+            b.latest().displayName() ?? b.name(),
+        ),
+    );
+
     $: filteredGames =
         searchText.length === 0
-            ? games
-            : games.filter((g) => {
-                  const v = g.latest();
-                  return [
-                      v.displayName(),
-                      g.name(),
-                      v.description(),
-                      ...v.authors().map((a: any) => a.display_name),
-                      ...v.categories().map((c: any) => c.name),
-                  ].some((field) => field && fuzzyMatch(field, searchText));
-              });
+            ? sortedGames
+            : fuse.search(searchText).map((r) => r.item);
 
     $: totalPages = filteredGames.length;
 
@@ -1131,7 +1131,7 @@
 
     .drawer-header {
         font-family: var(--font-mono);
-        font-size: 0.6rem;
+        font-size: 0.75rem;
         font-weight: bold;
         color: var(--color-primary);
         letter-spacing: 0.05em;
@@ -1222,7 +1222,7 @@
 
     .search-display {
         font-family: var(--font-mono);
-        font-size: 0.6rem;
+        font-size: 0.75rem;
         color: var(--color-primary);
         letter-spacing: 0.05em;
         min-width: 0;
@@ -1245,19 +1245,19 @@
     }
 
     .keyboard-key {
-        height: 26px;
-        min-width: 26px;
-        padding: 0 6px;
+        height: 30px;
+        min-width: 30px;
+        padding: 0 8px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         font-family: var(--font-mono);
-        font-size: 0.6rem;
+        font-size: 0.75rem;
         font-weight: 700;
-        color: #666;
-        background: #111;
-        border: 1px solid #333;
+        color: #fff;
+        background: #000;
+        border: 1px solid #fff;
         cursor: pointer;
         transition: all 0.1s ease;
         user-select: none;
@@ -1277,8 +1277,8 @@
     }
 
     .keyboard-key.special-key {
-        font-size: 0.45rem;
-        color: #888;
+        font-size: 0.55rem;
+        color: #fff;
         letter-spacing: 0.02em;
     }
 
@@ -1542,7 +1542,7 @@
 
     .hud-icon {
         font-family: var(--font-mono);
-        font-size: 0.4rem;
+        font-size: 0.55rem;
         color: var(--color-primary);
         background: rgba(250, 204, 21, 0.1);
         border: 1px solid rgba(250, 204, 21, 0.3);
@@ -1553,8 +1553,8 @@
 
     .hud-msg {
         font-family: var(--font-mono);
-        font-size: 0.4rem;
-        color: #888;
+        font-size: 0.55rem;
+        color: #fff;
         text-transform: uppercase;
     }
 
