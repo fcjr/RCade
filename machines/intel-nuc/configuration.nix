@@ -224,11 +224,18 @@ in
   # RTSP Stream (capture GUD display via kmsgrab)
   # ===========================================================================
   systemd.services.mediamtx = {
-    description = "MediaMTX RTSP server";
+    description = "MediaMTX streaming server";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
     serviceConfig = {
       ExecStart = "${pkgs.mediamtx}/bin/mediamtx ${pkgs.writeText "mediamtx.yml" ''
+        # RTSP remains the local ingest path from ffmpeg.
+        # Remote viewers should connect with a browser over WebRTC:
+        #   http://<cabinet-ip>:8889/stream
+        webrtc: yes
+        webrtcAddress: :8889
+        webrtcLocalUDPAddress: :8189
+
         paths:
           all: {}
       ''}";
@@ -269,8 +276,10 @@ in
         -fflags nobuffer -flags low_delay \
         -f kmsgrab -device "$GUD_CARD" -i - \
         -vf 'hwdownload,format=bgr0' \
-        -c:v libx264 -tune zerolatency -preset ultrafast \
-        -g 15 -bf 0 \
+        -c:v libx264 -preset ultrafast -tune zerolatency \
+        -pix_fmt yuv420p -profile:v baseline \
+        -g 15 -keyint_min 15 -sc_threshold 0 -bf 0 \
+        -x264-params "slice-max-size=1200:sync-lookahead=0:rc-lookahead=0" \
         -f rtsp -rtsp_transport udp rtsp://localhost:8554/stream
     '';
     serviceConfig = {
@@ -284,8 +293,8 @@ in
   # ===========================================================================
   # Firewall
   # ===========================================================================
-  networking.firewall.allowedTCPPorts = [ 22 8554 ];
-  networking.firewall.allowedUDPPorts = [ 8000 8001 ];
+  networking.firewall.allowedTCPPorts = [ 22 8554 8889 ];
+  networking.firewall.allowedUDPPorts = [ 8000 8001 8189 ];
 
   # ===========================================================================
   # System State Version
