@@ -14,12 +14,14 @@
 , autoPatchelfHook
 , electron
 , pnpm_9
+, fetchPnpmDeps
+, pnpmConfigHook
 , nodejs_22
-, cacert
 , alsa-lib
 , at-spi2-atk
 , at-spi2-core
 , atk
+, cacert
 , cairo
 , cups
 , dbus
@@ -51,9 +53,6 @@
 }:
 
 let
-  pname = "rcade-cabinet";
-  version = "0.2.1";
-
   runtimeLibs = [
     alsa-lib
     at-spi2-atk
@@ -88,27 +87,6 @@ let
     libxshmfence
   ];
 
-  src = lib.cleanSourceWith {
-    src = ../..;
-    filter = path: type:
-      let
-        baseName = baseNameOf path;
-      in
-      !(
-        baseName == "node_modules" ||
-        baseName == ".git" ||
-        baseName == "dist" ||
-        baseName == "release" ||
-        baseName == ".turbo" ||
-        baseName == ".svelte-kit" ||
-        baseName == ".vite" ||
-        baseName == ".claude" ||
-        lib.hasPrefix "result" baseName ||
-        lib.hasSuffix ".log" baseName ||
-        lib.hasInfix "cli/templates" path
-      );
-  };
-
   # Only package.json + pnpm-lock.yaml so code changes don't invalidate the FOD hash.
   depsSrc = lib.cleanSourceWith {
     src = ../..;
@@ -135,7 +113,7 @@ let
           baseName == ".npmrc";
   };
 
-  pnpmModulesHash = "sha256-+c6CUACQJvz6HsL99OAYv41d9b980kfz6kCCu5vLKdM=";
+  pnpmModulesHash = "";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
   pnpmModules = stdenv.mkDerivation {
@@ -174,14 +152,37 @@ let
   };
 
 in
-stdenv.mkDerivation {
-  inherit pname version src;
+stdenv.mkDerivation rec {
+  pname = "rcade-cabinet";
+  version = "0.2.1";
+
+  src = lib.cleanSourceWith {
+    src = ../..;
+    filter = path: type:
+      let
+        baseName = baseNameOf path;
+      in
+      !(
+        baseName == "node_modules" ||
+        baseName == ".git" ||
+        baseName == "dist" ||
+        baseName == "release" ||
+        baseName == ".turbo" ||
+        baseName == ".svelte-kit" ||
+        baseName == ".vite" ||
+        baseName == ".claude" ||
+        lib.hasPrefix "result" baseName ||
+        lib.hasSuffix ".log" baseName ||
+        lib.hasInfix "cli/templates" path
+      );
+  };
 
   nativeBuildInputs = [
     makeWrapper
     autoPatchelfHook
     pnpm_9
     nodejs_22
+    pnpmConfigHook
   ];
 
   buildInputs = [
@@ -191,31 +192,19 @@ stdenv.mkDerivation {
     stdenv.cc.cc  # libstdc++
   ];
 
+  pnpmDeps = fetchPnpmDeps {
+    inherit
+      pname
+      version
+      src
+      ;
+    pnpm = pnpm_9;
+    fetcherVersion = 1;
+    hash = "";
+  };
+
   buildPhase = ''
     runHook preBuild
-
-    export HOME=$(mktemp -d)
-
-    tar xzf ${pnpmModules}
-
-    # FOD skips patchShebangs (dontFixup), so we patch here instead.
-    patchShebangs node_modules
-    find . -mindepth 2 -maxdepth 4 -name 'node_modules' -type d | while read -r nm; do
-      patchShebangs "$nm"
-    done
-
-    # Recreate workspace symlinks removed from the FOD.
-    # Parse workspace dirs from pnpm-workspace.yaml (simple "  - dir" format)
-    workspaces=$(grep '^ *- ' pnpm-workspace.yaml | sed 's/^ *- //')
-    for ws_dir in $workspaces; do
-      if [ -f "$ws_dir/package.json" ]; then
-        pkg_name=$(${nodejs_22}/bin/node -p "require('./$ws_dir/package.json').name" 2>/dev/null || true)
-        if [ -n "$pkg_name" ]; then
-          mkdir -p "node_modules/$(dirname "$pkg_name")"
-          ln -sfn "$PWD/$ws_dir" "node_modules/$pkg_name"
-        fi
-      fi
-    done
 
     node_modules/.bin/turbo build --filter="@rcade/api" --filter="@rcade/input-classic" --filter="@rcade/input-spinners" --filter="@rcade/sleep" --filter="@rcade/plugin-sleep" --filter="@rcade/plugin-menu-backend" --filter="@rcade/sdk" --filter="@rcade/sdk-plugin"
 
