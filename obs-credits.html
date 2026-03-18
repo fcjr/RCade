@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RCade Credits</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: transparent;
+      color: #f5f5f5;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 2rem;
+    }
+
+    .credits {
+      text-align: right;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .credits.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .credits.hidden {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 0.25rem;
+    }
+
+    .game-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.75rem;
+      color: #facc15;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .authors {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.4;
+    }
+
+    .author {
+      display: block;
+    }
+
+    .idle {
+      font-family: 'Jersey 15', serif;
+      font-size: 2rem;
+      color: rgba(250, 204, 21, 0.6);
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="credits" id="credits"></div>
+  <script>
+    const STATUS_URL = 'http://localhost:9100/status';
+    const POLL_MS = 2000;
+
+    const el = document.getElementById('credits');
+    let lastStatus = null;
+    let lastGame = null;
+
+    function render(data) {
+      const { status, game } = data;
+      const key = status + (game ? game.name : '');
+
+      if (key === lastStatus) return;
+      lastStatus = key;
+
+      // Fade out, swap content, fade in
+      el.classList.remove('visible');
+      el.classList.add('hidden');
+
+      setTimeout(() => {
+        if (status === 'in-game' && game) {
+          const authorNames = (game.authors || [])
+            .map(a => a.display_name)
+            .join(', ');
+
+          el.innerHTML = `
+          <div class="label">Now Playing</div>
+          <div class="game-name">${esc(game.displayName || game.name)}</div>
+          ${authorNames ? `<div class="authors">by ${esc(authorNames)}</div>` : ''}
+        `;
+        } else if (status === 'loading' && game) {
+          el.innerHTML = `
+          <div class="label">Loading</div>
+          <div class="game-name">${esc(game.displayName || game.name)}</div>
+        `;
+        } else {
+          el.innerHTML = `
+          <div class="label">In Menu</div>
+          <div class="game-name">RCade Menu</div>
+          <div class="authors">by Rose Kodsi-Hall, Frank Chiarulli Jr.</div>
+        `;
+        }
+
+        el.classList.remove('hidden');
+        el.classList.add('visible');
+      }, 300);
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    async function poll() {
+      try {
+        const res = await fetch(STATUS_URL);
+        const data = await res.json();
+        render(data);
+      } catch {
+        // endpoint down — show idle
+        render({ status: 'menu', game: null });
+      }
+    }
+
+    poll();
+    setInterval(poll, POLL_MS);
+  </script>
+</body>
+
+</html>

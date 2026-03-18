@@ -16,6 +16,7 @@ export interface CliOptions {
   dev: boolean;
   devtools: boolean | undefined;
   scale: number | null;
+  statusPort: number | null;
   overrides: Map<string, string>;
 }
 

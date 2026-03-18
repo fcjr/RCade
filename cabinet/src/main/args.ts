@@ -63,6 +63,9 @@ export function parseCliArgs(): CliOptions {
             },
             'menu': {
                 type: 'string'
+            },
+            'status-port': {
+                type: 'string'
             }
         },
         allowPositionals: true,
@@ -71,6 +74,9 @@ export function parseCliArgs(): CliOptions {
 
     // Parse scale factor
     const scale = values['scale'] ? parseFloat(values['scale']) : null;
+
+    // Parse status port
+    const statusPort = values['status-port'] ? parseInt(values['status-port'], 10) : null;
 
     // Parse the first positional as a path
     const path = positionals.length > 0 ? positionals[0] : null;
@@ -108,6 +114,7 @@ export function parseCliArgs(): CliOptions {
         devtools: values['devtools'],
         forceScreensaver: values['force-screensaver'],
         scale,
+        statusPort,
         overrides,
         menuManifest
     };

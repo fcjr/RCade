@@ -76,6 +76,12 @@ const gameServers = new Map<string, { server?: ReturnType<typeof serve>; url: st
 // Track current game's permissions for the permission handler
 let currentGamePermissions: Permission[] = [];
 
+// Track cabinet state for the status endpoint
+let cabinetState: { status: 'menu' | 'loading' | 'in-game'; game: GameInfo | null } = {
+  status: 'menu',
+  game: null,
+};
+
 function getCachePath(gameId: string, version: string): string {
   return path.join(cacheDir, gameId, version);
 }
@@ -503,6 +509,8 @@ app.whenReady().then(async () => {
     // Set current game permissions for the permission handler
     currentGamePermissions = game.permissions ?? [];
 
+    cabinetState = { status: 'loading', game };
+
     let url;
 
     if (id != undefined && latestVersion != undefined) {
@@ -555,6 +563,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('unload-game', async (event, gameId: string | undefined, gameName: string, version: string | undefined, quitOptions: QuitOptions): Promise<void> => {
     // Clear game permissions when unloading
     currentGamePermissions = [];
+    cabinetState = { status: 'menu', game: null };
 
     let serverKey;
 
@@ -582,12 +591,30 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle("game-load-finished", async (event, result) => {
+    if (cabinetState.status === 'loading') {
+      cabinetState = { ...cabinetState, status: 'in-game' };
+    }
     event.sender.emit("game-load-finished", result);
   });
 
   ipcMain.handle("exit-to-menu", (event) => {
     exitToMenu(event.sender);
   })
+
+  // Status HTTP endpoint so external tools can query cabinet state
+  const statusApp = new Hono();
+  statusApp.use('*', async (c, next) => {
+    await next();
+    c.header('Access-Control-Allow-Origin', '*');
+  });
+  statusApp.get('/status', (c) => {
+    return c.json(cabinetState);
+  });
+  const statusPort = args.statusPort ?? 9100;
+  const statusServer = serve({ fetch: statusApp.fetch, port: statusPort });
+  statusServer.once('listening', () => {
+    console.log(`[Status] Cabinet status endpoint at http://localhost:${statusPort}/status`);
+  });
 
   createWindow();
 
