@@ -110,6 +110,7 @@ export const createCommand = new Command("create")
                 { value: "vanilla-cpp", name: "Vanilla (C/C++)" },
                 { value: "vanilla-ocaml", name: "Vanilla (OCaml)" },
                 { value: "pygame", name: "Pygame (Python)" },
+                { value: "paint-gleam", name: "Paint (Gleam)" },
             ]
         });
 
@@ -131,6 +132,13 @@ export const createCommand = new Command("create")
             fs.rmSync(projectDir, { recursive: true, force: true });
         }
 
+        const dependencies = [
+            { name: "@rcade/input-classic", version: "1.0.0" },
+            ...(templateDirectory === "paint-gleam"
+                ? [{ name: "@rcade/input-spinners", version: "1.0.0" }]
+                : []),
+        ];
+
         const manifest = {
             $schema: "https://rcade.dev/manifest.schema.json",
             name,
@@ -139,7 +147,7 @@ export const createCommand = new Command("create")
             visibility,
             ...(versioning === "automatic" ? {} : { version: "1.0.0" }),
             authors: [{ display_name: author }],
-            dependencies: [{ name: "@rcade/input-classic", version: "1.0.0" }],
+            dependencies,
         };
 
         const templatePath = path.join(getTemplatesDir(), templateDirectory);
@@ -184,6 +192,7 @@ export const createCommand = new Command("create")
             case "vanilla-cpp": await setup_cpp(projectDir); break;
             case "pygame": await setup_js(projectDir); break;
             case "vanilla-ocaml": await setup_ocaml(projectDir); break;
+            case "paint-gleam": await setup_gleam(projectDir); break;
         }
     });
 
@@ -325,6 +334,45 @@ async function setup_cpp(path: string) {
         {
             name: "Build with Emscripten",
             run: "make build"
+        }
+    ])
+
+    await exc`git init`;
+}
+
+async function setup_gleam(path: string) {
+    const exc = execa({ cwd: path, stdio: "inherit" });
+
+    await exc`bun install`;
+    await exc`gleam deps download`;
+
+    write_workflow(path, [
+        {
+            name: "Setup Bun",
+            uses: "oven-sh/setup-bun@v2",
+            with: {
+                "bun-version": "latest"
+            }
+        },
+        {
+            name: "Setup Gleam",
+            uses: "erlef/setup-beam@v1",
+            with: {
+                "otp-version": "28",
+                "gleam-version": "1.15.0"
+            }
+        },
+        {
+            name: "Install npm dependencies",
+            run: "bun install",
+        },
+        {
+            name: "Download Gleam dependencies",
+            run: "gleam deps download",
+        },
+        {
+            name: "Build Lustre app",
+            run: "gleam run -m lustre/dev build app --minify",
         }
     ])
 
