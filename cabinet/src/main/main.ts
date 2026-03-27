@@ -52,11 +52,10 @@ if (process.platform === 'linux') {
     app.commandLine.appendSwitch('disable-gpu');
   }
 
-  if (!isDev) {
-    app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
-    app.commandLine.appendSwitch('enable-unsafe-webgpu');
-    app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+  app.commandLine.appendSwitch('enable-unsafe-webgpu');
+  app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 
+  if (!isDev) {
     app.commandLine.appendSwitch('cursor', 'none');
   }
 }
