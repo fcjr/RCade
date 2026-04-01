@@ -6,7 +6,7 @@ export const RecurseResponse = z.object({
     last_name: z.string(),
     name: z.string(),
     email: z.string(),
-    github: z.string(),
+    github: z.string().nullable(),
     // TODO
 });
 
