@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@types/node-hid": "^1.3.4",
-    "electron": "^39.2.4"
+    "electron": "^39.8.3"
   },
   "dependencies": {
     "@rcade/sdk-plugin": "0.1.0",
