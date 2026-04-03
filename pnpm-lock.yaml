@@ -160,8 +160,8 @@ importers:
         specifier: ^9.0.0
         version: 9.2.1
       electron:
-        specifier: ^39.2.4
-        version: 39.8.2
+        specifier: ^39.8.4
+        version: 39.8.4
       electron-builder:
         specifier: ^26.0.12
         version: 26.8.1(electron-builder-squirrel-windows@26.8.1)
@@ -331,8 +331,8 @@ importers:
         version: 5.9.3
     devDependencies:
       electron:
-        specifier: ^39.2.4
-        version: 39.8.2
+        specifier: ^39.8.4
+        version: 39.8.4
 
   plugins/input-classic/clients/typescript:
     dependencies:
@@ -359,8 +359,8 @@ importers:
         specifier: ^1.3.4
         version: 1.3.4
       electron:
-        specifier: ^39.2.4
-        version: 39.8.2
+        specifier: ^39.8.4
+        version: 39.8.4
 
   plugins/input-spinners/clients/typescript:
     dependencies:
@@ -386,8 +386,8 @@ importers:
         specifier: ^25.0.1
         version: 25.5.0
       electron:
-        specifier: ^39.2.7
-        version: 39.8.2
+        specifier: ^39.8.4
+        version: 39.8.4
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -450,8 +450,8 @@ importers:
   sdk/backend:
     dependencies:
       electron:
-        specifier: ^39.2.4
-        version: 39.8.2
+        specifier: ^39.8.4
+        version: 39.8.4
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -2792,6 +2792,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abbrev@3.0.1:
     resolution: {integrity: sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg==}
@@ -3309,8 +3310,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@39.8.2:
-    resolution: {integrity: sha512-uwNJHeqm8pzQEZf/KX4XM1fJctZpHcA0Za/MlP9mOg0FAWHbKo6yRC33QbdfLX7PeNjYZC3I3nnVhE5L2CLqxw==}
+  electron@39.8.4:
+    resolution: {integrity: sha512-eXYKxr4y+s31xs78keVJYg+XY20tGQMQzyIhZvc5L0XRDH2Gp08mbeFlbR1OjAeM5h5l/T2JYT2MFK2kYe2fMg==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -3921,6 +3922,9 @@ packages:
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -6585,7 +6589,7 @@ snapshots:
 
   '@rcade/sdk-plugin@0.1.0(typescript@5.9.3)':
     dependencies:
-      electron: 39.8.2
+      electron: 39.8.4
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -7786,14 +7790,14 @@ snapshots:
       '@electron/asar': 3.4.1
       debug: 4.4.3
       fs-extra: 7.0.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       temp: 0.9.4
     optionalDependencies:
       '@electron/windows-sign': 1.2.2
     transitivePeerDependencies:
       - supports-color
 
-  electron@39.8.2:
+  electron@39.8.4:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 22.19.15
@@ -8494,6 +8498,8 @@ snapshots:
   locate-character@3.0.0: {}
 
   lodash@4.17.23: {}
+
+  lodash@4.18.1: {}
 
   log-symbols@4.1.0:
     dependencies:

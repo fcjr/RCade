@@ -12,6 +12,6 @@
     "@rcade/sdk-plugin": "workspace:*",
     "@rcade/sdk": "workspace:*",
     "@types/node": "^25.0.1",
-    "electron": "^39.2.7"
+    "electron": "^39.8.4"
   }
 }
