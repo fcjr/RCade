@@ -8,10 +8,9 @@ let
   # Known SSH keys for RCade maintainers
   # Add your key here when setting up a new cabinet
   sshKeys = {
-    "rose" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpmuAVPQUMOZhy+a/54Rh/vwbhx9j5HU2rnhyExw01r";
-    "frank" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGhBgDfImfTT4FQX6feRvOtkFJWPswFo7EG5VGjYDOs4";
-    "cyrene" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDs/OEquZs5ZK+/2SdYVs9hu8tq/LtBJ6u56jjFvEzPN";
-    "stephen" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH2lZ4I7sx+uEtwlbxxxMl8/aGz5rJNwJQvAVy6dSMHz";
+    "rose" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpmuAVPQUMOZhy+a/54Rh/vwbhx9j5HU2rnhyExw01r" ];
+    "frank" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGhBgDfImfTT4FQX6feRvOtkFJWPswFo7EG5VGjYDOs4" ];
+    "stephen" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH2lZ4I7sx+uEtwlbxxxMl8/aGz5rJNwJQvAVy6dSMHz" ];
   };
 in
 {
@@ -21,8 +20,8 @@ in
 
   inherit sshKeys;
 
-  # Get all maintainer SSH keys as a list
-  allMaintainerKeys = builtins.attrValues sshKeys;
+  # Get all maintainer SSH keys as a flat list
+  allMaintainerKeys = builtins.concatLists (builtins.attrValues sshKeys);
 
   # =========================================================================
   # Machine Configuration Helpers

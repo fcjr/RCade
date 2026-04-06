@@ -19,9 +19,15 @@
     # Flake utilities
     flake-utils.url = "github:numtide/flake-utils";
 
+    # Secret management
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
 };
 
-  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, ... }@inputs:
+  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, agenix, ... }@inputs:
     let
       # Systems we support for development
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -117,22 +123,7 @@
           ];
         };
 
-	# Rose's Razer Laptop
-	prod = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs self; };
-          modules = [
-            ./machines/rcade-rose-laptop/configuration.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.extraSpecialArgs = { inherit inputs self; };
-            }
-          ];
-        };
-
-        # VM for testing the cabinet
+# VM for testing the cabinet
         rcade-vm = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
@@ -147,17 +138,28 @@
         };
 
         # Updated nuc for cabinet (Current Production Machine)
-        intel-nuc = nixpkgs.lib.nixosSystem {
+        rcade-nuc = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
           modules = [
-            ./machines/intel-nuc/configuration.nix
+            ./machines/rcade-nuc/configuration.nix
+            agenix.nixosModules.default
             home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.extraSpecialArgs = { inherit inputs self; };
             }
+          ];
+        };
+
+        # Marquee display (Raspberry Pi, aarch64)
+        rcade-marquee = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            ./machines/rcade-marquee/configuration.nix
+            agenix.nixosModules.default
           ];
         };
       };
@@ -190,6 +192,7 @@
 
               # Useful dev tools
               just  # Task runner
+              agenix.packages.${system}.default  # Secret management
 
             ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
               # Linux-specific deps for Electron

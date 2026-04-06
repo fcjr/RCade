@@ -37,11 +37,32 @@ in
     self.nixosModules.rcade-cabinet
   ];
 
+  # Secrets
+  age.secrets.cabinet-secrets-env.file = ../../secrets/cabinet-secrets-env.age;
+  age.secrets.wifi-psk.file = ../../secrets/wifi-psk.age;
+
   # ===========================================================================
   # Machine Identity
   # ===========================================================================
   networking.hostName = "rcade-nuc"; # Change this for each machine
   networking.networkmanager.enable = true;
+  networking.networkmanager.ensureProfiles = {
+    environmentFiles = [ config.age.secrets.wifi-psk.path ];
+    profiles.recurse-center = {
+      connection = {
+        id = "Recurse Center";
+        type = "wifi";
+      };
+      wifi = {
+        ssid = "Recurse Center";
+        mode = "infrastructure";
+      };
+      wifi-security = {
+        key-mgmt = "wpa-psk";
+        psk = "$PSK";
+      };
+    };
+  };
   services.tailscale.enable = true;
 
   # ===========================================================================
@@ -50,9 +71,8 @@ in
   services.rcade-cabinet = {
     enable = true;
 
-    # Secrets file for API keys (create this on the target machine)
-    # Format: CABINET_API_KEY=your-api-key-here
-    environmentFile = "/etc/rcade/secrets.env";
+    # Secrets managed by agenix (decrypted at boot)
+    environmentFile = config.age.secrets.cabinet-secrets-env.path;
 
     # Extra arguments for the cabinet app
     extraArgs = [ ];

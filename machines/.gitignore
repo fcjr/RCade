@@ -4,7 +4,7 @@
 !README.md
 !template/
 !template/**
-!rcade-rose-laptop/
-!rcade-rose-laptop/**
-!intel-nuc/
-!intel-nuc/**
+!rcade-nuc/
+!rcade-nuc/**
+!rcade-marquee/
+!rcade-marquee/**
