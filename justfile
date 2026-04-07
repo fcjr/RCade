@@ -1,26 +1,26 @@
 # Deploy NixOS configurations to machines via Tailscale
 
-[group: 'deploy']
-[doc: 'Deploy all machines']
+[doc('Deploy all machines')]
+[group('deploy')]
 deploy-all: deploy-marquee deploy-nuc
 
-[group: 'deploy']
-[doc: 'Deploy marquee (Raspberry Pi)']
-deploy-marquee:
-    nix run nixpkgs#nixos-rebuild -- switch --flake .#rcade-marquee --target-host rcade@100.123.178.9 --build-host rcade@100.123.178.9 --sudo
+[doc('Deploy marquee (Raspberry Pi)')]
+[group('deploy')]
+deploy-marquee ip="100.123.178.9":
+    nix run nixpkgs#nixos-rebuild -- switch --flake .#rcade-marquee --target-host rcade@{{ ip }} --build-host rcade@{{ ip }} --sudo
 
-[group: 'deploy']
-[doc: 'Deploy nuc (production cabinet)']
-deploy-nuc:
-    nix run nixpkgs#nixos-rebuild -- switch --flake .#rcade-nuc --target-host rcade@100.111.184.1 --build-host rcade@100.111.184.1 --sudo
+[doc('Deploy nuc (production cabinet)')]
+[group('deploy')]
+deploy-nuc ip="100.111.184.1":
+    nix run nixpkgs#nixos-rebuild -- switch --flake .#rcade-nuc --target-host rcade@{{ ip }} --build-host rcade@{{ ip }} --sudo
 
-[group: 'build']
-[doc: 'Build marquee SD card image (decrypts WiFi PSK from agenix)']
+[doc('Build marquee SD card image (decrypts WiFi PSK from agenix)')]
+[group('build')]
 build-marquee-image:
     MARQUEE_WIFI_PSK=$(cd secrets && nix run github:ryantm/agenix -- -d wifi-psk.age 2>/dev/null | sed 's/^PSK=//') nix build .#packages.aarch64-linux.marquee-image --impure
 
-[group: 'build']
-[doc: 'Flash marquee image to a USB/SD drive']
+[doc('Flash marquee image to a USB/SD drive')]
+[group('build')]
 flash-marquee-image:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -86,20 +86,20 @@ flash-marquee-image:
 
 # Manage agenix-encrypted secrets (see secrets/secrets.nix for key config)
 
-[group: 'secrets']
-[doc: 'Edit a secret by name']
+[doc('Edit a secret by name')]
+[group('secrets')]
 edit-secret file:
-    cd secrets && nix run github:ryantm/agenix -- -e {{file}}.age
+    cd secrets && nix run github:ryantm/agenix -- -e {{ file }}.age
 
-[group: 'secrets']
-[doc: 'Edit the shared WiFi PSK']
+[doc('Edit the shared WiFi PSK')]
+[group('secrets')]
 edit-wifi-psk: (edit-secret "wifi-psk")
 
-[group: 'secrets']
-[doc: 'Edit cabinet API keys']
+[doc('Edit cabinet API keys')]
+[group('secrets')]
 edit-cabinet-secrets: (edit-secret "cabinet-secrets-env")
 
-[group: 'secrets']
-[doc: 'Re-encrypt all secrets after adding/removing keys']
+[doc('Re-encrypt all secrets after adding/removing keys')]
+[group('secrets')]
 rekey:
     cd secrets && nix run github:ryantm/agenix -- -r

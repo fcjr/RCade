@@ -164,6 +164,8 @@
         };
 
         # Marquee SD card image (for flashing)
+        # Built with --impure so it can read the WiFi PSK from the environment.
+        # Use `just build-marquee-image` which decrypts it automatically.
         rcade-marquee-image = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           specialArgs = { inherit inputs self; };
