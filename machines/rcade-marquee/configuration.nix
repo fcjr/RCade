@@ -11,23 +11,21 @@ in
 {
   imports = [
     ./hardware-configuration.nix
+    ./wifi.nix
   ];
-
-  # Secrets
-  age.secrets.wifi-psk.file = ../../secrets/wifi-psk.age;
 
   # Use the extlinux boot loader. (NixOS wants to enable GRUB by default)
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
 
-  networking.hostName = "rcade-marquee";
+  # Broadcom WiFi stability tweaks for RPi 4
+  boot.kernelParams = [
+    "brcmfmac.roamoff=1"
+    "brcmfmac.feature_disable=0x282000"
+  ];
 
-  # Wifi
+  networking.hostName = "rcade-marquee";
   networking.wireless.enable = true;
-  networking.wireless.networks."Recurse Center" = {
-    pskRaw = "ext:PSK";
-  };
-  networking.wireless.secretsFile = config.age.secrets.wifi-psk.path;
 
   # Users
   users.users.rcade = {

@@ -11,6 +11,7 @@ let
     "rose" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpmuAVPQUMOZhy+a/54Rh/vwbhx9j5HU2rnhyExw01r" ];
     "frank" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGhBgDfImfTT4FQX6feRvOtkFJWPswFo7EG5VGjYDOs4" ];
     "stephen" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH2lZ4I7sx+uEtwlbxxxMl8/aGz5rJNwJQvAVy6dSMHz" ];
+    "iris" = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPjfh5qryDGZ2njf6lISP8eU0ij36wuULIcORi3BtTl9" ];
   };
 in
 {
@@ -45,29 +46,31 @@ in
   # =========================================================================
 
   # Standard packages for all RCade machines
-  baseSystemPackages = pkgs: with pkgs; [
-    vim
-    wget
-    curl
-    git
-    htop
-    tmux
-    ripgrep
-    fd
-    bat
-    fzf
-  ];
+  baseSystemPackages =
+    pkgs: with pkgs; [
+      vim
+      wget
+      curl
+      git
+      htop
+      tmux
+      ripgrep
+      fd
+      bat
+      fzf
+    ];
 
   # Development packages for machines with dev access
-  devSystemPackages = pkgs: with pkgs; [
-    cargo
-    rustc
-    rust-analyzer
-    clippy
-    rustfmt
-    clang
-    llvm
-    cmake
-    pkg-config
-  ];
+  devSystemPackages =
+    pkgs: with pkgs; [
+      cargo
+      rustc
+      rust-analyzer
+      clippy
+      rustfmt
+      clang
+      llvm
+      cmake
+      pkg-config
+    ];
 }

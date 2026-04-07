@@ -7,11 +7,14 @@ let
   ];
   rose = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpmuAVPQUMOZhy+a/54Rh/vwbhx9j5HU2rnhyExw01r" ];
   stephen = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH2lZ4I7sx+uEtwlbxxxMl8/aGz5rJNwJQvAVy6dSMHz" ];
-  maintainers = frank ++ rose ++ stephen;
+  iris = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPjfh5qryDGZ2njf6lISP8eU0ij36wuULIcORi3BtTl9" ];
+  maintainers = frank ++ rose ++ stephen ++ iris;
 
   # Machine SSH host keys (so machines can decrypt their own secrets at boot)
   rcade-nuc = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBLYTkvRcsC6MtfUT57FtPAtgE3UsDeNYOA5aU73jTk0" ];
-  rcade-marquee = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINIGWYMEjeoeJwYzLySPdYi//FTs5bvI6sK2G8sSh2te" ];
+  rcade-marquee = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINIGWYMEjeoeJwYzLySPdYi//FTs5bvI6sK2G8sSh2te"
+  ];
 in
 {
   # WiFi PSK for the Recurse Center network (shared by all machines)

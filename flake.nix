@@ -171,7 +171,19 @@
             "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
             ./machines/rcade-marquee/configuration.nix
             agenix.nixosModules.default
-            { disabledModules = [ ./machines/rcade-marquee/hardware-configuration.nix ]; }
+            {
+              disabledModules = [
+                ./machines/rcade-marquee/hardware-configuration.nix
+                ./machines/rcade-marquee/wifi.nix
+              ];
+            }
+            # Hardcode WiFi PSK for the image (agenix can't decrypt on first boot)
+            # Set an initial password so we can SSH in before keys are deployed
+            ({ lib, ... }: {
+              networking.wireless.networks."Recurse Center".psk = builtins.getEnv "MARQUEE_WIFI_PSK";
+              users.users.rcade.initialPassword = lib.mkForce "rcade";
+              users.users.root.initialPassword = lib.mkForce "rcade";
+            })
           ];
         };
       };
