@@ -14,6 +14,11 @@ deploy-marquee:
 deploy-nuc:
     nix run nixpkgs#nixos-rebuild -- switch --flake .#rcade-nuc --target-host rcade@100.111.184.1 --build-host rcade@100.111.184.1 --sudo
 
+[group: 'build']
+[doc: 'Build marquee SD card image']
+build-marquee-image:
+    nix build .#packages.aarch64-linux.marquee-image
+
 # Manage agenix-encrypted secrets (see secrets/secrets.nix for key config)
 
 [group: 'secrets']

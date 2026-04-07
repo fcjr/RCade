@@ -162,6 +162,18 @@
             agenix.nixosModules.default
           ];
         };
+
+        # Marquee SD card image (for flashing)
+        rcade-marquee-image = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+            ./machines/rcade-marquee/configuration.nix
+            agenix.nixosModules.default
+            { disabledModules = [ ./machines/rcade-marquee/hardware-configuration.nix ]; }
+          ];
+        };
       };
 
       # =======================================================================
@@ -245,6 +257,9 @@
           # Export the cabinet package
           cabinet = pkgs.rcade.cabinet;
           default = pkgs.rcade.cabinet;
+        } // nixpkgs.lib.optionalAttrs (system == "aarch64-linux") {
+          # Build with: nix build .#marquee-image
+          marquee-image = self.nixosConfigurations.rcade-marquee-image.config.system.build.sdImage;
         } // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
           # Build with: nix build .#vm 
           vm = self.nixosConfigurations.rcade-vm.config.system.build.vm;
