@@ -7,6 +7,7 @@
 
 let
   rcadeLib = import ../../nix/lib { inherit lib; };
+  marqueeDisplay = pkgs.callPackage ../../nix/pkgs/marquee-display.nix { };
 in
 {
   imports = [
@@ -30,9 +31,18 @@ in
   # Users
   users.users.rcade = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [
+      "wheel"
+      "gpio"
+    ];
     openssh.authorizedKeys.keys = rcadeLib.allMaintainerKeys;
   };
+
+  # GPIO group for /dev/mem access (required by rpi-rgb-led-matrix adafruit-hat mapping)
+  users.groups.gpio = { };
+  services.udev.extraRules = ''
+    KERNEL=="mem", GROUP="gpio", MODE="0660"
+  '';
 
   # Passwordless sudo for wheel
   security.sudo.wheelNeedsPassword = false;
@@ -48,6 +58,20 @@ in
 
   # Tailscale
   services.tailscale.enable = true;
+
+  # RGB LED matrix marquee display
+  systemd.services.marquee-display = {
+    description = "RCade RGB LED matrix marquee display";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      ExecStart = "${marqueeDisplay}/bin/marquee-display";
+      User = "rcade";
+      Restart = "on-failure";
+      RestartSec = 5;
+      AmbientCapabilities = [ "CAP_SYS_RAWIO" ];
+    };
+  };
 
   # Nix flakes
   nix.settings.experimental-features = [
