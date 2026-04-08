@@ -101,15 +101,8 @@ func toPixels(src image.Image, w, h int) []color.Color {
 	return p
 }
 
-var gpioSlowdown = flag.Bool("gpio-slowdown", false, "Apply GPIO slowdown (use if display is glitchy on Pi 4)")
-
 func main() {
 	flag.Parse()
-
-	gpioSpeed := 0
-	if *gpioSlowdown {
-		gpioSpeed = 4
-	}
 
 	hc := &rgbmatrix.HardwareConfig{
 		HardwareMapping:   "adafruit-hat",
@@ -123,7 +116,7 @@ func main() {
 		ScanMode:          rgbmatrix.Progressive,
 	}
 	rc := &rgbmatrix.RuntimeOptions{
-		GPIOSlowdown:   gpioSpeed,
+		GPIOSlowdown:   2, // hardcoded for Pi4
 		Daemon:         0,
 		DropPrivileges: 0, //1, // ask library to drop privileges after init
 		DoGPIOInit:     true,
