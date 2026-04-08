@@ -80,7 +80,7 @@ in
     serviceConfig = {
       ExecStart = "${marqueeDisplay}/bin/marquee-display";
       User = "root";
-      Restart = "on-failure";
+      Restart = "always";
       RestartSec = 5;
       AmbientCapabilities = [ "CAP_SYS_RAWIO" ];
     };
