@@ -1,28 +1,82 @@
 package main
 
 import (
+	"encoding/gob"
 	"encoding/hex"
 	"flag"
 	"fmt"
 	"image"
 	"image/color"
-	_ "image/gif"
+	"image/draw"
+	"image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
 	"log"
+	"net/rpc"
 	"os"
 	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/disintegration/imaging"
-	rgbmatrix "github.com/fcjr/rgbmatrix-rpi"
-	"github.com/fcjr/rgbmatrix-rpi/rpc"
 )
 
 const displayW, displayH = 128, 32
+
+func init() {
+	// Must match the server's gob registration so interface values encode correctly.
+	gob.Register(color.RGBA{})
+}
+
+// RPC arg/reply types must match the server's registered handler exactly.
+type geometryArgs struct{}
+type geometryReply struct{ Width, Height int }
+type applyArgs struct{ Colors []color.Color }
+type applyReply struct{}
+
+type display struct {
+	client        *rpc.Client
+	width, height int
+}
+
+func connect(addr string) (*display, error) {
+	client, err := rpc.DialHTTP("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	var reply geometryReply
+	if err := client.Call("RPCMatrix.Geometry", &geometryArgs{}, &reply); err != nil {
+		client.Close()
+		return nil, fmt.Errorf("geometry: %v", err)
+	}
+	return &display{client: client, width: reply.Width, height: reply.Height}, nil
+}
+
+func (d *display) apply(pixels []color.Color) error {
+	var reply applyReply
+	return d.client.Call("RPCMatrix.Apply", &applyArgs{Colors: pixels}, &reply)
+}
+
+// fromImage scales img to fit the display (letterboxed) and returns a pixel slice.
+func (d *display) fromImage(img image.Image) []color.Color {
+	scaled := imaging.Fit(img, d.width, d.height, imaging.Lanczos)
+	canvas := imaging.New(d.width, d.height, color.Black)
+	ox := (d.width - scaled.Bounds().Dx()) / 2
+	oy := (d.height - scaled.Bounds().Dy()) / 2
+	fitted := imaging.Paste(canvas, scaled, image.Pt(ox, oy))
+
+	p := make([]color.Color, d.width*d.height)
+	for y := 0; y < d.height; y++ {
+		for x := 0; x < d.width; x++ {
+			r, g, b, a := fitted.At(x, y).RGBA()
+			p[y*d.width+x] = color.RGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)}
+		}
+	}
+	return p
+}
 
 var addr = flag.String("addr", "100.123.178.9:1234", "marquee RPC server address")
 
@@ -33,7 +87,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	m, err := rpc.NewClient("tcp", *addr)
+	d, err := connect(*addr)
 	if err != nil {
 		log.Fatalf("connect: %v", err)
 	}
@@ -43,100 +97,121 @@ func main() {
 		if flag.NArg() < 2 {
 			log.Fatal("usage: fill <RRGGBB>")
 		}
-		doFill(m, flag.Arg(1))
+		doFill(d, flag.Arg(1))
 	case "image":
 		if flag.NArg() < 2 {
 			log.Fatal("usage: image <path>")
 		}
-		doImage(m, loadAndScale(flag.Arg(1)))
+		doImage(d, flag.Arg(1))
 	case "gif":
 		if flag.NArg() < 2 {
 			log.Fatal("usage: gif <path>")
 		}
-		doGIF(m, flag.Arg(1))
+		doGIF(d, flag.Arg(1))
 	case "webcam":
-		streamWebcam(m) // blocks until Ctrl-C
+		streamWebcam(d)
 	default:
 		log.Fatalf("unknown subcommand: %s", flag.Arg(0))
 	}
 }
 
-// doFill flood-fills the display with a hex color and holds it until Ctrl-C.
-func doFill(m rgbmatrix.Matrix, hexColor string) {
+func doFill(d *display, hexColor string) {
 	hexColor = strings.TrimPrefix(hexColor, "#")
 	b, err := hex.DecodeString(hexColor)
 	if err != nil || len(b) != 3 {
 		log.Fatalf("invalid color %q: want RRGGBB hex", hexColor)
 	}
-	c := rgbmatrix.NewCanvas(m)
-	defer c.Close()
+	c := color.RGBA{R: b[0], G: b[1], B: b[2], A: 255}
 
-	col := color.RGBA{R: b[0], G: b[1], B: b[2], A: 255}
-	bounds := c.Bounds()
-	for x := bounds.Min.X; x < bounds.Max.X; x++ {
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			c.Set(x, y, col)
-		}
+	p := make([]color.Color, d.width*d.height)
+	for i := range p {
+		p[i] = c
 	}
-	if err := c.Render(); err != nil {
-		log.Fatalf("render: %v", err)
+	if err := d.apply(p); err != nil {
+		log.Fatalf("apply: %v", err)
 	}
 	log.Printf("fill #%s — Ctrl-C to clear", hexColor)
 	waitForInterrupt()
 }
 
-// doImage displays a pre-scaled image and holds it until Ctrl-C.
-func doImage(m rgbmatrix.Matrix, img image.Image) {
-	tk := rgbmatrix.NewToolKit(m)
-	defer tk.Close()
-
-	c := tk.Canvas
-	bounds := c.Bounds()
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			c.Set(x, y, img.At(x, y))
-		}
+func doImage(d *display, path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		log.Fatalf("open: %v", err)
 	}
-	if err := c.Render(); err != nil {
-		log.Fatalf("render: %v", err)
+	defer f.Close()
+
+	img, _, err := image.Decode(f)
+	if err != nil {
+		log.Fatalf("decode: %v", err)
+	}
+
+	if err := d.apply(d.fromImage(img)); err != nil {
+		log.Fatalf("apply: %v", err)
 	}
 	log.Println("image displayed — Ctrl-C to clear")
 	waitForInterrupt()
 }
 
-// doGIF plays an animated GIF until Ctrl-C.
-func doGIF(m rgbmatrix.Matrix, path string) {
+func doGIF(d *display, path string) {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatalf("open gif: %v", err)
 	}
 	defer f.Close()
 
-	tk := rgbmatrix.NewToolKit(m)
-	defer tk.Close()
-
-	quit, err := tk.PlayGIF(f)
+	g, err := gif.DecodeAll(f)
 	if err != nil {
-		log.Fatalf("play gif: %v", err)
+		log.Fatalf("decode gif: %v", err)
 	}
+
+	quit := make(chan struct{})
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() { <-sigCh; close(quit) }()
+
+	// Composite GIF frames onto a running canvas to handle partial frames.
+	canvas := image.NewRGBA(image.Rect(0, 0, g.Config.Width, g.Config.Height))
 	log.Println("playing GIF — Ctrl-C to stop")
-	waitForInterrupt()
-	quit <- true
+	for {
+		for i, frame := range g.Image {
+			select {
+			case <-quit:
+				return
+			default:
+			}
+
+			draw.Draw(canvas, frame.Bounds(), frame, frame.Bounds().Min, draw.Over)
+			if err := d.apply(d.fromImage(canvas)); err != nil {
+				log.Printf("apply: %v", err)
+				return
+			}
+
+			delay := time.Duration(g.Delay[i]) * 10 * time.Millisecond
+			if delay < 50*time.Millisecond {
+				delay = 50 * time.Millisecond
+			}
+			select {
+			case <-quit:
+				return
+			case <-time.After(delay):
+			}
+		}
+	}
 }
 
 // streamWebcam runs ffmpeg continuously, reading raw RGBA frames at ~5 fps and
-// pushing each frame to the display. Letterboxes to preserve aspect ratio.
-// Runs until Ctrl-C or ffmpeg exits.
+// pushing each frame to the display. Runs until Ctrl-C or ffmpeg exits.
 // Requires ffmpeg (brew install ffmpeg).
-func streamWebcam(m rgbmatrix.Matrix) {
-	const frameSize = displayW * displayH * 4 // RGBA bytes per frame
+func streamWebcam(d *display) {
+	const frameSize = displayW * displayH * 4
 	const vfLetterbox = "scale=%d:%d:force_original_aspect_ratio=decrease," +
 		"pad=%d:%d:(ow-iw)/2:(oh-ih)/2"
 
 	cmd := exec.Command("ffmpeg",
-		"-f", "avfoundation", "-i", "0",
+		"-f", "avfoundation", "-framerate", "30", "-i", "0",
 		"-r", "5",
-		"-vf", fmt.Sprintf(vfLetterbox, displayW, displayH, displayW, displayH),
+		"-vf", fmt.Sprintf(vfLetterbox, d.width, d.height, d.width, d.height),
 		"-f", "rawvideo", "-pix_fmt", "rgba",
 		"pipe:1",
 	)
@@ -152,50 +227,23 @@ func streamWebcam(m rgbmatrix.Matrix) {
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigCh
-		cmd.Process.Kill()
-	}()
-
-	c := rgbmatrix.NewCanvas(m)
-	defer c.Close()
+	go func() { <-sigCh; cmd.Process.Kill() }()
 
 	buf := make([]byte, frameSize)
 	for {
 		if _, err := io.ReadFull(stdout, buf); err != nil {
-			break // ffmpeg exited or was killed
+			break
 		}
-		for i := 0; i < displayW*displayH; i++ {
-			x := i % displayW
-			y := i / displayW
-			c.Set(x, y, color.RGBA{R: buf[i*4], G: buf[i*4+1], B: buf[i*4+2], A: buf[i*4+3]})
+		p := make([]color.Color, d.width*d.height)
+		for i := range p {
+			p[i] = color.RGBA{R: buf[i*4], G: buf[i*4+1], B: buf[i*4+2], A: buf[i*4+3]}
 		}
-		if err := c.Render(); err != nil {
-			log.Printf("render: %v", err)
+		if err := d.apply(p); err != nil {
+			log.Printf("apply: %v", err)
 			break
 		}
 	}
 	cmd.Wait()
-}
-
-// loadAndScale opens an image file and scales it to fit the display (letterboxed).
-func loadAndScale(path string) image.Image {
-	f, err := os.Open(path)
-	if err != nil {
-		log.Fatalf("open image: %v", err)
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		log.Fatalf("decode image: %v", err)
-	}
-
-	scaled := imaging.Fit(img, displayW, displayH, imaging.Lanczos)
-	canvas := imaging.New(displayW, displayH, color.Black)
-	x := (displayW - scaled.Bounds().Dx()) / 2
-	y := (displayH - scaled.Bounds().Dy()) / 2
-	return imaging.Paste(canvas, scaled, image.Pt(x, y))
 }
 
 func waitForInterrupt() {
