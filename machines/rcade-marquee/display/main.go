@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"image/color"
 	"log"
 
 	rgbmatrix "github.com/fcjr/rgbmatrix-rpi"
+	"github.com/fcjr/rgbmatrix-rpi/rpc"
 )
 
 var gpioSlowdown = flag.Bool("gpio-slowdown", false, "Apply GPIO slowdown (use if display is glitchy on Pi 4)")
@@ -32,28 +32,21 @@ func main() {
 	rc := &rgbmatrix.RuntimeOptions{
 		GPIOSlowdown:   gpioSpeed,
 		Daemon:         0,
-		DropPrivileges: 0,
+		DropPrivileges: 1, // ask library to drop privileges after init
 		DoGPIOInit:     true,
 	}
 
+	// Diagnostics: log configs so journalctl shows what we passed in
+	log.Printf("HardwareConfig: %+v", hc)
+	log.Printf("RuntimeOptions: %+v", rc)
+
 	m, err := rgbmatrix.NewRGBLedMatrix(hc, rc)
 	if err != nil {
-		log.Fatalf("failed to initialize matrix: %v", err)
+		log.Printf("NewRGBLedMatrix error: %v", err)
+		return
 	}
+	defer m.Close()
 
-	c := rgbmatrix.NewCanvas(m)
-	defer c.Close()
-
-	bounds := c.Bounds()
-	for x := bounds.Min.X; x < bounds.Max.X; x++ {
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			c.Set(x, y, color.RGBA{R: 255, G: 0, B: 0, A: 255})
-		}
-	}
-	if err := c.Render(); err != nil {
-		log.Fatalf("render failed: %v", err)
-	}
-
-	// Block forever — systemd Restart=on-failure handles reconnect after crashes
-	select {}
+	log.Println("marquee-display RPC server listening on :1234")
+	rpc.Serve(m) // blocks; systemd Restart=on-failure handles crashes
 }
