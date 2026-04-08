@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",
-    "@hono/node-server": "^1.13.7",
+    "@hono/node-server": "^1.19.13",
     "@rcade/api": "workspace:*",
     "@rcade/input-classic": "workspace:*",
     "@rcade/input-spinners": "workspace:*",
