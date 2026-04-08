@@ -13,7 +13,6 @@ import (
 	"time"
 
 	rgbmatrix "github.com/fcjr/rgbmatrix-rpi"
-	"github.com/fcjr/rgbmatrix-rpi/rpc"
 )
 
 //go:embed idle.gif
@@ -27,12 +26,12 @@ type idleMatrix struct {
 	lastClient time.Time // zero = never; start idle immediately
 }
 
-func (m *idleMatrix) Geometry() (int, int)      { return m.inner.Geometry() }
-func (m *idleMatrix) At(pos int) color.Color    { return m.inner.At(pos) }
+func (m *idleMatrix) Geometry() (int, int)       { return m.inner.Geometry() }
+func (m *idleMatrix) At(pos int) color.Color     { return m.inner.At(pos) }
 func (m *idleMatrix) Set(pos int, c color.Color) { m.inner.Set(pos, c) }
-func (m *idleMatrix) Render() error             { return m.inner.Render() }
-func (m *idleMatrix) Close() error              { return m.inner.Close() }
-func (m *idleMatrix) SetBrightness(b int)       { m.inner.SetBrightness(b) }
+func (m *idleMatrix) Render() error              { return m.inner.Render() }
+func (m *idleMatrix) Close() error               { return m.inner.Close() }
+func (m *idleMatrix) SetBrightness(b int)        { m.inner.SetBrightness(b) }
 
 // Apply is called by RPC clients — intercept to track last activity.
 func (m *idleMatrix) Apply(leds []color.Color) error {
@@ -126,7 +125,7 @@ func main() {
 	rc := &rgbmatrix.RuntimeOptions{
 		GPIOSlowdown:   gpioSpeed,
 		Daemon:         0,
-		DropPrivileges: 1, // ask library to drop privileges after init
+		DropPrivileges: 0, //1, // ask library to drop privileges after init
 		DoGPIOInit:     true,
 	}
 
@@ -139,11 +138,32 @@ func main() {
 		log.Printf("NewRGBLedMatrix error: %v", err)
 		return
 	}
-	defer m.Close()
 
-	im := &idleMatrix{inner: m}
-	go runIdleLoop(im)
+	//Note: Trying out a basic implementation without RPC for now, to isolate issues with the display itself before adding RPC into the mix. Once we confirm the display is working reliably, we can re-enable the RPC server code below.
 
-	log.Println("marquee-display RPC server listening on :1234")
-	rpc.Serve(im) // blocks; systemd Restart=on-failure handles crashes
+	c := rgbmatrix.NewCanvas(m)
+	defer c.Close()
+
+	// Debug: fill entire display solid red, render once, then block.
+	bounds := c.Bounds()
+	log.Printf("Canvas bounds: %v", bounds)
+	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			c.Set(x, y, color.RGBA{255, 0, 0, 255})
+		}
+	}
+	if err := c.Render(); err != nil {
+		log.Printf("Render error: %v", err)
+	}
+	log.Println("Render called — display should be solid red. Blocking.")
+	select {} // block forever so the display stays lit
+
+	// Note: Below is code to run RPC Server
+	// defer m.Close()
+
+	// im := &idleMatrix{inner: m}
+	// go runIdleLoop(im)
+
+	// log.Println("marquee-display RPC server listening on :1234")
+	// rpc.Serve(im) // blocks; systemd Restart=on-failure handles crashes
 }
