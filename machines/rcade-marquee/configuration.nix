@@ -47,12 +47,25 @@ in
   # Passwordless sudo for wheel
   security.sudo.wheelNeedsPassword = false;
 
+  # Allow admin user to use sudo without password (for remote maintenance)
+  security.sudo.extraRules = [
+    {
+      users = [ "rcade" ];
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
   # SSH
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = "yes";
-      PasswordAuthentication = true;
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
     };
   };
 
@@ -66,7 +79,7 @@ in
     after = [ "network.target" ];
     serviceConfig = {
       ExecStart = "${marqueeDisplay}/bin/marquee-display";
-      User = "rcade";
+      User = "root";
       Restart = "on-failure";
       RestartSec = 5;
       AmbientCapabilities = [ "CAP_SYS_RAWIO" ];
