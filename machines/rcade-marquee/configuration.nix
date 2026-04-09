@@ -24,6 +24,13 @@ in
     "brcmfmac.roamoff=1"
     "brcmfmac.feature_disable=0x282000"
   ];
+  # Avoid Raspberry Pi peripherals that commonly conflict with
+  # rpi-rgb-led-matrix timing/GPIO access.
+  boot.blacklistedKernelModules = [
+    "snd_bcm2835"
+    "w1_gpio"
+    "w1_therm"
+  ];
 
   networking.hostName = "rcade-marquee";
   networking.wireless.enable = true;
