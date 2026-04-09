@@ -101,6 +101,8 @@ func toPixels(src image.Image, w, h int) []color.Color {
 	return p
 }
 
+var gpioSpeed = flag.Int("gpio-speed", 4, "GPIO speed value for matrix timing")
+
 func main() {
 	flag.Parse()
 
@@ -116,7 +118,7 @@ func main() {
 		ScanMode:          rgbmatrix.Progressive,
 	}
 	rc := &rgbmatrix.RuntimeOptions{
-		GPIOSlowdown:   2, // hardcoded for Pi4
+		GPIOSlowdown:   *gpioSpeed,
 		Daemon:         0,
 		DropPrivileges: 0, //1, // ask library to drop privileges after init
 		DoGPIOInit:     true,
