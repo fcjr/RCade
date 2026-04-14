@@ -8,7 +8,7 @@ The service exposes an RPC server on port 1234. Any client on the Tailscale netw
 
 | Parameter | Value |
 |---|---|
-| GPIO mapping | `adafruit-hat` |
+| GPIO mapping | `adafruit-hat-pwm` |
 | Panel size | 32 rows × 64 cols |
 | Chain length | 2 panels |
 | Parallel | 1 |
@@ -60,29 +60,23 @@ The `vendorHash` covers the fetched module cache **including** the C headers inj
 
 **Why `overrideModAttrs`**: `go mod vendor` only copies files from Go package directories. `lib/rpi-rgb-led-matrix/include/` has no `.go` files, so `go mod vendor` silently skips it — but `matrix.go`'s CGo flags reference it via `${SRCDIR}/lib/rpi-rgb-led-matrix/include`. The `overrideModAttrs.postBuild` step copies those headers in after vendoring, before the hash is computed.
 
+A second patch adds a missing `SetBrightness` method to the RPC client (a v0.4.2 bug). This patch is conditional on `rpc/client.go` being present in the vendor tree — `go mod vendor` only includes the `rpc` subpackage when `main.go` imports it, so the patch silently no-ops when the RPC server is disabled. The `vendorHash` therefore differs depending on whether the RPC server is enabled in `main.go`.
+
 The package is referenced directly in `configuration.nix` via `callPackage` rather than exposed through the flake overlay, since it is only used by this machine.
 
 The demo client module (`machines/rcade-marquee/demo-client`) is not built by Nix — run it locally with `go run`.
 
 ## GPIO access
 
-The `adafruit-hat` mapping drives GPIO by memory-mapping the BCM2835 peripheral registers via `/dev/mem`. This requires:
+The `adafruit-hat-pwm` mapping drives GPIO by memory-mapping the BCM2835/BCM2711 peripheral registers via `/dev/mem`. The Adafruit RGB Matrix Bonnet uses hardware PWM on GPIO 18 for the OE (output enable) signal — `adafruit-hat-pwm` is required; `adafruit-hat` (which expects OE on GPIO 4) will initialize without errors but the display will stay dark.
 
-1. **`CAP_SYS_RAWIO`** — granted to the service via `AmbientCapabilities` so it can access raw memory without running as root
-2. **`gpio` group + udev rule** — `/dev/mem` is owned by the `gpio` group with mode `0660`, allowing the `rcade` user (a member of `gpio`) to open it
+Two things are required for `/dev/mem` access to work on NixOS:
 
-Runtime note: the C driver used by `fcjr/rgbmatrix-rpi` performs low-level `/dev/mem` access very early during initialization. On some Pi images and kernel configurations this can cause a segmentation fault when the process lacks root privileges, even if `CAP_SYS_RAWIO` or group permissions are configured. To avoid spurious SIGSEGVs during device init we currently start the service as `root` on the device and rely on the Go library's `DropPrivileges` option to relinquish privileges after hardware initialization completes.
+1. **`nixos-hardware.nixosModules.raspberry-pi-4`** — the standard NixOS aarch64 kernel does not expose the `Revision` field in `/proc/cpuinfo` or `/proc/device-tree/system/linux,revision`. Without these, the `hzeller/rpi-rgb-led-matrix` C library cannot identify the Pi model and falls back to the Pi 3 peripheral base address (`0x3F000000` instead of Pi 4's `0xFE000000`). All GPIO writes silently go to the wrong memory location and the display stays dark. The `nixos-hardware` Pi 4 module provides a kernel that exposes the standard revision fields. The module is wired in via `flake.nix` for both `rcade-marquee` and `rcade-marquee-image`.
+2
+2. **`iomem=relaxed` kernel parameter** — NixOS enables strict `/dev/mem` protection by default. Even as root, mmapping the GPIO peripheral address (`0xFE200000`) fails with `Operation not permitted` without this parameter. It is set in `boot.kernelParams` in `machines/rcade-marquee/configuration.nix`. **Important:** kernel parameters only take effect after a full reboot. `nixos-rebuild switch` alone is not sufficient — the service will restart with the new binary but the old kernel remains in effect until the next boot.
 
-Why this is temporary:
-- Some C libraries perform privileged memory operations before user/group or capability checks can take effect; running as `root` prevents hard-to-debug crashes during that early phase.
-- We minimize risk by asking the library to drop privileges after init (see `machines/rcade-marquee/display/main.go`).
-
-Planned hardening options (future work):
-- Ensure the udev rule and `gpio` group are applied and settled before the service starts (order the unit after `systemd-udev-settle.service`).
-- Grant only the specific capability (`CAP_SYS_RAWIO`) and use `DeviceAllow` for `/dev/mem` so the service can run as `rcade` without full root.
-- Move privileged setup into a tiny, auditable root helper that performs the `/dev/mem` setup and then execs the service as `rcade`.
-
-For now we keep the temporary root startup + privilege drop approach until udev/capability behavior is confirmed across target Pi images.
+The service runs as `root` (see `configuration.nix`) to avoid SIGSEGV during the early C driver initialization phase, which accesses `/dev/mem` before any capability or group checks can be enforced by the Go process.
 
 ## Deployment
 
