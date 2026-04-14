@@ -25,7 +25,7 @@ buildGoModule {
   # This hash covers the vendor tree including the injected/patched files below.
   # Update order: get rgbmatrixRpi.hash first, then this one.
   # Set to lib.fakeHash, deploy, copy the "got:" value from the build error.
-  vendorHash = lib.fakeHash;
+  vendorHash = "sha256-uSCoCE5NL7gCq8SAW9lpRpog6tZ31OAT27T+/56/uFg=";
 
   # Two patches to the vendored fcjr/rgbmatrix-rpi source:
   overrideModAttrs = _: {
