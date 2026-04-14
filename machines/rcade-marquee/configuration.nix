@@ -7,6 +7,7 @@
 
 let
   rcadeLib = import ../../nix/lib { inherit lib; };
+  marqueeDisplay = pkgs.callPackage ../../nix/pkgs/marquee-display.nix { };
 in
 {
   imports = [
@@ -22,6 +23,14 @@ in
   boot.kernelParams = [
     "brcmfmac.roamoff=1"
     "brcmfmac.feature_disable=0x282000"
+    "iomem=relaxed" # required for rpi-rgb-led-matrix /dev/mem GPIO access
+  ];
+  # Avoid Raspberry Pi peripherals that commonly conflict with
+  # rpi-rgb-led-matrix timing/GPIO access.
+  boot.blacklistedKernelModules = [
+    "snd_bcm2835"
+    "w1_gpio"
+    "w1_therm"
   ];
 
   networking.hostName = "rcade-marquee";
@@ -30,24 +39,60 @@ in
   # Users
   users.users.rcade = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [
+      "wheel"
+      "gpio"
+    ];
     openssh.authorizedKeys.keys = rcadeLib.allMaintainerKeys;
   };
 
+  # GPIO group for /dev/mem access (required by rpi-rgb-led-matrix adafruit-hat mapping)
+  users.groups.gpio = { };
+  services.udev.extraRules = ''
+    KERNEL=="mem", GROUP="gpio", MODE="0660"
+  '';
+
   # Passwordless sudo for wheel
   security.sudo.wheelNeedsPassword = false;
+
+  # Allow admin user to use sudo without password (for remote maintenance)
+  security.sudo.extraRules = [
+    {
+      users = [ "rcade" ];
+      commands = [
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
 
   # SSH
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = "yes";
-      PasswordAuthentication = true;
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
     };
   };
 
   # Tailscale
   services.tailscale.enable = true;
+
+  # RGB LED matrix marquee display
+  systemd.services.marquee-display = {
+    description = "RCade RGB LED matrix marquee display";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      ExecStart = "${marqueeDisplay}/bin/marquee-display";
+      User = "root";
+      Restart = "always";
+      RestartSec = 5;
+      AmbientCapabilities = [ "CAP_SYS_RAWIO" ];
+    };
+  };
 
   # Nix flakes
   nix.settings.experimental-features = [
