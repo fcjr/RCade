@@ -2,81 +2,195 @@ package main
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
+	"encoding/binary"
+	"errors"
 	"flag"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/gif"
 	"log"
+	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
 	rgbmatrix "github.com/fcjr/rgbmatrix-rpi"
-	"github.com/fcjr/rgbmatrix-rpi/rpc"
 )
 
 //go:embed idle.gif
 var idleGIF []byte
 
-const idleTimeout = 5 * time.Second
+const (
+	msgApply         byte = 0x00
+	msgSetBrightness byte = 0x01
+)
 
-type idleMatrix struct {
-	inner      rgbmatrix.Matrix
-	mu         sync.Mutex
-	lastClient time.Time // zero = never; start idle immediately
+type display struct {
+	inner rgbmatrix.Matrix
+	w, h  int
+
+	mu    sync.Mutex
+	taken bool
 }
 
-func (m *idleMatrix) Geometry() (int, int)       { return m.inner.Geometry() }
-func (m *idleMatrix) At(pos int) color.Color     { return m.inner.At(pos) }
-func (m *idleMatrix) Set(pos int, c color.Color) { m.inner.Set(pos, c) }
-func (m *idleMatrix) Render() error              { return m.inner.Render() }
-func (m *idleMatrix) Close() error               { return m.inner.Close() }
-func (m *idleMatrix) SetBrightness(b int)        { m.inner.SetBrightness(b) }
-
-// Apply is called by RPC clients — intercept to track last activity.
-func (m *idleMatrix) Apply(leds []color.Color) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.lastClient = time.Now()
-	return m.inner.Apply(leds)
+func (d *display) tryTake() bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.taken {
+		return false
+	}
+	d.taken = true
+	return true
 }
 
-func (m *idleMatrix) isIdle() bool {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m.lastClient.IsZero() || time.Since(m.lastClient) > idleTimeout
+func (d *display) release() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.taken = false
 }
 
-// applyIdle sends a frame only if no client has been active recently.
-func (m *idleMatrix) applyIdle(leds []color.Color) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.lastClient.IsZero() || time.Since(m.lastClient) > idleTimeout {
-		m.inner.Apply(leds) //nolint:errcheck
+func (d *display) isTaken() bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.taken
+}
+
+func (d *display) apply(pixels []color.Color) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.inner.Apply(pixels)
+}
+
+func (d *display) applyIfIdle(pixels []color.Color) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if !d.taken {
+		_ = d.inner.Apply(pixels)
 	}
 }
 
-func runIdleLoop(m *idleMatrix) {
+func (d *display) setBrightness(b uint8) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.inner.SetBrightness(int(b) * 100 / 255)
+}
+
+func (d *display) handleMessage(msg []byte, cw, ch int) error {
+	if len(msg) < 3 {
+		return errors.New("message shorter than TLV header")
+	}
+	t := msg[0]
+	length := binary.BigEndian.Uint16(msg[1:3])
+	payload := msg[3:]
+	if len(payload) != int(length) {
+		return fmt.Errorf("TLV length mismatch: header=%d payload=%d", length, len(payload))
+	}
+	switch t {
+	case msgApply:
+		expected := cw * ch * 3
+		if len(payload) != expected {
+			return fmt.Errorf("apply: expected %d bytes, got %d", expected, len(payload))
+		}
+		img := image.NewRGBA(image.Rect(0, 0, cw, ch))
+		for i := 0; i < cw*ch; i++ {
+			o := i * 3
+			img.Pix[i*4+0] = payload[o+0]
+			img.Pix[i*4+1] = payload[o+1]
+			img.Pix[i*4+2] = payload[o+2]
+			img.Pix[i*4+3] = 255
+		}
+		return d.apply(toPixels(img, d.w, d.h))
+	case msgSetBrightness:
+		if len(payload) != 1 {
+			return fmt.Errorf("setBrightness: expected 1 byte, got %d", len(payload))
+		}
+		d.setBrightness(payload[0])
+		return nil
+	default:
+		return fmt.Errorf("unknown message type 0x%02x", t)
+	}
+}
+
+func handleTake(d *display) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cw, err := strconv.Atoi(r.URL.Query().Get("w"))
+		if err != nil || cw <= 0 {
+			http.Error(w, "bad or missing 'w'", http.StatusBadRequest)
+			return
+		}
+		ch, err := strconv.Atoi(r.URL.Query().Get("height"))
+		if err != nil || ch <= 0 {
+			http.Error(w, "bad or missing 'height'", http.StatusBadRequest)
+			return
+		}
+
+		if !d.tryTake() {
+			http.Error(w, "display in use", http.StatusConflict)
+			return
+		}
+
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+			InsecureSkipVerify: true,
+		})
+		if err != nil {
+			d.release()
+			log.Printf("ws accept error: %v", err)
+			return
+		}
+		log.Printf("client connected (%dx%d)", cw, ch)
+		defer func() {
+			c.CloseNow()
+			d.release()
+			log.Printf("client disconnected (%dx%d)", cw, ch)
+		}()
+
+		ctx := r.Context()
+		for {
+			typ, data, err := c.Read(ctx)
+			if err != nil {
+				return
+			}
+			if typ != websocket.MessageBinary {
+				c.Close(websocket.StatusUnsupportedData, "expected binary")
+				return
+			}
+			if err := d.handleMessage(data, cw, ch); err != nil {
+				log.Printf("message error: %v", err)
+				c.Close(websocket.StatusUnsupportedData, err.Error())
+				return
+			}
+		}
+	}
+}
+
+func runIdleLoop(ctx context.Context, d *display) {
 	g, err := gif.DecodeAll(bytes.NewReader(idleGIF))
 	if err != nil {
 		log.Printf("idle gif decode error (idle display disabled): %v", err)
 		return
 	}
-	w, h := m.inner.Geometry()
 	canvas := image.NewRGBA(image.Rect(0, 0, g.Config.Width, g.Config.Height))
 	i := 0
 	for {
-		if !m.isIdle() {
-			// Client active — reset GIF so it plays fresh on resume.
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		if d.isTaken() {
 			i = 0
 			draw.Draw(canvas, canvas.Bounds(), image.Black, image.Point{}, draw.Src)
-			time.Sleep(250 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		frame := g.Image[i]
 		draw.Draw(canvas, frame.Bounds(), frame, frame.Bounds().Min, draw.Over)
-		m.applyIdle(toPixels(canvas, w, h))
+		d.applyIfIdle(toPixels(canvas, d.w, d.h))
 		delay := time.Duration(g.Delay[i]) * 10 * time.Millisecond
 		if delay < 50*time.Millisecond {
 			delay = 50 * time.Millisecond
@@ -86,7 +200,6 @@ func runIdleLoop(m *idleMatrix) {
 	}
 }
 
-// toPixels converts src to a flat []color.Color scaled to (w, h) via nearest-neighbor.
 func toPixels(src image.Image, w, h int) []color.Color {
 	sw, sh := src.Bounds().Dx(), src.Bounds().Dy()
 	ox, oy := src.Bounds().Min.X, src.Bounds().Min.Y
@@ -102,7 +215,10 @@ func toPixels(src image.Image, w, h int) []color.Color {
 	return p
 }
 
-var gpioSpeed = flag.Int("gpio-speed", 4, "GPIO speed value for matrix timing")
+var (
+	gpioSpeed = flag.Int("gpio-speed", 4, "GPIO speed value for matrix timing")
+	addr      = flag.String("addr", ":8080", "websocket listen address")
+)
 
 func main() {
 	flag.Parse()
@@ -121,11 +237,10 @@ func main() {
 	rc := &rgbmatrix.RuntimeOptions{
 		GPIOSlowdown:   *gpioSpeed,
 		Daemon:         0,
-		DropPrivileges: 0, //1, // ask library to drop privileges after init
+		DropPrivileges: 0,
 		DoGPIOInit:     true,
 	}
 
-	// Diagnostics: log configs so journalctl shows what we passed in
 	log.Printf("HardwareConfig: %+v", hc)
 	log.Printf("RuntimeOptions: %+v", rc)
 
@@ -134,12 +249,18 @@ func main() {
 		log.Printf("NewRGBLedMatrix error: %v", err)
 		return
 	}
-
 	defer m.Close()
 
-	im := &idleMatrix{inner: m}
-	go runIdleLoop(im)
+	w, h := m.Geometry()
+	d := &display{inner: m, w: w, h: h}
 
-	log.Println("marquee-display RPC server listening on :1234")
-	rpc.Serve(im) // blocks; systemd Restart=on-failure handles crashes
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go runIdleLoop(ctx, d)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/take", handleTake(d))
+
+	log.Printf("marquee-display websocket listening on %s/take (display %dx%d)", *addr, w, h)
+	log.Fatal(http.ListenAndServe(*addr, mux))
 }
