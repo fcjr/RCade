@@ -2,7 +2,10 @@ module rcade/marquee-display
 
 go 1.22
 
-require github.com/fcjr/rgbmatrix-rpi v0.4.2
+require (
+	github.com/coder/websocket v1.8.12
+	github.com/fcjr/rgbmatrix-rpi v0.4.2
+)
 
 require (
 	dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9 // indirect
