@@ -23,6 +23,7 @@ in
   boot.kernelParams = [
     "brcmfmac.roamoff=1"
     "brcmfmac.feature_disable=0x282000"
+    "iomem=relaxed" # required for rpi-rgb-led-matrix /dev/mem GPIO access
   ];
   # Avoid Raspberry Pi peripherals that commonly conflict with
   # rpi-rgb-led-matrix timing/GPIO access.

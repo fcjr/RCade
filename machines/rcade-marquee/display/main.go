@@ -13,6 +13,7 @@ import (
 	"time"
 
 	rgbmatrix "github.com/fcjr/rgbmatrix-rpi"
+	"github.com/fcjr/rgbmatrix-rpi/rpc"
 )
 
 //go:embed idle.gif
@@ -107,7 +108,7 @@ func main() {
 	flag.Parse()
 
 	hc := &rgbmatrix.HardwareConfig{
-		HardwareMapping:   "adafruit-hat",
+		HardwareMapping:   "adafruit-hat-pwm",
 		Rows:              32,
 		Cols:              64,
 		ChainLength:       2,
@@ -134,31 +135,11 @@ func main() {
 		return
 	}
 
-	//Note: Trying out a basic implementation without RPC for now, to isolate issues with the display itself before adding RPC into the mix. Once we confirm the display is working reliably, we can re-enable the RPC server code below.
+	defer m.Close()
 
-	c := rgbmatrix.NewCanvas(m)
-	defer c.Close()
+	im := &idleMatrix{inner: m}
+	go runIdleLoop(im)
 
-	// Debug: fill entire display solid red, render once, then block.
-	bounds := c.Bounds()
-	log.Printf("Canvas bounds: %v", bounds)
-	for x := bounds.Min.X; x < bounds.Max.X; x++ {
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			c.Set(x, y, color.RGBA{255, 0, 0, 255})
-		}
-	}
-	if err := c.Render(); err != nil {
-		log.Printf("Render error: %v", err)
-	}
-	log.Println("Render called — display should be solid red. Blocking.")
-	select {} // block forever so the display stays lit
-
-	// Note: Below is code to run RPC Server
-	// defer m.Close()
-
-	// im := &idleMatrix{inner: m}
-	// go runIdleLoop(im)
-
-	// log.Println("marquee-display RPC server listening on :1234")
-	// rpc.Serve(im) // blocks; systemd Restart=on-failure handles crashes
+	log.Println("marquee-display RPC server listening on :1234")
+	rpc.Serve(im) // blocks; systemd Restart=on-failure handles crashes
 }

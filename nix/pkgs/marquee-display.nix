@@ -22,7 +22,7 @@ buildGoModule {
 
   src = ../../machines/rcade-marquee/display;
 
-  # This hash covers the vendor tree including the injected headers below.
+  # This hash covers the vendor tree including the injected/patched files below.
   # Update order: get rgbmatrixRpi.hash first, then this one.
   # Set to lib.fakeHash, deploy, copy the "got:" value from the build error.
   vendorHash = "sha256-aLcobeCSS9IGyeeW7a3TIkTyYbHHjWfKwrlHePIAOy8=";
@@ -37,8 +37,12 @@ buildGoModule {
 
       # 2. Add missing SetBrightness to rpc.Client (v0.4.2 bug: Matrix interface
       #    requires it but rpc/client.go never implemented it).
-      printf '\nfunc (c *Client) SetBrightness(_ int) {}\n' \
-        >> vendor/github.com/fcjr/rgbmatrix-rpi/rpc/client.go
+      #    Conditional: rpc is only vendored when main.go imports it (i.e. when
+      #    the RPC server is enabled); skip silently when it's commented out.
+      if [ -f vendor/github.com/fcjr/rgbmatrix-rpi/rpc/client.go ]; then
+        printf '\nfunc (c *Client) SetBrightness(_ int) {}\n' \
+          >> vendor/github.com/fcjr/rgbmatrix-rpi/rpc/client.go
+      fi
     '';
   };
 
