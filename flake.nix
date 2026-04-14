@@ -25,9 +25,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Hardware-specific NixOS modules
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
 };
 
-  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, agenix, ... }@inputs:
+  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, agenix, nixos-hardware, ... }@inputs:
     let
       # Systems we support for development
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -158,6 +161,7 @@
           system = "aarch64-linux";
           specialArgs = { inherit inputs self; };
           modules = [
+            nixos-hardware.nixosModules.raspberry-pi-4
             ./machines/rcade-marquee/configuration.nix
             agenix.nixosModules.default
           ];
@@ -171,6 +175,7 @@
           specialArgs = { inherit inputs self; };
           modules = [
             "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+            nixos-hardware.nixosModules.raspberry-pi-4
             ./machines/rcade-marquee/configuration.nix
             agenix.nixosModules.default
             {
