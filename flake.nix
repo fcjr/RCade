@@ -19,15 +19,15 @@
     # Flake utilities
     flake-utils.url = "github:numtide/flake-utils";
 
-    # Bun packaging for Nix (reproducible builds)
-    bun2nix = {
-      url = "github:nix-community/bun2nix";
+    # Secret management
+    agenix = {
+      url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-  };
+};
 
-  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, bun2nix, ... }@inputs:
+  outputs = { self, nixpkgs, fenix, home-manager, flake-utils, agenix, ... }@inputs:
     let
       # Systems we support for development
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -123,22 +123,7 @@
           ];
         };
 
-	# Rose's Razer Laptop (Current Production Machine)
-	prod = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs self; };
-          modules = [
-            ./machines/rcade-rose-laptop/configuration.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.extraSpecialArgs = { inherit inputs self; };
-            }
-          ];
-        };
-
-        # VM for testing the cabinet
+# VM for testing the cabinet
         rcade-vm = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
@@ -149,6 +134,58 @@
               services.rcade-cabinet.enable = true;
               nixpkgs.overlays = [ fenix.overlays.default self.overlays.default ];
             }
+          ];
+        };
+
+        # Updated nuc for cabinet (Current Production Machine)
+        rcade-nuc = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            ./machines/rcade-nuc/configuration.nix
+            agenix.nixosModules.default
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.extraSpecialArgs = { inherit inputs self; };
+            }
+          ];
+        };
+
+        # Marquee display (Raspberry Pi, aarch64)
+        rcade-marquee = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            ./machines/rcade-marquee/configuration.nix
+            agenix.nixosModules.default
+          ];
+        };
+
+        # Marquee SD card image (for flashing)
+        # Built with --impure so it can read the WiFi PSK from the environment.
+        # Use `just build-marquee-image` which decrypts it automatically.
+        rcade-marquee-image = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs self; };
+          modules = [
+            "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+            ./machines/rcade-marquee/configuration.nix
+            agenix.nixosModules.default
+            {
+              disabledModules = [
+                ./machines/rcade-marquee/hardware-configuration.nix
+                ./machines/rcade-marquee/wifi.nix
+              ];
+            }
+            # Hardcode WiFi PSK for the image (agenix can't decrypt on first boot)
+            # Set an initial password so we can SSH in before keys are deployed
+            ({ lib, ... }: {
+              networking.wireless.networks."Recurse Center".psk = builtins.getEnv "MARQUEE_WIFI_PSK";
+              users.users.rcade.initialPassword = lib.mkForce "rcade";
+              users.users.root.initialPassword = lib.mkForce "rcade";
+            })
           ];
         };
       };
@@ -176,14 +213,12 @@
               pkg-config
 
               # JavaScript runtime & package manager
-              bun
+              pnpm_9
               nodejs_22
-
-              # Nix tooling for reproducible builds
-              bun2nix.packages.${system}.default
 
               # Useful dev tools
               just  # Task runner
+              agenix.packages.${system}.default  # Secret management
 
             ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
               # Linux-specific deps for Electron
@@ -210,7 +245,7 @@
               echo "🕹️  RCade development environment"
               echo ""
               echo "Available commands:"
-              echo "  bun install    - Install dependencies"
+              echo "  pnpm install   - Install dependencies"
               echo "  turbo dev      - Start development servers"
               echo "  turbo build    - Build all packages"
               echo ""
@@ -220,7 +255,7 @@
           # Minimal shell for CI/quick tasks
           ci = pkgs.mkShell {
             name = "rcade-ci";
-            buildInputs = with pkgs; [ bun nodejs_22 ];
+            buildInputs = with pkgs; [ pnpm_9 nodejs_22 ];
           };
         }
       );
@@ -236,6 +271,9 @@
           # Export the cabinet package
           cabinet = pkgs.rcade.cabinet;
           default = pkgs.rcade.cabinet;
+        } // nixpkgs.lib.optionalAttrs (system == "aarch64-linux") {
+          # Build with: nix build .#marquee-image
+          marquee-image = self.nixosConfigurations.rcade-marquee-image.config.system.build.sdImage;
         } // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
           # Build with: nix build .#vm 
           vm = self.nixosConfigurations.rcade-vm.config.system.build.vm;

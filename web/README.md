@@ -5,14 +5,14 @@ SvelteKit web application for browsing and managing RCade games. Deployed to Clo
 ## Development
 
 ```bash
-bun install
-bun run dev
+pnpm install
+pnpm run dev
 ```
 
 ## Build
 
 ```bash
-bun run build
+pnpm run build
 ```
 
 ## Deploy

@@ -116,13 +116,13 @@
 
   function screensaverConfigChanged(newConfig: ScreensaverConfig) {
     newConfig.timeBeforeActive = normalizeTime(newConfig.timeBeforeActive);
-    if (isNaN(newConfig.timeBeforeActive ?? 0))
+    if (newConfig.timeBeforeActive === undefined || isNaN(newConfig.timeBeforeActive ?? 0))
       delete newConfig.timeBeforeActive;
 
     newConfig.timeBeforeForcedExit = normalizeTime(
       newConfig.timeBeforeForcedExit,
     );
-    if (isNaN(newConfig.timeBeforeForcedExit ?? 0))
+    if (newConfig.timeBeforeForcedExit === undefined || isNaN(newConfig.timeBeforeForcedExit ?? 0))
       delete newConfig.timeBeforeForcedExit;
 
     const needsTimerUpdate =

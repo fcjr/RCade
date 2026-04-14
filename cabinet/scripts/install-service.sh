@@ -9,10 +9,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CURRENT_USER="$(whoami)"
 CURRENT_UID="$(id -u)"
 
-# Find bun
-BUN_PATH=$(which bun 2>/dev/null || echo "$HOME/.bun/bin/bun")
-if [ ! -x "$BUN_PATH" ]; then
-    echo "Error: bun not found"
+# Find pnpm
+PNPM_PATH=$(which pnpm 2>/dev/null || echo "")
+if [ -z "$PNPM_PATH" ] || [ ! -x "$PNPM_PATH" ]; then
+    echo "Error: pnpm not found"
     exit 1
 fi
 
@@ -23,7 +23,7 @@ cd "$MONOREPO_DIR"
 # Clean old build artifacts to ensure fresh rebuild
 rm -rf "$PROJECT_DIR/release"
 
-"$BUN_PATH" run turbo build:cabinet-linux --filter=@rcade/client
+"$PNPM_PATH" run turbo build:cabinet-linux --filter=@rcade/client
 
 # Find the AppImage
 APP_PATH=$(ls "$PROJECT_DIR"/release/rcade*.AppImage 2>/dev/null | head -1)

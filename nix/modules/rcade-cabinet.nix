@@ -33,7 +33,7 @@ let
     ${cfg.preLaunchCommands}
 
     # Environment file for secrets (API keys, etc.)
-    ${lib.optionalString (cfg.environmentFile != null) "source ${cfg.environmentFile}"}
+    ${lib.optionalString (cfg.environmentFile != null) "set -a; source ${cfg.environmentFile}; set +a"}
 
     # Launch the cabinet app
     exec ${cabinetPackage}/bin/rcade-cabinet ${lib.escapeShellArgs cfg.extraArgs} \
@@ -116,6 +116,8 @@ in
         "audio"
         "input"
         "render"
+        "seat"
+        "tty"
       ] ++ lib.optionals config.services.pulseaudio.enable [ "pulse" ]
         ++ lib.optionals config.services.pipewire.enable [ "pipewire" ];
 
@@ -131,11 +133,53 @@ in
       enable = true;
       settings = {
         default_session = {
-          command = "${pkgs.cage}/bin/cage -d -s -- ${launchScript}";
+          command = "${pkgs.writeShellScript "cage-wrapper" ''
+            # Wait for the USB display (gud driver) to appear, then use it.
+            # Device order is not stable across boots, so detect by driver name.
+            GUD_CARD=""
+            for i in $(seq 1 30); do
+              for card in /sys/class/drm/card[0-9]; do
+                driver=$(basename "$(readlink "$card/device/driver")" 2>/dev/null)
+                if [ "$driver" = "gud" ]; then
+                  GUD_CARD="/dev/dri/$(basename "$card")"
+                  break 2
+                fi
+              done
+              sleep 1
+            done
+
+            if [ -n "$GUD_CARD" ]; then
+              # Find a real GPU to use for rendering (first non-gud card)
+              RENDER_GPU=""
+              for card in /sys/class/drm/card[0-9]; do
+                driver=$(basename "$(readlink "$card/device/driver")" 2>/dev/null)
+                if [ "$driver" != "gud" ]; then
+                  RENDER_GPU="/dev/dri/$(basename "$card")"
+                  break
+                fi
+              done
+
+              if [ -n "$RENDER_GPU" ]; then
+                # Render on the real GPU, output frames to the USB display
+                export WLR_DRM_DEVICES="$RENDER_GPU:$GUD_CARD"
+              else
+                # No real GPU, fall back to software rendering on the USB display
+                export WLR_DRM_DEVICES="$GUD_CARD"
+                export WLR_RENDERER=pixman
+              fi
+              export WLR_NO_HARDWARE_CURSORS=1
+            else
+              export WLR_DRM_DEVICES="$(echo /dev/dri/card* | tr ' ' ':')"
+            fi
+            exec ${pkgs.cage}/bin/cage -D -d -s -- ${launchScript} 2>/tmp/cage-debug.log
+          ''}";
           user = cfg.user;
         };
       };
     };
+
+    # Seat management (required by cage/greetd for device access)
+    services.seatd.enable = true;
 
     # Disable other display managers
     services.xserver.displayManager.lightdm.enable = lib.mkForce false;

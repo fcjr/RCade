@@ -162,18 +162,18 @@ See each template's README for language-specific examples.
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) runtime
+- [pnpm](https://pnpm.io/) package manager
 
 ### Setup
 
 ```bash
-bun install
+pnpm install
 ```
 
 ### Build
 
 ```bash
-bun run build
+pnpm run build
 ```
 
 This outputs the CLI to `dist/index.js`.
@@ -181,5 +181,5 @@ This outputs the CLI to `dist/index.js`.
 ### Local Testing
 
 ```bash
-bun run src/index.ts
+pnpm run dev
 ```

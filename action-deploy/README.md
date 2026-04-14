@@ -25,6 +25,6 @@ Uses GitHub OIDC tokens - no secrets required. Your GitHub account must be linke
 ## Development
 
 ```bash
-bun install
-bun run build
+pnpm install
+pnpm run build
 ```

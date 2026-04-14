@@ -5,17 +5,17 @@ Electron desktop application that runs on the RCade arcade cabinet. Loads and ru
 ## Development
 
 ```bash
-bun install
-bun run dev
+pnpm install
+pnpm run dev
 ```
 
 ## Build
 
 ```bash
-bun run build          # All platforms
-bun run build:mac      # macOS
-bun run build:win      # Windows
-bun run build:linux    # Linux
+pnpm run build          # All platforms
+pnpm run build:mac      # macOS
+pnpm run build:win      # Windows
+pnpm run build:linux    # Linux
 ```
 
 ## Raspberry Pi 5

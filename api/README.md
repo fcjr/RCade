@@ -13,6 +13,6 @@ const manifest = GameManifest.parse(data);
 ## Development
 
 ```bash
-bun install
-bun run build
+pnpm install
+pnpm run build
 ```

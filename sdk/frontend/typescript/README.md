@@ -19,6 +19,6 @@ const channel = await PluginChannel.acquire("@rcade/my-plugin", "1.0.0");
 ## Development
 
 ```bash
-bun install
-bun run build
+pnpm install
+pnpm run build
 ```

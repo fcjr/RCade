@@ -5,6 +5,6 @@ Game runtime environment for RCade. Handles plugin loading and communication bet
 ## Development
 
 ```bash
-bun install
-bun run index.ts
+pnpm install
+pnpm run dev
 ```

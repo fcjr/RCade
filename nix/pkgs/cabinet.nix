@@ -1,20 +1,21 @@
 # RCade Cabinet Package
 #
 # Dependencies are fetched via a fixed-output derivation (FOD) that
-# runs `bun install` with network access, working around bun2nix#71.
+# runs `pnpm install` with network access.
 #
 # To update dependencies:
-#   1. Run `bun install` to update bun.lock
+#   1. Run `pnpm install` to update pnpm-lock.yaml
 #   2. Rebuild with `nix build .#cabinet`
-#   3. Update `bunModulesHash` with the hash from the error
+#   3. Update `pnpmModulesHash` with the hash from the error
 
 { lib
 , stdenv
 , makeWrapper
 , autoPatchelfHook
 , electron
-, bun
+, pnpm_9
 , nodejs_22
+, cacert
 , alsa-lib
 , at-spi2-atk
 , at-spi2-core
@@ -36,8 +37,15 @@
 , pango
 , systemd
 , vulkan-loader
-, xorg
 , libGL
+, libx11
+, libxcomposite
+, libxdamage
+, libxext
+, libxfixes
+, libxrandr
+, libxcb
+, libxshmfence
 , pipewire
 , libpulseaudio
 }:
@@ -70,14 +78,14 @@ let
     libpulseaudio
     systemd
     vulkan-loader
-    xorg.libX11
-    xorg.libXcomposite
-    xorg.libXdamage
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libXrandr
-    xorg.libxcb
-    xorg.libxshmfence
+    libx11
+    libxcomposite
+    libxdamage
+    libxext
+    libxfixes
+    libxrandr
+    libxcb
+    libxshmfence
   ];
 
   src = lib.cleanSourceWith {
@@ -101,7 +109,7 @@ let
       );
   };
 
-  # Only package.json + bun.lock so code changes don't invalidate the FOD hash.
+  # Only package.json + pnpm-lock.yaml so code changes don't invalidate the FOD hash.
   depsSrc = lib.cleanSourceWith {
     src = ../..;
     filter = path: type:
@@ -122,33 +130,35 @@ let
           )
         else
           baseName == "package.json" ||
-          baseName == "bun.lock";
+          baseName == "pnpm-lock.yaml" ||
+          baseName == "pnpm-workspace.yaml" ||
+          baseName == ".npmrc";
   };
 
-  bunModulesHash = "sha256-YEE3v8Rf+gVw7Dt+9Tx2LxzRUNzf/3spISwdj8a47bE=";
+  pnpmModulesHash = "sha256-wweW+AAp8i9oJ2EjgTi10K9LQRrAPNvBiMObQWSooa8=";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
-  bunModules = stdenv.mkDerivation {
-    name = "rcade-bun-modules.tar.gz";
+  pnpmModules = stdenv.mkDerivation {
+    name = "rcade-pnpm-modules.tar.gz";
     src = depsSrc;
 
-    nativeBuildInputs = [ bun ];
+    nativeBuildInputs = [ nodejs_22 pnpm_9 cacert ];
 
     outputHashAlgo = "sha256";
     outputHashMode = "flat";
-    outputHash = bunModulesHash;
+    outputHash = pnpmModulesHash;
 
     # Prevent patchShebangs from adding store-path references to the FOD output.
     dontFixup = true;
 
     buildPhase = ''
       export HOME=$(mktemp -d)
-      bun install --frozen-lockfile --ignore-scripts
+      export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+      pnpm install --frozen-lockfile --ignore-scripts
     '';
 
     installPhase = ''
       # Remove workspace symlinks (point to source dirs, invalid after extraction).
-      # Keep bun internal symlinks (contain "node_modules" in target path).
       find . -name 'node_modules' -type d -prune | while read -r nm_dir; do
         find "$nm_dir" -type l | while read -r link; do
           target=$(readlink "$link")
@@ -170,7 +180,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     makeWrapper
     autoPatchelfHook
-    bun
+    pnpm_9
     nodejs_22
   ];
 
@@ -186,7 +196,7 @@ stdenv.mkDerivation {
 
     export HOME=$(mktemp -d)
 
-    tar xzf ${bunModules}
+    tar xzf ${pnpmModules}
 
     # FOD skips patchShebangs (dontFixup), so we patch here instead.
     patchShebangs node_modules
@@ -195,7 +205,8 @@ stdenv.mkDerivation {
     done
 
     # Recreate workspace symlinks removed from the FOD.
-    workspaces=$(${nodejs_22}/bin/node -p "require('./package.json').workspaces.join('\n')")
+    # Parse workspace dirs from pnpm-workspace.yaml (simple "  - dir" format)
+    workspaces=$(grep '^ *- ' pnpm-workspace.yaml | sed 's/^ *- //')
     for ws_dir in $workspaces; do
       if [ -f "$ws_dir/package.json" ]; then
         pkg_name=$(${nodejs_22}/bin/node -p "require('./$ws_dir/package.json').name" 2>/dev/null || true)
@@ -210,13 +221,8 @@ stdenv.mkDerivation {
 
     cd cabinet
 
-    bun build src/main/main.ts --outfile dist/main/main.cjs --target node --format cjs --external electron --external node-hid
-    bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron
-
-    # bun build hardcodes __dirname/__filename to the build-time path.
-    # Replace with CJS's native __dirname so paths resolve at runtime.
-    substituteInPlace dist/main/main.cjs \
-      --replace-quiet 'var __dirname2 = ' 'var __dirname2 = __dirname; var __dirname_unused = '
+    node_modules/.bin/esbuild src/main/main.ts --bundle --outfile=dist/main/main.cjs --platform=node --format=cjs --define:import.meta.url=import_meta_url --banner:js="var import_meta_url=require('url').pathToFileURL(__filename).href;" --external:electron --external:node-hid
+    node_modules/.bin/esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron
     node_modules/.bin/vite build
 
     cd ..
@@ -233,44 +239,13 @@ stdenv.mkDerivation {
     cp cabinet/package.json $out/lib/rcade-cabinet/package.json
     cp -r cabinet/assets $out/lib/rcade-cabinet/
 
-    # node-hid native addon (can't be bundled by bun build).
-    # Location varies depending on bun's hoisting decisions.
-    NODE_HID=""
-    for nhid_dir in \
-      node_modules/node-hid \
-      node_modules/.bun/node_modules/node-hid \
-      plugins/input-spinners/node_modules/node-hid \
-      plugins/input-classic/node_modules/node-hid; do
-      if [ -d "$nhid_dir" ]; then
-        NODE_HID="$nhid_dir"
-        break
-      fi
-    done
-    PKG_PREBUILDS=""
-    for pb_dir in \
-      node_modules/pkg-prebuilds \
-      node_modules/.bun/node_modules/pkg-prebuilds \
-      plugins/input-spinners/node_modules/pkg-prebuilds; do
-      if [ -d "$pb_dir" ]; then
-        PKG_PREBUILDS="$pb_dir"
-        break
-      fi
-    done
-
-    if [ -n "$NODE_HID" ]; then
-      mkdir -p $out/lib/rcade-cabinet/node_modules
-      cp -rL "$NODE_HID" $out/lib/rcade-cabinet/node_modules/node-hid
-      if [ -n "$PKG_PREBUILDS" ]; then
-        cp -rL "$PKG_PREBUILDS" $out/lib/rcade-cabinet/node_modules/pkg-prebuilds
-      fi
-
-      # Keep only linux-x64 prebuilds (autoPatchelfHook can't patch others).
-      find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds \
-        -mindepth 1 -maxdepth 1 -type d \
-        ! -name 'HID_hidraw-linux-x64' \
-        ! -name 'HID-linux-x64' \
-        -exec rm -rf {} +
-    fi
+    # Copy native modules that are --external in the esbuild bundle
+    # and their runtime dependencies.
+    mkdir -p $out/lib/rcade-cabinet/node_modules
+    cp -rL node_modules/.pnpm/node-hid@*/node_modules/node-hid $out/lib/rcade-cabinet/node_modules/
+    cp -rL node_modules/.pnpm/node-hid@*/node_modules/pkg-prebuilds $out/lib/rcade-cabinet/node_modules/
+    # Remove musl and non-x64 prebuilds to avoid autoPatchelfHook failures
+    find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds -type d \( -name '*musl*' -o -name '*arm*' \) -exec rm -rf {} + 2>/dev/null || true
 
     cat > $out/bin/rcade-cabinet <<'LAUNCHER'
 #!/usr/bin/env bash

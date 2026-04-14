@@ -14,15 +14,13 @@
     "dist"
   ],
   "scripts": {
-    "build": "bun build bin.ts --outdir dist --target node"
+    "build": "esbuild bin.ts --outdir=dist --platform=node --format=esm --bundle"
   },
   "dependencies": {
     "commander": "^14.0.2",
     "rcade": "workspace:*"
   },
-  "devDependencies": {
-    "@types/bun": "^1.3.8"
-  },
+  "devDependencies": {},
   "peerDependencies": {
     "typescript": "^5"
   }

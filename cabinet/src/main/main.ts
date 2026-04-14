@@ -17,7 +17,11 @@ import { setTimeout } from 'timers/promises';
 
 const args = parseCliArgs();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// In production builds, use app.getAppPath() which correctly resolves inside the asar/app directory.
+// In dev, import.meta.url gives the correct source directory.
+const __dirname = app.isPackaged
+  ? path.join(app.getAppPath(), 'dist/main')
+  : path.dirname(fileURLToPath(import.meta.url));
 const isDev = !app.isPackaged || args.dev;
 
 // Icon path - in dev mode use assets folder, in production it's bundled
@@ -37,16 +41,21 @@ const scaleFactor = args.scale ?? (isDev ? 2 : 1);
 app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
 
 if (process.platform === 'linux') {
-  // WebGPU via Vulkan/ANGLE
-
   app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
   // Enable audio output via ALSA (required for some Linux systems)
   app.commandLine.appendSwitch('alsa-output-device', 'default');
 
-  if (!isDev) {
-    app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
-    app.commandLine.appendSwitch('enable-unsafe-webgpu');
+  // Check if a GPU render node exists (e.g. /dev/dri/renderD128).
+  // Devices without one (e.g. Raspberry Pi) need software rendering.
+  const hasRenderNode = existsSync('/dev/dri/renderD128');
+  if (!hasRenderNode) {
+    app.commandLine.appendSwitch('disable-gpu');
+  }
 
+  app.commandLine.appendSwitch('enable-unsafe-webgpu');
+  app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+
+  if (!isDev) {
     app.commandLine.appendSwitch('cursor', 'none');
   }
 }

@@ -35,5 +35,5 @@ Add event handlers for when the screensaver starts and stops. (when the user bec
 ## Development
 
 ```bash
-bun install
+pnpm install
 ```

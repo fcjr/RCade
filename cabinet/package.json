@@ -1,21 +1,21 @@
 {
   "name": "@rcade/client",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
-  "main": "dist/main/main.js",
+  "main": "dist/main/main.cjs",
   "scripts": {
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
-    "dev:electron": "bun run build:main && bun run build:preload && electron --trace-warnings .",
-    "build:main": "bun build src/main/main.ts --outfile dist/main/main.js --target node --external electron --external node-hid",
-    "build:preload": "bun build src/main/preload.ts --outdir dist/main --target node --format cjs --external electron",
-    "build": "bun run build:main && bun run build:preload && vite build && electron-builder",
-    "build:cabinet-mac": "bun run build:main && bun run build:preload && vite build && electron-builder --mac",
-    "build:cabinet-mac-x64": "bun run build:main && bun run build:preload && vite build && electron-builder --mac --x64",
-    "build:cabinet-mac-arm64": "bun run build:main && bun run build:preload && vite build && electron-builder --mac --arm64",
-    "build:cabinet-win": "bun run build:main && bun run build:preload && vite build && electron-builder --win",
-    "build:cabinet-linux": "bun run build:main && bun run build:preload && vite build && electron-builder --linux"
+    "dev:electron": "pnpm run build:main && pnpm run build:preload && electron --trace-warnings .",
+    "build:main": "esbuild src/main/main.ts --outfile=dist/main/main.cjs --platform=node --format=cjs --bundle --external:electron --define:import.meta.url=import_meta_url --banner:js=\"var import_meta_url=require('url').pathToFileURL(__filename).href;\"",
+    "build:preload": "esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron",
+    "build": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder",
+    "build:cabinet-mac": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac",
+    "build:cabinet-mac-x64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac --x64",
+    "build:cabinet-mac-arm64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac --arm64",
+    "build:cabinet-win": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --win",
+    "build:cabinet-linux": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --linux"
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",
@@ -31,8 +31,7 @@
     "hono": "^4.6.14",
     "semver": "^7.7.3",
     "tar": "^7.4.3",
-    "zod": "^4.1.13",
-    "node-hid": "^3.1.0"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -44,6 +43,7 @@
     "electron-builder": "^26.0.12",
     "svelte": "^5.0.0",
     "typescript": "^5.6.0",
+    "esbuild": "^0.25.0",
     "vite": "^6.0.0"
   },
   "build": {
