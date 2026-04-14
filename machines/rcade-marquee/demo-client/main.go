@@ -210,7 +210,7 @@ func streamWebcam(d *display) {
 
 	cmd := exec.Command("ffmpeg",
 		"-f", "avfoundation", "-framerate", "30", "-i", "0",
-		"-r", "5",
+		"-r", "30",
 		"-vf", fmt.Sprintf(vfLetterbox, d.width, d.height, d.width, d.height),
 		"-f", "rawvideo", "-pix_fmt", "rgba",
 		"pipe:1",
