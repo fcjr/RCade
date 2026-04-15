@@ -19,6 +19,10 @@
             "version": "1.0.0"
         },
         {
+            "name": "@rcade/marquee",
+            "version": "1.0.0"
+        },
+        {
             "name": "@rcade/menu",
             "version": "1.0.0"
         },

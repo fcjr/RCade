@@ -16,6 +16,8 @@ packages:
   - plugins/sleep
   - plugins/menu/clients/typescript
   - plugins/menu
+  - plugins/marquee/clients/typescript
+  - plugins/marquee
   - vite-plugins
   - web-content
   - engine
