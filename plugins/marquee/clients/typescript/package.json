@@ -1,0 +1,35 @@
+{
+  "name": "@rcade/plugin-marquee",
+  "module": "index.ts",
+  "main": "./dist/index.js",
+  "version": "0.1.0",
+  "type": "module",
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "esbuild index.ts --outdir=dist --platform=node --format=esm --bundle"
+  },
+  "files": [
+    "dist",
+    "index.ts"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "@rcade/sdk": "^0.2.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fcjr/RCade"
+  }
+}

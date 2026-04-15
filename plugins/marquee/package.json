@@ -1,0 +1,16 @@
+{
+  "name": "@rcade/marquee",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/ws": "^8"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@rcade/sdk-plugin": "^0.1.0",
+    "ws": "^8.18.0"
+  }
+}

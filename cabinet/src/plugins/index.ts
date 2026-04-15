@@ -11,6 +11,8 @@ import PluginSleep from "@rcade/sleep";
 import PluginSleepManifest from "@rcade/sleep/rcade.manifest.json";
 import PluginMenu from "@rcade/plugin-menu-backend";
 import PluginMenuManifest from "@rcade/plugin-menu-backend/rcade.manifest.json";
+import PluginMarquee from "@rcade/marquee";
+import PluginMarqueeManifest from "@rcade/marquee/rcade.manifest.json";
 
 export class PluginManager {
     public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"], isMenu: boolean) {
@@ -48,8 +50,9 @@ export class PluginManager {
 
     private ref(name: string): { plugin: { new(): Plugin }, manifest: PluginManifest } {
         switch (name) {
-            case "@rcade/input-classic": return { plugin: PluginInputClassic, manifest: PluginInputClassicManifest as PluginManifest };
             case "@rcade/input-spinners": return { plugin: PluginInputSpinners, manifest: PluginInputSpinnersManifest as PluginManifest };
+            case "@rcade/input-classic": return { plugin: PluginInputClassic, manifest: PluginInputClassicManifest as PluginManifest };
+            case "@rcade/marquee": return { plugin: PluginMarquee, manifest: PluginMarqueeManifest as PluginManifest };
             case "@rcade/sleep": return { plugin: PluginSleep, manifest: PluginSleepManifest as PluginManifest };
             case "@rcade/menu": return { plugin: PluginMenu, manifest: PluginMenuManifest as PluginManifest };
         }
