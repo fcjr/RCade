@@ -1,26 +1,25 @@
 {
   "name": "@rcade/plugin-input-spinners",
-  "module": "index.ts",
+  "module": "./dist/index.js",
   "main": "./dist/index.js",
   "version": "0.2.2",
   "type": "module",
-  "types": "./index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "esbuild index.ts --outdir=dist --platform=node --format=esm --bundle"
+    "build": "esbuild index.ts --outdir=dist --platform=node --format=esm --bundle --external:@rcade/sdk && tsc"
   },
   "files": [
-    "dist",
-    "index.ts"
+    "dist"
   ],
   "devDependencies": {},
   "dependencies": {
-    "@rcade/sdk": "^0.2.2"
+    "@rcade/sdk": "workspace:^"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
