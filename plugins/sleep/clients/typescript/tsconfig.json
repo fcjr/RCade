@@ -13,6 +13,7 @@
     "allowImportingTsExtensions": false,
     "verbatimModuleSyntax": true,
     "declaration": true,
+    "declarationMap": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
 

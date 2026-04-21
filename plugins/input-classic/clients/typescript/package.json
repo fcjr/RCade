@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "esbuild index.ts --outdir=dist --platform=node --format=esm --bundle --external:@rcade/sdk && tsc"
+    "build": "esbuild index.ts --outdir=dist --platform=node --format=esm --bundle --external:@rcade/sdk --sourcemap && tsc"
   },
   "files": [
     "dist"
