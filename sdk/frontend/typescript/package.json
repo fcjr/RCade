@@ -7,17 +7,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
   "scripts": {
     "build": "tsc --build tsconfig.json"
   },
-  "files": [
-    "dist",
-    "src",
-    "index.ts"
-  ],
+  "files": ["dist", "src", "index.ts"],
   "devDependencies": {},
   "peerDependencies": {
     "typescript": "^5.0.0"
