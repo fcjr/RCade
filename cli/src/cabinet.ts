@@ -228,6 +228,7 @@ export function launchCabinet(
   args: string[],
 ): void {
   let command: string;
+  const env = { ...process.env };
 
   switch (info.nodePlatform) {
     case "darwin":
@@ -235,11 +236,10 @@ export function launchCabinet(
       break;
     case "win32":
       command = binaryPath;
+      break;
     case "linux":
       command = binaryPath;
-      // disable sandboxing for linux
-      args.push("--");
-      args.push("--no-sandbox");
+      env.ELECTRON_DISABLE_SANDBOX = "1";
       break;
   }
 
@@ -247,6 +247,7 @@ export function launchCabinet(
 
   const child = spawn(command, args, {
     stdio: "inherit",
+    env,
   });
 
   const cleanup = () => {
