@@ -238,6 +238,7 @@ export function launchCabinet(
     case "linux":
       command = binaryPath;
       // disable sandboxing for linux
+      args.push("--");
       args.push("--no-sandbox");
       break;
   }
