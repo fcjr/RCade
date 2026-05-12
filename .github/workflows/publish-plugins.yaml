@@ -121,9 +121,6 @@ jobs:
       - name: Build
         run: pnpm run build --filter=@rcade/plugin-${{ inputs.plugin }}
 
-      - name: Update npm
-        run: npm install -g npm@latest
-
       - name: Publish
         working-directory: plugins/${{ inputs.plugin }}/clients/typescript
         run: |

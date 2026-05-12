@@ -126,9 +126,6 @@ jobs:
       - name: Build
         run: pnpm run build --filter=${{ matrix.package }}
 
-      - name: Update npm
-        run: npm install -g npm@latest
-
       - name: Publish
         working-directory: ${{ matrix.directory }}
         run: |
