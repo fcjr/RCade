@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "esbuild bin.ts --outdir=dist --platform=node --format=esm --bundle --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
+    "build": "esbuild bin.ts --outdir=dist --platform=node --format=esm --bundle --banner:js=\"import { createRequire as __cr_create_rcade } from 'module'; const require = __cr_create_rcade(import.meta.url);\""
   },
   "dependencies": {
     "commander": "^14.0.2",
