@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "@rcade/plugin-input-classic": "^0.2.3",
+        "@rcade/plugin-input-spinners": "^0.2.2"
+    }
+}

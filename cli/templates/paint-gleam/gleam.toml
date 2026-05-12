@@ -1,0 +1,26 @@
+name = "game"
+version = "0.1.0"
+target = "javascript"
+
+[dependencies]
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+paint = ">= 1.0.1 and < 2.0.0"
+lustre = ">= 5.6.0 and < 6.0.0"
+gleam_community_colour = ">= 2.0.4 and < 3.0.0"
+rcade_inputs = ">= 1.0.1 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
+lustre_dev_tools = ">= 2.3.5 and < 3.0.0"
+
+[javascript]
+runtime = "bun"
+
+[tools.lustre.bin]
+bun = "system"
+
+[tools.lustre.html]
+stylesheets = [{ href = "/style.css" }]
+
+[tools.lustre.build]
+minify = true
