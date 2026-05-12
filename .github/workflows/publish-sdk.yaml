@@ -116,7 +116,4 @@ jobs:
 
       - name: Publish
         working-directory: sdk/frontend/typescript
-        run: |
-          pnpm pack
-          tarball=$(ls *.tgz)
-          npm publish "$tarball" --provenance --access public
+        run: pnpm publish --provenance --access public --no-git-checks
