@@ -21,3 +21,10 @@ packages:
   - engine
   - menu
   - log
+allowBuilds:
+  electron: true
+  electron-winstaller: true
+  esbuild: false
+  node-hid: true
+  sharp: true
+  workerd: true
