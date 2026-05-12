@@ -208,14 +208,6 @@ async function setup_js(path: string) {
     await exc`git init`;
 
     write_workflow(path, [
-        {
-            name: "Setup Node.js",
-            uses: "actions/setup-node@v4",
-            with: {
-                "node-version": "20",
-                ...(packageManager === "bun" ? {} : { cache: packageManager })
-            }
-        },
         ...(packageManager === "bun" ? [{
             name: "Setup Bun",
             uses: "oven-sh/setup-bun@v2",
@@ -230,6 +222,14 @@ async function setup_js(path: string) {
                 "version": 9
             }
         }] : []),
+        {
+            name: "Setup Node.js",
+            uses: "actions/setup-node@v4",
+            with: {
+                "node-version": "20",
+                ...(packageManager === "bun" ? {} : { cache: packageManager })
+            }
+        },
         {
             name: "Install dependencies",
             run: `${packageManager} install`,
