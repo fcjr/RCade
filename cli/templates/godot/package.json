@@ -1,0 +1,15 @@
+{
+  "name": "beyblade",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "cd harness && npm ci && npm run build && npm run inject",
+    "serve": "serve web-export -p 5173",
+    "dev": "concurrently \"npm run serve\" \"rcade dev http://localhost:5173\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "rcade": "^0.0.42",
+    "serve": "^14.0.0"
+  }
+}
