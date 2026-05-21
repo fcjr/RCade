@@ -111,6 +111,7 @@ export const createCommand = new Command("create")
                 { value: "vanilla-ocaml", name: "Vanilla (OCaml)" },
                 { value: "pygame", name: "Pygame (Python)" },
                 { value: "paint-gleam", name: "Paint (Gleam)" },
+                { value: "godot", name: "Godot (GDScript)" },
             ]
         });
 
