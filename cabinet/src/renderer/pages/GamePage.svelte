@@ -72,10 +72,6 @@
 
   let frame: HTMLIFrameElement | undefined = $state(undefined);
 
-  setInterval(() => {
-    frame?.focus();
-  }, 100);
-
   const receivedPorts = new Map<string, MessagePort>();
 
   onMount(() => {

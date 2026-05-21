@@ -135,7 +135,7 @@ let
           baseName == ".npmrc";
   };
 
-  pnpmModulesHash = "sha256-wweW+AAp8i9oJ2EjgTi10K9LQRrAPNvBiMObQWSooa8=";
+  pnpmModulesHash = "sha256-+c6CUACQJvz6HsL99OAYv41d9b980kfz6kCCu5vLKdM=";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
   pnpmModules = stdenv.mkDerivation {
