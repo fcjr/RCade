@@ -21,8 +21,8 @@ RCadeInput="*uid://ci44fyk4upc0u"
 
 [display]
 
-window/size/viewport_width=336
-window/size/viewport_height=262
+window/size/viewport_width=320
+window/size/viewport_height=240
 
 [editor_plugins]
 
