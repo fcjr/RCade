@@ -38,7 +38,10 @@ in
   ];
 
   # Secrets
-  age.secrets.cabinet-secrets-env.file = ../../secrets/cabinet-secrets-env.age;
+  age.secrets.cabinet-secrets-env = {
+    file = ../../secrets/cabinet-secrets-env.age;
+    owner = config.services.rcade-cabinet.user;
+  };
   age.secrets.wifi-psk.file = ../../secrets/wifi-psk.age;
 
   # ===========================================================================
