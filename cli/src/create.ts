@@ -389,41 +389,14 @@ async function setup_godot(path: string) {
             id: "export",
             uses: "firebelley/godot-export@v7.0.0",
             with: {
-                godot_executable_download_url: "https://github.com/godotengine/godot/releases/download/4.6-stable/Godot_v4.6-stable_linux.x86_64.zip",
-                godot_export_templates_download_url: "https://github.com/godotengine/godot/releases/download/4.6-stable/Godot_v4.6-stable_export_templates.tpz",
-                relative_project_path: "./godot",
-                archive_output: false,
+                godot_executable_download_url: "https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_linux.x86_64.zip",
+                godot_export_templates_download_url: "https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_export_templates.tpz",
+                relative_project_path: "./",
+                relative_export_path: "dist",
                 verbose: true,
             }
-        },
-        {
-            name: "Move export to web-export/",
-            run: 'mv "${{ steps.export.outputs.build_directory }}/Web" web-export',
-        },
-        {
-            name: "Set up Node",
-            uses: "actions/setup-node@v4",
-            with: {
-                "node-version": 22,
-            }
-        },
-        {
-            name: "Install harness deps",
-            run: "npm ci",
-            "working-directory": "harness",
-        },
-        {
-            name: "Bundle RCade bridge",
-            run: "npm run build",
-            "working-directory": "harness",
-        },
-        {
-            name: "Inject bridge into index.html",
-            run: "npm run inject",
-            "working-directory": "harness",
         },
     ])
 
     await exc`git init`;
 }
-
