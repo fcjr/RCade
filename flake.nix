@@ -218,7 +218,7 @@
               pkg-config
 
               # JavaScript runtime & package manager
-              pnpm_9
+              pnpm
               nodejs_22
 
               # Useful dev tools
