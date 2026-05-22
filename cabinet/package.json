@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",
-    "@hono/node-server": "^1.13.7",
+    "@hono/node-server": "^1.19.13",
     "@rcade/api": "workspace:*",
     "@rcade/input-classic": "workspace:*",
     "@rcade/input-spinners": "workspace:*",
@@ -28,7 +28,7 @@
     "@rcade/plugin-menu-backend": "workspace:*",
     "@rcade/sdk": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
-    "hono": "^4.6.14",
+    "hono": "^4.12.18",
     "semver": "^7.7.3",
     "tar": "^7.4.3",
     "zod": "^4.1.13"
@@ -39,12 +39,12 @@
     "@types/semver": "^7.7.1",
     "@types/tar": "^6.1.13",
     "concurrently": "^9.0.0",
-    "electron": "^39.2.4",
+    "electron": "^39.8.5",
     "electron-builder": "^26.0.12",
-    "svelte": "^5.0.0",
+    "svelte": "^5.55.7",
     "typescript": "^5.6.0",
     "esbuild": "^0.25.0",
-    "vite": "^6.0.0"
+    "vite": "^6.4.2"
   },
   "build": {
     "npmRebuild": false,

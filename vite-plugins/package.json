@@ -27,7 +27,7 @@
     "devDependencies": {
         "@types/node": "^22.0.0",
         "typescript": "^5.0.0",
-        "vite": "^7.2.4",
+        "vite": "^7.3.2",
         "pyodide": "^0.27.0"
     },
     "publishConfig": {
