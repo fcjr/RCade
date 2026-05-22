@@ -366,6 +366,23 @@ This monorepo contains:
 
 ---
 
+## rcade-nuc System Specs
+
+| Component | Details |
+|-----------|---------|
+| Hostname | rcade-nuc |
+| OS | NixOS 26.05 (Yarara) |
+| Kernel | Linux 6.18.16 (x86_64) |
+| CPU | Intel Core i7-10710U @ 1.10GHz (6 cores / 12 threads, turbo to 4.7GHz) |
+| RAM | 64 GB |
+| GPU | Intel UHD Graphics (Comet Lake) — integrated |
+| Disk | 477 GB SSD — 400 GB root partition, 1 GB boot, 69 GB swap |
+| Virtualization | VT-x supported |
+| Cache | L1: 384 KiB, L2: 1.5 MiB, L3: 12 MiB |
+| DRI Devices | card0, card1, renderD128 |
+
+---
+
 ## Community Games
 
 Looking for inspiration? Check out the [rcade-community](https://github.com/rcade-community) archive—a collection of games created by the Recurse Center community.
