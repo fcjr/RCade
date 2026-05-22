@@ -111,6 +111,7 @@ export const createCommand = new Command("create")
                 { value: "vanilla-ocaml", name: "Vanilla (OCaml)" },
                 { value: "pygame", name: "Pygame (Python)" },
                 { value: "paint-gleam", name: "Paint (Gleam)" },
+                { value: "godot", name: "Godot (GDScript)" },
             ]
         });
 
@@ -193,6 +194,7 @@ export const createCommand = new Command("create")
             case "pygame": await setup_js(projectDir); break;
             case "vanilla-ocaml": await setup_ocaml(projectDir); break;
             case "paint-gleam": await setup_gleam(projectDir); break;
+            case "godot": await setup_godot(projectDir); break;
         }
     });
 
@@ -379,3 +381,23 @@ async function setup_gleam(path: string) {
     await exc`git init`;
 }
 
+async function setup_godot(path: string) {
+    const exc = execa({ cwd: path, stdio: "inherit" });
+
+    write_workflow(path, [
+        {
+            name: "Export Godot to Web",
+            id: "export",
+            uses: "firebelley/godot-export@v7.0.0",
+            with: {
+                godot_executable_download_url: "https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_linux.x86_64.zip",
+                godot_export_templates_download_url: "https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_export_templates.tpz",
+                relative_project_path: "./",
+                relative_export_path: "dist",
+                verbose: true,
+            }
+        },
+    ])
+
+    await exc`git init`;
+}
