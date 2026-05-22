@@ -3,15 +3,14 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "devDependencies": {},
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@rcade/api": "workspace:*",
-    "@rcade/sdk-plugin": "workspace:*",
     "@rcade/sdk": "workspace:*",
+    "@rcade/sdk-plugin": "workspace:*",
     "@types/node": "^25.0.1",
-    "electron": "^39.8.5"
+    "electron": "^39.8.10"
   }
 }

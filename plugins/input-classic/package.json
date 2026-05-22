@@ -11,10 +11,10 @@
     "./rcade.manifest.json": "./rcade.manifest.json"
   },
   "devDependencies": {
-    "electron": "^39.8.5"
+    "electron": "^39.8.10"
   },
   "dependencies": {
-    "@rcade/sdk-plugin": "0.1.0"
+    "@rcade/sdk-plugin": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

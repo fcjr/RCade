@@ -28,3 +28,16 @@ allowBuilds:
   node-hid: true
   sharp: true
   workerd: true
+overrides:
+  '@xmldom/xmldom': ^0.8.13
+  'brace-expansion@<1.1.13': ^1.1.13
+  'brace-expansion@>=2.0.0 <2.0.3': ^2.0.3
+  'brace-expansion@>=4.0.0 <5.0.6': ^5.0.6
+  cookie: ^0.7.0
+  esbuild: ^0.25.0
+  'ip-address@<10.1.1': ^10.1.1
+  'lodash@<4.17.24': ^4.17.24
+  'picomatch@<2.3.2': ^2.3.2
+  'picomatch@>=4.0.0 <4.0.4': ^4.0.4
+  'postcss@<8.5.10': ^8.5.10
+  'ws@<8.20.1': ^8.20.1
