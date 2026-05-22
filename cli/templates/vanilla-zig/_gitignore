@@ -1,0 +1,4 @@
+/.zig-cache/
+/dist/
+/zig-out/
+/zig-pkg/

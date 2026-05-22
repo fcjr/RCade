@@ -98,13 +98,17 @@ If your deployment fails with an authentication error, you need to link your Git
 
 Choose your weapon:
 
-| Template | Best For |
-|----------|----------|
-| **Vanilla JavaScript** | Quick prototypes, simple games |
-| **Vanilla TypeScript** | Type-safe development, larger projects |
-| **p5.js** | Creative coding, visual games, animations |
-| **p5.js + TypeScript** | Creative coding with type safety |
-| **Vanilla Rust** | Performance-critical games, WASM enthusiasts |
+- **Vanilla JavaScript**
+- **Vanilla TypeScript**
+- **p5.js (JavaScript)**
+- **p5.js (TypeScript)**
+- **Vanilla Rust**
+- **Vanilla C/C++**
+- **Vanilla Zig**
+- **Vanilla OCaml**
+- **Pygame (Python)**
+- **Paint (Gleam)**
+- **Godot (GDScript)**
 
 All templates come pre-configured with:
 - Hot module reloading for fast development

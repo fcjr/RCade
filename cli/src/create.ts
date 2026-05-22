@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { input, select, confirm } from "@inquirer/prompts";
 import { fdir } from "fdir";
 import mustache from "mustache";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path, { dirname } from "node:path";
@@ -108,6 +109,7 @@ export const createCommand = new Command("create")
                 { value: "vanilla-js", name: "Vanilla (JavaScript)" },
                 { value: "vanilla-rs", name: "Vanilla (Rust)" },
                 { value: "vanilla-cpp", name: "Vanilla (C/C++)" },
+                { value: "vanilla-zig", name: "Vanilla (Zig)" },
                 { value: "vanilla-ocaml", name: "Vanilla (OCaml)" },
                 { value: "pygame", name: "Pygame (Python)" },
                 { value: "paint-gleam", name: "Paint (Gleam)" },
@@ -160,6 +162,7 @@ export const createCommand = new Command("create")
             description,
             private: String(visibility !== "public"),
             rcade_version: packageJson.version,
+            zig_fingerprint: `0x${crypto.randomBytes(8).toString("hex")}`,
         }
 
         // ensure project directory exists
@@ -191,6 +194,7 @@ export const createCommand = new Command("create")
             case "vanilla-js": await setup_js(projectDir); break;
             case "vanilla-rs": await setup_rs(projectDir); break;
             case "vanilla-cpp": await setup_cpp(projectDir); break;
+            case "vanilla-zig": await setup_zig(projectDir); break;
             case "pygame": await setup_js(projectDir); break;
             case "vanilla-ocaml": await setup_ocaml(projectDir); break;
             case "paint-gleam": await setup_gleam(projectDir); break;
@@ -336,6 +340,30 @@ async function setup_cpp(path: string) {
         {
             name: "Build with Emscripten",
             run: "make build"
+        }
+    ])
+
+    await exc`git init`;
+}
+
+async function setup_zig(path: string) {
+    const exc = execa({ cwd: path, stdio: "inherit" });
+
+    write_workflow(path, [
+        {
+            name: "Setup Zig",
+            uses: "mlugg/setup-zig@v2",
+            with: {
+                version: "0.16.0"
+            }
+        },
+        {
+            name: "Check formatting",
+            run: "zig fmt --check build.zig src tools"
+        },
+        {
+            name: "Build Zig project",
+            run: "zig build --release -p dist"
         }
     ])
 
