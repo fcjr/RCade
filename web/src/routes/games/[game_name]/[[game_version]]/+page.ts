@@ -1,5 +1,5 @@
 import { Game } from '@rcade/api';
-import type { PageLoad } from '../$types';
+import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ data }) => {
     const game = Game.fromApiResponse(data.game);
