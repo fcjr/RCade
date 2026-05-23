@@ -130,6 +130,9 @@ importers:
       '@rcade/input-spinners':
         specifier: workspace:*
         version: link:../plugins/input-spinners
+      '@rcade/marquee':
+        specifier: workspace:*
+        version: link:../plugins/marquee
       '@rcade/plugin-menu-backend':
         specifier: workspace:*
         version: link:../plugins/menu
@@ -391,8 +394,8 @@ importers:
   plugins/marquee:
     dependencies:
       '@rcade/sdk-plugin':
-        specifier: ^0.1.0
-        version: 0.1.0(typescript@5.9.3)
+        specifier: workspace:*
+        version: link:../../sdk/backend
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -1699,11 +1702,6 @@ packages:
 
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
-
-  '@rcade/sdk-plugin@0.1.0':
-    resolution: {integrity: sha512-FFe4hSVvFJt+ZMKQKyT8QqRrBMrRY/niXlZ7AzwbL/W6DiwiimA4ehuDAQPhrb90LcaHwr+4SHKA+tElMbhcuQ==}
-    peerDependencies:
-      typescript: ^5
 
   '@rcade/sdk@0.2.6':
     resolution: {integrity: sha512-bXXBz0A90drVsuAig21SipcofdIBj9sUmgGZWd5JafqlmVCRiiNTCHo1yIhPfp5r0xUcI1CmH+KwRgzemrplAw==}
@@ -5308,13 +5306,6 @@ snapshots:
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
-
-  '@rcade/sdk-plugin@0.1.0(typescript@5.9.3)':
-    dependencies:
-      electron: 39.8.10
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - supports-color
 
   '@rcade/sdk@0.2.6(typescript@5.9.3)':
     dependencies:

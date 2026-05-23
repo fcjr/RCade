@@ -25,6 +25,7 @@
     "@rcade/input-spinners": "workspace:*",
     "@rcade/plugin-menu-backend": "workspace:*",
     "@rcade/plugin-sleep": "workspace:*",
+    "@rcade/marquee": "workspace:*",
     "@rcade/sdk": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
     "@rcade/sleep": "workspace:*",
