@@ -26,7 +26,7 @@ let
   launchScript = pkgs.writeShellScript "rcade-launch" ''
     export ELECTRON_OZONE_PLATFORM_HINT=wayland
 
-    export RCADE_MARQUEE_HOST="ws://10.100.2.17:8080"
+    export RCADE_MARQUEE_HOST="ws://${cfg.marqueeIp}:8080"
 
     # Prepend the NixOS hardware driver path so the system's active GPU driver
     # (nvidia, mesa, etc.) is found before any bundled mesa libs in the package wrapper.
@@ -103,6 +103,11 @@ in
       type = lib.types.bool;
       default = false;
       description = "Whether to open firewall ports for the cabinet server.";
+    };
+
+    marqueeIp = lib.mkOption {
+      type = lib.types.str;
+      description = "The IP address of the marquee display.";
     };
   };
 
