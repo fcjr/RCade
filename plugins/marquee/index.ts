@@ -102,6 +102,9 @@ export default class PluginMarquee implements Plugin {
 
         port.addListener("message", (event) => {
             const msg = event.data;
+
+            console.log("marq it", msg);
+
             switch (msg?.type) {
                 case "take": {
                     if (this.entry) return;

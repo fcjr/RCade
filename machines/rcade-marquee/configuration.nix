@@ -35,6 +35,7 @@ in
 
   networking.hostName = "rcade-marquee";
   networking.wireless.enable = true;
+  networking.firewall.enable = false;
 
   # Users
   users.users.rcade = {
@@ -86,7 +87,7 @@ in
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
     serviceConfig = {
-      ExecStart = "${marqueeDisplay}/bin/marquee-display";
+      ExecStart = "${marqueeDisplay}/bin/marquee-display -addr 0.0.0.0:8080";
       User = "root";
       Restart = "always";
       RestartSec = 5;

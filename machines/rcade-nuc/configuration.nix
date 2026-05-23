@@ -97,6 +97,8 @@ in
         sleep 0.5
       done
     '';
+
+    marqueeIp = "172.16.12.100";
   };
 
   # ===========================================================================
@@ -357,4 +359,56 @@ in
   # This should match the NixOS version you initially installed
   # Do not change this unless you understand the implications
   system.stateVersion = "24.05";
+
+  # ===========================================================================
+  # DHCP Server on USB ethernet (enp0s20f0u4)
+  # ===========================================================================
+  # Take this interface away from NetworkManager so we can pin a static IP.
+  networking.interfaces.enp0s20f0u4.ipv4.addresses = [{
+    address = "172.16.12.1";
+    prefixLength = 24;
+  }];
+
+  services.kea.dhcp4 = {
+    enable = true;
+    settings = {
+      interfaces-config = {
+        interfaces = [ "enp0s20f0u4" ];
+        dhcp-socket-type = "raw";
+      };
+      lease-database = {
+        type = "memfile";
+        persist = true;
+        name = "/var/lib/kea/dhcp4.leases";
+      };
+      valid-lifetime = 3600;
+      renew-timer = 900;
+      rebind-timer = 1800;
+      subnet4 = [{
+        id = 1;
+        subnet = "172.16.12.0/24";
+        pools = [{ pool = "172.16.12.100 - 172.16.12.100"; }];
+        option-data = [
+          { name = "routers"; data = "172.16.12.1"; }
+          { name = "domain-name-servers"; data = "1.1.1.1, 8.8.8.8"; }
+        ];
+      }];
+    };
+  };
+
+  # ===========================================================================
+  # Routing for marquee subnet
+  # ===========================================================================
+  # The marquee at 172.16.12.100 uses the NUC as its default gateway (set via
+  # the `routers` DHCP option above). Enable forwarding + masquerade so its
+  # traffic actually makes it out to the upstream network.
+  networking.nat = {
+    enable = true;
+    internalInterfaces = [ "enp0s20f0u4" ];
+    # externalInterface left unset: MASQUERADE on the default-route iface,
+    # which works whether you're on wifi or built-in ethernet.
+  };
+
+  # Trust the marquee subnet so the firewall doesn't drop forwarded packets.
+  networking.firewall.trustedInterfaces = [ "enp0s20f0u4" ];
 }
