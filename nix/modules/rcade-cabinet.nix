@@ -26,6 +26,8 @@ let
   launchScript = pkgs.writeShellScript "rcade-launch" ''
     export ELECTRON_OZONE_PLATFORM_HINT=wayland
 
+    export RCADE_MARQUEE_HOST="ws://10.100.2.17:8080"
+
     # Prepend the NixOS hardware driver path so the system's active GPU driver
     # (nvidia, mesa, etc.) is found before any bundled mesa libs in the package wrapper.
     export LD_LIBRARY_PATH="/run/opengl-driver/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
