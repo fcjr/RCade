@@ -10,7 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@rcade/sdk-plugin": "^0.1.0",
+    "@rcade/sdk-plugin": "workspace:*",
     "ws": "^8.18.0"
   }
 }
