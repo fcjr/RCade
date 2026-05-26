@@ -425,6 +425,10 @@ async function setup_godot(path: string) {
                 verbose: true,
             }
         },
+        {
+            name: "Move output",
+            run: "mv dist/rcade/* dist/.",
+        },
     ])
 
     await exc`git init`;
