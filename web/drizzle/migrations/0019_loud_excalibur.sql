@@ -1,0 +1,1 @@
+ALTER TABLE `games` ADD `hidden` integer NOT NULL DEFAULT 0;

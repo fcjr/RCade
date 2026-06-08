@@ -346,6 +346,10 @@ export class Game {
             return undefined;
         }
 
+        if (this.data.hidden == 1 && auth.for === "cabinet") {
+            return undefined;
+        }
+
         const versions = (await Promise.all(this.data.versions.map(async version => {
             if (version.status !== "published") {
                 return undefined;
@@ -420,6 +424,7 @@ export class Game {
         return {
             id: this.data.id,
             name: this.data.name,
+            hidden: this.data.hidden,
             admin_lock_reason: this.data.admin_lock_reason,
             git: {
                 ssh: `git@github.com:${this.data.github_repo}.git`,
@@ -454,6 +459,14 @@ export class Game {
 
         return result.length > 0;
     }
+
+    public async setHidden(hidden: boolean): Promise<void> {
+        await (await getDb()).update(games)
+            .set({ hidden: hidden ? 1 : 0 })
+            .where(eq(games.id, this.data.id))
+            .run();
+    }
+
 
     public async markVersionHasThumbnail(version: string): Promise<void> {
         await (await getDb()).update(gameVersions)

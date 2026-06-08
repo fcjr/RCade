@@ -1,7 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { rm } from 'fs/promises';
 import { execSync } from 'child_process';
-import * as schema from '../src/lib/db/schema';
 import { sql } from 'drizzle-orm';
 
 // Colors and formatting
