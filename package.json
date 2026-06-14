@@ -20,7 +20,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "husky": "^9.1.7",
     "turbo": "^2.9.14"
   },
