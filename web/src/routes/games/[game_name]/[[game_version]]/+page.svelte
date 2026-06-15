@@ -79,6 +79,7 @@
 	});
 
 	let hidden = $state(false);
+	let confirmingHidden = $state(false);
 
 	$effect(() => {
 		hidden = data.game.hidden();
@@ -97,6 +98,11 @@
 		} catch {
 			hidden = !next;
 		}
+	}
+
+	async function confirmToggleHidden() {
+		confirmingHidden = false;
+		await toggleHidden();
 	}
 
 	async function handleUpdate(game: Game, version: GameVersion) {
@@ -323,7 +329,7 @@
 						</div>
 					</div>
 					{#if data.session?.user?.rc_id}
-						<button class="sys-chip cursor-pointer" onclick={toggleHidden}>
+						<button class="sys-chip cursor-pointer" onclick={() => (confirmingHidden = true)}>
 							<span class="chip-label icon-label">
 								<span>HIDE ON CABINET</span>
 							</span>
@@ -518,6 +524,45 @@
 	</main>
 </div>
 
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (confirmingHidden = false)} />
+
+{#if confirmingHidden}
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div
+		class="confirm-overlay"
+		role="presentation"
+		onclick={() => (confirmingHidden = false)}
+	>
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<div
+			class="confirm-dialog"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<div class="confirm-title">
+				{hidden ? 'SHOW ON CABINET?' : 'HIDE ON CABINET?'}
+			</div>
+			<div class="confirm-body">
+				{#if hidden}
+					This game will become visible on the cabinet again.
+				{:else}
+					This game will no longer appear on the cabinet.
+				{/if}
+			</div>
+			<div class="confirm-actions">
+				<button class="confirm-btn cancel" onclick={() => (confirmingHidden = false)}>
+					CANCEL
+				</button>
+				<button class="confirm-btn confirm" onclick={confirmToggleHidden}>
+					{hidden ? 'SHOW' : 'HIDE'}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <style>
 	@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Orbitron:wght@500;700&family=Roboto+Mono:wght@400;500&display=swap');
 
@@ -711,6 +756,68 @@
 		height: 100%;
 		display: flex;
 		align-items: center;
+	}
+
+	.confirm-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(15, 15, 15, 0.85);
+		backdrop-filter: blur(4px);
+		z-index: 100;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+	}
+	.confirm-dialog {
+		background: #111;
+		border: 1px solid #333;
+		border-radius: 4px;
+		max-width: 360px;
+		width: 100%;
+		padding: 1.25rem;
+	}
+	.confirm-title {
+		font-weight: 700;
+		font-size: 0.9rem;
+		letter-spacing: 0.05em;
+		color: #ccc;
+		margin-bottom: 0.5rem;
+	}
+	.confirm-body {
+		color: #999;
+		font-size: 0.8rem;
+		line-height: 1.4;
+		margin-bottom: 1.25rem;
+	}
+	.confirm-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+	.confirm-btn {
+		background: #222;
+		border: 1px solid #333;
+		border-radius: 4px;
+		color: #999;
+		font-weight: 700;
+		font-size: 0.7rem;
+		letter-spacing: 0.05em;
+		padding: 0 12px;
+		height: 28px;
+		cursor: pointer;
+	}
+	.confirm-btn:hover {
+		border-color: #555;
+		color: #ccc;
+	}
+	.confirm-btn.confirm {
+		background: var(--deck-danger);
+		border-color: var(--deck-danger);
+		color: #fff;
+	}
+	.confirm-btn.confirm:hover {
+		filter: brightness(1.1);
 	}
 
 	.status-light {
