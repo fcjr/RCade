@@ -45,7 +45,7 @@ export class Game {
     }
 
     public hidden(): boolean {
-        return this.apiResponse.hidden == 1;
+        return this.apiResponse.hidden === true;
     }
 
     public intoApiResponse(): any {

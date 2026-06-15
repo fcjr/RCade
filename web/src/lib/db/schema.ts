@@ -18,7 +18,7 @@ export const games = sqliteTable('games', {
     github_repo: text("github_repo").notNull(),
     owner_rc_id: numeric("owner_rc_id").notNull(),
     admin_lock_reason: text("admin_lock_reason"),
-    hidden: integer("hidden").notNull().$default(() => 0),
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
 }, (t) => [
     index("games_name_idx").on(t.name),
 ]);

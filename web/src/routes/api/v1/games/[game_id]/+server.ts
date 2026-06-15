@@ -40,9 +40,9 @@ export const GET: RequestHandler = async ({ locals, params, request }) => {
 
 export const PATCH: RequestHandler = async ({ locals, params, request }) => {
     const session = await locals.auth();
-    const auth = session?.user ? { for: <const>"recurser", rc_id: session.user.rc_id } : request.headers.get("Authorization") == `Bearer ${env.CABINET_API_KEY}` ? { for: <const>"cabinet" } : { for: <const>"public" };
 
-    if (auth.for === "public") {
+    // TODO: scope this to the game's owner (owner_rc_id) rather than any authenticated Recurser.
+    if (!session?.user) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -53,7 +53,7 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
         }
 
         const body = await request.json();
-        const hidden = body.hidden ?? false;
+        const hidden = body.hidden === true;
 
         const game = await Game.byId(gameId);
         if (!game) {

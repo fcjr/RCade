@@ -93,7 +93,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ hidden: next })
 			});
-			if (!res.ok) hidden = !next; 
+			if (!res.ok) hidden = !next;
 		} catch {
 			hidden = !next;
 		}

@@ -346,7 +346,7 @@ export class Game {
             return undefined;
         }
 
-        if (this.data.hidden == 1 && auth.for === "cabinet") {
+        if (this.data.hidden && auth.for === "cabinet") {
             return undefined;
         }
 
@@ -462,11 +462,10 @@ export class Game {
 
     public async setHidden(hidden: boolean): Promise<void> {
         await (await getDb()).update(games)
-            .set({ hidden: hidden ? 1 : 0 })
+            .set({ hidden })
             .where(eq(games.id, this.data.id))
             .run();
     }
-
 
     public async markVersionHasThumbnail(version: string): Promise<void> {
         await (await getDb()).update(gameVersions)
