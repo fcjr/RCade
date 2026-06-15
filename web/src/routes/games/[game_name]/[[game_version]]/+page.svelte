@@ -78,6 +78,27 @@
 		handleUpdate(data.game, data.version);
 	});
 
+	let hidden = $state(false);
+
+	$effect(() => {
+		hidden = data.game.hidden();
+	});
+
+	async function toggleHidden() {
+		const next = !hidden;
+		hidden = next;
+		try {
+			const res = await fetch(`/api/v1/games/${data.game.id()}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ hidden: next })
+			});
+			if (!res.ok) hidden = !next;
+		} catch {
+			hidden = !next;
+		}
+	}
+
 	async function handleUpdate(game: Game, version: GameVersion) {
 		if (ENGINE == undefined) return undefined;
 
@@ -301,6 +322,16 @@
 							{data.version.visibility()?.toUpperCase()}
 						</div>
 					</div>
+					{#if data.session?.user?.rc_id}
+						<button class="sys-chip cursor-pointer" onclick={toggleHidden}>
+							<span class="chip-label icon-label">
+								<span>HIDE ON CABINET</span>
+							</span>
+							<div class="chip-value">
+								{hidden ? 'TRUE' : 'FALSE'}
+							</div>
+						</button>
+					{/if}
 
 					{#each data.version.dependencies() as dep}
 						<div class="sys-chip">

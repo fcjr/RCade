@@ -44,6 +44,10 @@ export class Game {
         return this.apiResponse.git.ssh;
     }
 
+    public hidden(): boolean {
+        return this.apiResponse.hidden === true;
+    }
+
     public intoApiResponse(): any {
         return this.apiResponse;
     }

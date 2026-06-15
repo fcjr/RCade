@@ -37,3 +37,38 @@ export const GET: RequestHandler = async ({ locals, params, request }) => {
         );
     }
 };
+
+export const PATCH: RequestHandler = async ({ locals, params, request }) => {
+    const session = await locals.auth();
+
+    // TODO: scope this to the game's owner (owner_rc_id) rather than any authenticated Recurser.
+    if (!session?.user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    try {
+        const gameId = params.game_id ?? "";
+        if (!gameId) {
+            return new Response(JSON.stringify({ error: 'Game ID is required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        const body = await request.json();
+        const hidden = body.hidden === true;
+
+        const game = await Game.byId(gameId);
+        if (!game) {
+            return new Response(JSON.stringify({ error: 'Game not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        await game.setHidden(hidden);
+
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    } catch (error) {
+        console.error('Database error:', error);
+
+        return new Response(
+            JSON.stringify({ error: 'Failed to update game' }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+};
