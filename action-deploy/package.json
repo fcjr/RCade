@@ -10,7 +10,7 @@
     "@actions/github": "^9.1.1",
     "@actions/io": "^2.0.0",
     "@types/node": "^22.0.0",
-    "tar": "^7.5.2",
+    "tar": "^7.5.16",
     "zod": "^4.1.13"
   },
   "peerDependencies": {
