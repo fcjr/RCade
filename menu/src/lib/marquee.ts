@@ -47,7 +47,6 @@ export function startTestPattern(): () => void {
         try {
             handle = await take();
             if (stopped) return;
-            handle.setBrightness(0.8);
             const start = performance.now();
             timer = setInterval(() => {
                 const t = (performance.now() - start) / 1000;
