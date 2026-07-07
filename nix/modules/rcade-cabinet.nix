@@ -26,7 +26,7 @@ let
   launchScript = pkgs.writeShellScript "rcade-launch" ''
     export ELECTRON_OZONE_PLATFORM_HINT=wayland
 
-    export RCADE_MARQUEE_HOST="ws://${cfg.marqueeIp}:8080"
+    ${if cfg.marqueeIp != null then ''RCADE_MARQUEE_HOST="ws://${cfg.marqueeIp}:8080"'' else ""}
 
     # Prepend the NixOS hardware driver path so the system's active GPU driver
     # (nvidia, mesa, etc.) is found before any bundled mesa libs in the package wrapper.
@@ -106,7 +106,8 @@ in
     };
 
     marqueeIp = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.nullOr lib.types.str;
+      default = null;
       description = "The IP address of the marquee display.";
     };
   };
