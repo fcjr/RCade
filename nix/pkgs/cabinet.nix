@@ -13,7 +13,7 @@
 , makeWrapper
 , autoPatchelfHook
 , electron
-, pnpm_9
+, pnpm
 , nodejs_22
 , cacert
 , alsa-lib
@@ -135,14 +135,14 @@ let
           baseName == ".npmrc";
   };
 
-  pnpmModulesHash = "sha256-+c6CUACQJvz6HsL99OAYv41d9b980kfz6kCCu5vLKdM=";
+  pnpmModulesHash = "sha256-zBKJVZ8/gnNsIQ6wKbXytYWlp72bpThp1CH5e2q/NPY=";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
   pnpmModules = stdenv.mkDerivation {
     name = "rcade-pnpm-modules.tar.gz";
     src = depsSrc;
 
-    nativeBuildInputs = [ nodejs_22 pnpm_9 cacert ];
+    nativeBuildInputs = [ nodejs_22 pnpm cacert ];
 
     outputHashAlgo = "sha256";
     outputHashMode = "flat";
@@ -154,7 +154,9 @@ let
     buildPhase = ''
       export HOME=$(mktemp -d)
       export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
-      pnpm install --frozen-lockfile --ignore-scripts
+      # Don't try to self-install the version from package.json's packageManager
+      # field (no network access to fetch it; use nixpkgs' pnpm as-is).
+      pnpm install --frozen-lockfile --ignore-scripts --config.manage-package-manager-versions=false
     '';
 
     installPhase = ''
@@ -180,7 +182,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [
     makeWrapper
     autoPatchelfHook
-    pnpm_9
+    pnpm
     nodejs_22
   ];
 

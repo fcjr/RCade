@@ -260,7 +260,7 @@
           # Minimal shell for CI/quick tasks
           ci = pkgs.mkShell {
             name = "rcade-ci";
-            buildInputs = with pkgs; [ pnpm_9 nodejs_22 ];
+            buildInputs = with pkgs; [ pnpm nodejs_22 ];
           };
         }
       );
