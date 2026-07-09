@@ -61,26 +61,46 @@ for (const kind of ["keydown", "keyup"]) {
     });
 })();
 
-// WebKit renders silence through AudioWorklets when an AudioContext is created
-// with an explicit sampleRate that differs from the output device (e.g. Godot
-// forces 44100 while Macs run at 48000). Engines read the resulting
-// ctx.sampleRate back and adapt, so on Safari we drop the forced rate and let
-// the context open at the device rate.
 (function () {
     const ua = navigator.userAgent;
-    if (!/AppleWebKit/.test(ua) || /Chrome|Chromium|Edg|OPR/.test(ua)) return;
+    const isSafari = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
     const Orig = window.AudioContext || window.webkitAudioContext;
     if (!Orig) return;
+
+    const contexts = [];
+
     function PatchedAudioContext(options) {
-        if (options && options.sampleRate !== undefined) {
+        // WebKit renders silence through AudioWorklets when an AudioContext is
+        // created with an explicit sampleRate that differs from the output
+        // device (e.g. Godot forces 44100 while Macs run at 48000). Engines
+        // read the resulting ctx.sampleRate back and adapt, so on Safari we
+        // drop the forced rate and let the context open at the device rate.
+        if (isSafari && options && options.sampleRate !== undefined) {
             options = { ...options };
             delete options.sampleRate;
         }
-        return new Orig(options);
+        const ctx = options !== undefined ? new Orig(options) : new Orig();
+        contexts.push(ctx);
+        return ctx;
     }
     PatchedAudioContext.prototype = Orig.prototype;
     window.AudioContext = PatchedAudioContext;
     if (window.webkitAudioContext) window.webkitAudioContext = PatchedAudioContext;
+
+    // Engines unlock audio with one-shot gesture listeners (Godot uses
+    // { once: true }), so a single key event that lands without live user
+    // activation consumes the unlock and leaves the game silent forever.
+    // Retry on every input until the context actually runs.
+    const resumeAll = () => {
+        for (const ctx of contexts) {
+            if (ctx.state === "suspended" || ctx.state === "interrupted") {
+                ctx.resume().catch(() => {});
+            }
+        }
+    };
+    for (const ev of ["keydown", "mousedown", "touchstart"]) {
+        window.addEventListener(ev, resumeAll, true);
+    }
 })();
 
 (async () => {
