@@ -156,7 +156,8 @@ let
       export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
       # Don't try to self-install the version from package.json's packageManager
       # field (no network access to fetch it; use nixpkgs' pnpm as-is).
-      pnpm install --frozen-lockfile --ignore-scripts --config.manage-package-manager-versions=false
+      export npm_config_manage_package_manager_versions=false
+      pnpm install --frozen-lockfile --ignore-scripts
     '';
 
     installPhase = ''
@@ -197,6 +198,12 @@ stdenv.mkDerivation {
     runHook preBuild
 
     export HOME=$(mktemp -d)
+
+    # Keep nested pnpm invocations (turbo runs `pnpm run build`) from trying to
+    # self-install the packageManager version from package.json (no network).
+    # Turbo strips non-allowlisted env vars from task environments, so this
+    # must go in .npmrc rather than the environment.
+    echo "manage-package-manager-versions=false" >> .npmrc
 
     tar xzf ${pnpmModules}
 
