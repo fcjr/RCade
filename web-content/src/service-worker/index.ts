@@ -192,8 +192,18 @@ g.addEventListener("fetch", (event: FetchEvent) => {
 });
 
 let CURRENT_PORT: MessagePort | undefined = undefined;
+let CURRENT_LOAD: Promise<unknown> | undefined = undefined;
 
 g.addEventListener("message", async (event) => {
+    if (event.data && event.data.type === "KEEPALIVE") {
+        // Extends the worker's lifetime to cover an in-flight game load (see
+        // the keep-alive pings in the injection script).
+        if (CURRENT_LOAD !== undefined) {
+            event.waitUntil(CURRENT_LOAD);
+        }
+        return;
+    }
+
     if (event.data && event.data.type === "INIT_PORT") {
         const port: MessagePort = event.ports[0];
 
@@ -240,7 +250,7 @@ function handlePortMessage(event: MessageEvent) {
 
         const { game, version } = event.data.content;
 
-        loadGame(game, version, loading)
+        CURRENT_LOAD = loadGame(game, version, loading)
             .then(async ({ game_id, version, name }) => {
                 await write("CURRENT_GAME", JSON.stringify([game_id, version, name]));
                 CURRENT_PORT?.postMessage({ type: "GAME_LOADED", content: { game_id, version } });
@@ -254,6 +264,9 @@ function handlePortMessage(event: MessageEvent) {
                 }
 
                 CURRENT_PORT?.postMessage({ type: "GAME_LOAD_FAILED", content: err.message });
+            })
+            .finally(() => {
+                CURRENT_LOAD = undefined;
             });
 
         return;

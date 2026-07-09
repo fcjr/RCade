@@ -105,6 +105,15 @@ for (const kind of ["keydown", "keyup"]) {
 
     manuallyLog("Service Worker Announced Ready");
 
+    // Game loading runs in the service worker but is driven over a
+    // MessagePort, which doesn't count toward service worker lifetime -
+    // browsers (Safari especially) kill the "idle" worker mid-download on
+    // large games. These pings arrive as extendable message events the
+    // worker uses to keep itself alive while a load is in flight.
+    setInterval(() => {
+        registration.active?.postMessage({ type: "KEEPALIVE" });
+    }, 5000);
+
     const sw = registration.active;
     const messageChannel = new MessageChannel();
     const hello = new Promise((resolve) => {
