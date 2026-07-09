@@ -10,6 +10,8 @@ on:
       - 'api/**'
       - 'web/**'
       - 'runtime/**'
+      - 'engine/**'
+      - 'log/**'
       - 'pnpm-lock.yaml'
       - 'package.json'
 
@@ -22,6 +24,9 @@ jobs:
   build-and-deploy:
     name: Build and Deploy Web
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,6 +52,33 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Wait for Web Content deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # usercontent.rcade.dev must deploy before rcade.dev: the site's
+        # Cross-Origin-Embedder-Policy requires the game service worker to
+        # already be serving isolation headers, or game iframes get blocked.
+        run: |
+          for i in $(seq 1 90); do
+            runs=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow deploy-web-content.yaml --commit "$GITHUB_SHA" --json status,conclusion --jq '.[] | "\(.status) \(.conclusion)"')
+            if [ -z "$runs" ]; then
+              echo "no web-content deploy for this commit; proceeding"
+              exit 0
+            fi
+            if ! echo "$runs" | grep -qv '^completed'; then
+              if echo "$runs" | grep -qE 'failure|cancelled|timed_out'; then
+                echo "web-content deploy did not succeed; refusing to deploy web" >&2
+                exit 1
+              fi
+              echo "web-content deploy finished"
+              exit 0
+            fi
+            echo "waiting for web-content deploy..."
+            sleep 10
+          done
+          echo "timed out waiting for web-content deploy" >&2
+          exit 1
 
       - name: Deploy
         run: pnpm run deploy
