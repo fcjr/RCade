@@ -69,8 +69,6 @@ let g: ServiceWorkerGlobalScope = self as unknown as ServiceWorkerGlobalScope;
 g.addEventListener("install", () => g.skipWaiting());
 g.addEventListener("activate", (event) => event.waitUntil(g.clients.claim()));
 
-let currently_on_blank = false;
-
 g.addEventListener("fetch", (event: FetchEvent) => {
     const handle = logger.debug("Handling `fetch` event: ", event.request.method, event.request.url, Object.fromEntries(event.request.headers.entries()))
 
@@ -81,13 +79,18 @@ g.addEventListener("fetch", (event: FetchEvent) => {
         return;
     }
 
-    if (currently_on_blank) {
-        logger.because(handle).debug("Ignored because origin state is the blank page");
+    // Decide statelessly per request whether it belongs to the blank page /
+    // the SvelteKit app rather than a loaded game. A shared "on blank" flag
+    // is order-dependent: browsers (Safari especially) deliver late blank-page
+    // requests like favicons after the game document loads, which would flip
+    // the flag and make the worker ignore every game asset.
+    if (url.pathname.startsWith("/__rcade_blank")) {
+        logger.because(handle).debug("Ignored because is the blank page");
         return;
     }
 
-    if (url.pathname.startsWith("/__rcade_blank")) {
-        logger.because(handle).debug("Ignored because is the blank page");
+    if (url.pathname.startsWith("/_app/") || url.pathname.startsWith("/service-worker") || url.pathname === "/favicon.ico") {
+        logger.because(handle).debug("Ignored because is an app asset");
         return;
     }
 
@@ -96,10 +99,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
 
         if (referrer.pathname.startsWith("/__rcade_blank")) {
             logger.because(handle).debug("Ignored because origin is the blank page");
-            currently_on_blank = true;
             return;
-        } else {
-            currently_on_blank = false;
         }
     } catch (err) {
         if (Error.isError(err)) {
@@ -242,7 +242,6 @@ function handlePortMessage(event: MessageEvent) {
 
         loadGame(game, version, loading)
             .then(async ({ game_id, version, name }) => {
-                currently_on_blank = false;
                 await write("CURRENT_GAME", JSON.stringify([game_id, version, name]));
                 CURRENT_PORT?.postMessage({ type: "GAME_LOADED", content: { game_id, version } });
                 logger.because(loading).debug("Loaded game");
