@@ -118,6 +118,7 @@ export class RCadeWebEngine {
 
     private port_listener: any;
     private window_listener: any;
+    private key_listeners: Array<[string, (e: KeyboardEvent) => void]> = [];
 
     private constructor(
         private logger: Logger,
@@ -238,6 +239,21 @@ export class RCadeWebEngine {
         port.addEventListener("message", this.port_listener);
         window.addEventListener("message", this.window_listener);
 
+        // Mirror real keyboard events into the iframe. Games that read raw key
+        // events (Godot, emulators) only hear them when the iframe has focus,
+        // which browsers like Safari never grant it; the injected script
+        // re-dispatches these inside the game document. Only trusted events are
+        // forwarded (and only trusted events are forwarded back up), so nothing
+        // loops or doubles.
+        for (const kind of ["keydown", "keyup"] as const) {
+            const listener = (e: KeyboardEvent) => {
+                if (!e.isTrusted) return;
+                this.iframe.contentWindow?.postMessage({ type: "PARENT_KEY", kind, key: e.key, code: e.code, repeat: e.repeat }, "*");
+            };
+            window.addEventListener(kind, listener, true);
+            this.key_listeners.push([kind, listener]);
+        }
+
         port.postMessage({ type: "LOG_START" })
     }
 
@@ -253,6 +269,11 @@ export class RCadeWebEngine {
 
         this.port.removeEventListener("message", this.port_listener);
         window.removeEventListener("message", this.window_listener);
+
+        for (const [kind, listener] of this.key_listeners) {
+            window.removeEventListener(kind, listener as any, true);
+        }
+        this.key_listeners = [];
 
         this.port.postMessage({ type: "DISPOSE_PORT" });
         this.iframe.remove();

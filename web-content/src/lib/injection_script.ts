@@ -18,12 +18,48 @@ export const INJECT_SCRIPT = `
 
 // Games (e.g. Godot exports with focusCanvas) can move focus into this iframe,
 // which stops the parent page from seeing keyboard events. Forward them so the
-// parent's input plugins keep working wherever focus lands.
+// parent's input plugins keep working wherever focus lands. Only trusted events
+// are forwarded, so re-dispatched PARENT_KEY events below don't echo back.
 for (const kind of ["keydown", "keyup"]) {
     window.addEventListener(kind, (e) => {
+        if (!e.isTrusted) return;
         window.parent.postMessage({ type: "WIN_KEY", kind, key: e.key, code: e.code, repeat: e.repeat }, "*");
     }, true);
 }
+
+// The reverse direction: browsers like Safari never move focus into this
+// iframe (it can't be clicked), so games that read raw keyboard events would
+// never hear the keyboard, and audio-unlock handlers would never run. The
+// parent forwards its real key events here and we re-dispatch them on the
+// game's canvas.
+(function () {
+    function legacyKeyCode(key, code) {
+        if (code && code.startsWith("Key")) return code.charCodeAt(3);
+        if (code && code.startsWith("Digit")) return code.charCodeAt(5);
+        const map = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, " ": 32, Enter: 13, Escape: 27, Shift: 16, Control: 17, Alt: 18, Tab: 9, Backspace: 8 };
+        if (key in map) return map[key];
+        return key && key.length === 1 ? key.toUpperCase().charCodeAt(0) : 0;
+    }
+
+    window.addEventListener("message", (e) => {
+        if (e.source !== window.parent) return;
+        const d = e.data;
+        if (!d || d.type !== "PARENT_KEY") return;
+        if (d.kind !== "keydown" && d.kind !== "keyup") return;
+
+        const ev = new KeyboardEvent(d.kind, { key: d.key, code: d.code, repeat: d.repeat, bubbles: true, cancelable: true });
+        const keyCode = legacyKeyCode(d.key, d.code);
+        if (keyCode) {
+            try {
+                Object.defineProperty(ev, "keyCode", { get: () => keyCode });
+                Object.defineProperty(ev, "which", { get: () => keyCode });
+            } catch (err) {}
+        }
+
+        const target = document.querySelector("canvas") ?? document.body ?? window;
+        target.dispatchEvent(ev);
+    });
+})();
 
 (async () => {
     function manuallyLog(...content) {
