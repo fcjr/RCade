@@ -15,6 +15,20 @@ const domainRedirectHandle: Handle = async ({ event, resolve }) => {
     return resolve(event);
 };
 
+const isolationHandle: Handle = async ({ event, resolve }) => {
+    const response = await resolve(event);
+
+    // Cross-origin isolation so game iframes get SharedArrayBuffer
+    // (required by the Rust SDK's shared-memory plugin runner).
+    // Every cross-origin subresource must be CORP/CORS-safe: thumbnails
+    // are proxied same-origin, Google Fonts and usercontent.rcade.dev
+    // already send Cross-Origin-Resource-Policy: cross-origin.
+    response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+    response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
+
+    return response;
+};
+
 const corsHandle: Handle = async ({ event, resolve }) => {
     // Apply CORS headers for usercontent.rcade.dev
     if (event.request.headers.get('origin') === 'https://usercontent.rcade.dev') {
@@ -42,4 +56,4 @@ const corsHandle: Handle = async ({ event, resolve }) => {
     return response;
 };
 
-export const handle = sequence(domainRedirectHandle, corsHandle, authHandle);
+export const handle = sequence(domainRedirectHandle, isolationHandle, corsHandle, authHandle);

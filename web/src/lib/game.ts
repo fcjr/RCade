@@ -16,7 +16,7 @@ export enum GitUrlKind {
     Ssh,
 }
 
-const S3 = new S3Client({
+export const S3 = new S3Client({
     region: "auto",
     endpoint: env.BUCKET_S3_ENDPOINT!,
     credentials: {
@@ -373,11 +373,11 @@ export class Game {
                         new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/build.tar.gz` }),
                         { expiresIn: 3600 }
                     ),
-                    thumbnail_url: version.hasThumbnail != 0 ? await getSignedUrl(
-                        S3,
-                        new GetObjectCommand({ Bucket: "rcade", Key: `games/${this.data.id}/${version.version}/thumbnail.png`, ResponseContentType: 'image/png' }),
-                        { expiresIn: 3600 }
-                    ) : undefined,
+                    // Served same-origin (rather than a presigned R2 URL) so thumbnails
+                    // keep loading under the site's Cross-Origin-Embedder-Policy.
+                    thumbnail_url: version.hasThumbnail != 0
+                        ? `/api/v1/games/${this.data.id}/versions/${version.version}/thumbnail`
+                        : undefined,
                     expires: Date.now() + (3600 * 1000),
                 };
             }

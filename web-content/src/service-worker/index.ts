@@ -26,6 +26,14 @@ import { Game } from "@rcade/api";
 import { INJECT_SCRIPT } from "../lib/injection_script";
 
 const DEV_MODE = false;
+
+// Synthesized responses bypass the server hooks, so they need the isolation
+// headers themselves for the game document to stay cross-origin isolated
+// (SharedArrayBuffer support) inside the COEP-enabled rcade.dev page.
+const ISOLATION_HEADERS = {
+    "Cross-Origin-Embedder-Policy": "require-corp",
+    "Cross-Origin-Resource-Policy": "cross-origin",
+};
 const forwarder = LogForwarder.withTimeout(2000);
 const logger = Logger.create().withHandler(forwarder).withModule("ServiceWorker").withMinimumLevel("DEBUG");
 
@@ -101,7 +109,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
         return event.respondWith(
             read("CURRENT_GAME").then(async (data) => {
                 if (data === undefined || String(data) == "undefined" || String(data) == "") {
-                    return new Response("NO GAME LOADED", { status: 404 });
+                    return new Response("NO GAME LOADED", { status: 404, headers: ISOLATION_HEADERS });
                 }
 
                 const CURRENT_GAME = JSON.parse(data) as [string, string];
@@ -120,7 +128,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
 
                 if (!response) {
                     logger.because(responding).warn("Request for missing asset", url.pathname);
-                    return new Response("ASSET MISSING", { status: 404 });
+                    return new Response("ASSET MISSING", { status: 404, headers: ISOLATION_HEADERS });
                 }
 
 
@@ -144,7 +152,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
                         }
 
                         return new Response(injectedHtml, {
-                            headers: { "Content-Type": "text/html" }
+                            headers: { "Content-Type": "text/html", ...ISOLATION_HEADERS }
                         });
                     } catch (err) {
                         if (Error.isError(err)) {
@@ -153,7 +161,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
                             logger.because(patching).error(err);
                         }
 
-                        return new Response("PATCHING ERROR", { status: 500 });
+                        return new Response("PATCHING ERROR", { status: 500, headers: ISOLATION_HEADERS });
                     }
                 }
 
@@ -165,7 +173,7 @@ g.addEventListener("fetch", (event: FetchEvent) => {
                     logger.error(err);
                 }
 
-                return new Response("PATCHING ERROR", { status: 500 });
+                return new Response("PATCHING ERROR", { status: 500, headers: ISOLATION_HEADERS });
             })
         );
     } catch (err) {
@@ -406,7 +414,7 @@ export async function loadGame(gameData: any, version: string | "latest", loadin
     for (const entry of entries) {
         if (entry.header.type === "file") {
             const response = new Response((entry.data ?? new Uint8Array(0)) as any, {
-                headers: { "Content-Type": getMimeType(entry.header.name) }
+                headers: { "Content-Type": getMimeType(entry.header.name), ...ISOLATION_HEADERS }
             });
 
             const path = resolveAbsolutePath(entry.header.name, "/", game.id(), ver.version());

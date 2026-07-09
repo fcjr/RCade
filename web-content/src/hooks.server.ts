@@ -20,9 +20,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Allow common headers
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-    // Set permissive Cross-Origin policies for embedding
-    response.headers.set('Cross-Origin-Opener-Policy', 'unsafe-none');
-    response.headers.set('Cross-Origin-Embedder-Policy', 'unsafe-none');
+    // Cross-origin isolation: CORP lets the COEP-enabled rcade.dev page embed
+    // this origin, and COEP here makes the game iframe itself isolation-capable
+    // so games get SharedArrayBuffer (required by the Rust SDK).
+    response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+    response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
     response.headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
 
     return response;
