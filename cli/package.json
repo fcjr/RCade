@@ -34,7 +34,7 @@
     "commander": "^14.0.2",
     "execa": "^9.6.0",
     "fdir": "^6.5.0",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.2.0",
     "mustache": "^4.2.0",
     "semver": "^7.7.3",
     "terminal-kit": "^3.1.2"
