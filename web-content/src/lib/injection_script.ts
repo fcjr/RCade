@@ -61,6 +61,28 @@ for (const kind of ["keydown", "keyup"]) {
     });
 })();
 
+// WebKit renders silence through AudioWorklets when an AudioContext is created
+// with an explicit sampleRate that differs from the output device (e.g. Godot
+// forces 44100 while Macs run at 48000). Engines read the resulting
+// ctx.sampleRate back and adapt, so on Safari we drop the forced rate and let
+// the context open at the device rate.
+(function () {
+    const ua = navigator.userAgent;
+    if (!/AppleWebKit/.test(ua) || /Chrome|Chromium|Edg|OPR/.test(ua)) return;
+    const Orig = window.AudioContext || window.webkitAudioContext;
+    if (!Orig) return;
+    function PatchedAudioContext(options) {
+        if (options && options.sampleRate !== undefined) {
+            options = { ...options };
+            delete options.sampleRate;
+        }
+        return new Orig(options);
+    }
+    PatchedAudioContext.prototype = Orig.prototype;
+    window.AudioContext = PatchedAudioContext;
+    if (window.webkitAudioContext) window.webkitAudioContext = PatchedAudioContext;
+})();
+
 (async () => {
     function manuallyLog(...content) {
         window.parent.postMessage({
