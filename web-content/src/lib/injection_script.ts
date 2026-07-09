@@ -16,6 +16,15 @@ export const INJECT_SCRIPT = `
     };
 })();
 
+// Games (e.g. Godot exports with focusCanvas) can move focus into this iframe,
+// which stops the parent page from seeing keyboard events. Forward them so the
+// parent's input plugins keep working wherever focus lands.
+for (const kind of ["keydown", "keyup"]) {
+    window.addEventListener(kind, (e) => {
+        window.parent.postMessage({ type: "WIN_KEY", kind, key: e.key, code: e.code, repeat: e.repeat }, "*");
+    }, true);
+}
+
 (async () => {
     function manuallyLog(...content) {
         window.parent.postMessage({

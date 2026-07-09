@@ -63,6 +63,12 @@ function determineDevUrl(url: URL) {
 
 let g: ServiceWorkerGlobalScope = self as unknown as ServiceWorkerGlobalScope;
 
+// Take over from older service worker versions immediately. Without this,
+// a deployed SW change (e.g. new response headers) doesn't apply until every
+// tab from the old version closes, leaving players on stale behavior.
+g.addEventListener("install", () => g.skipWaiting());
+g.addEventListener("activate", (event) => event.waitUntil(g.clients.claim()));
+
 let currently_on_blank = false;
 
 g.addEventListener("fetch", (event: FetchEvent) => {

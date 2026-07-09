@@ -173,6 +173,17 @@ export class RCadeWebEngine {
                 return;
             }
 
+            if (event.data && event.data.type === "WIN_KEY") {
+                // Key events forwarded from inside the game iframe (games like
+                // Godot exports focus their own canvas, which would otherwise
+                // hide the keyboard from the input plugins listening up here).
+                const { kind, key, code, repeat } = event.data;
+                if (kind === "keydown" || kind === "keyup") {
+                    window.dispatchEvent(new KeyboardEvent(kind, { key, code, repeat }));
+                }
+                return;
+            }
+
             if (event.data && event.data.type === "acquire_plugin_channel") {
                 const nonce = event.data.nonce;
                 const channel = event.data.channel;
