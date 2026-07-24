@@ -29,7 +29,7 @@
     "@rcade/sdk": "workspace:*",
     "@rcade/sdk-plugin": "workspace:*",
     "@rcade/sleep": "workspace:*",
-    "hono": "^4.12.21",
+    "hono": "^4.12.27",
     "semver": "^7.7.3",
     "tar": "^7.4.3",
     "zod": "^4.1.13"
