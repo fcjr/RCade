@@ -3,11 +3,11 @@
 	import "$lib/fonts.css";
 	import favicon from "$lib/assets/favicon.svg";
 	import { onMount } from "svelte";
-	import { startTestPattern } from "$lib/marquee";
+	import { startMarquee } from "$lib/marquee";
 
 	let { children } = $props();
 
-	onMount(() => startTestPattern());
+	onMount(() => startMarquee());
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
