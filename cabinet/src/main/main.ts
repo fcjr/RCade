@@ -62,6 +62,9 @@ if (process.platform === 'linux') {
 
 const cabinetApiKey = process.env.CABINET_API_KEY;
 const apiClient = cabinetApiKey ? Client.newKeyed(cabinetApiKey) : Client.new();
+if (process.env.RCADE_API_URL) {
+  apiClient.withBaseUrl(process.env.RCADE_API_URL);
+}
 
 // Cache directory for game files
 const cacheDir = path.join(app.getPath('userData'), 'game-cache');

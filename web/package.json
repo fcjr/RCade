@@ -17,6 +17,8 @@
 		"db:migrate:remote": "wrangler d1 migrations apply rcade --remote",
 		"db:studio": "drizzle-kit studio",
 		"db:pull": "node scripts/pull-db.js",
+		"event:create": "node scripts/create-event.js create",
+		"event:list": "node scripts/create-event.js list",
 		"analyze": "vite build --mode production && npx vite-bundle-visualizer"
 	},
 	"devDependencies": {

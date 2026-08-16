@@ -27,7 +27,7 @@ export const GameVersionResponse = z.object({
       ssh: z.string(),
       https: z.string(),
     }),
-    owner_rc_id: z.string(),
+    owner_rc_id: z.string().nullable(),
     version: z.object({
       displayName: z.string().nullable().optional(),
       description: z.string(),
@@ -55,11 +55,30 @@ export const GameResponse = z.object({
     ssh: z.string(),
     https: z.string(),
   }),
-  owner_rc_id: z.string(),
+  owner_rc_id: z.string().nullable(),
   versions: z.array(GameVersionResponse),
 });
 
 export const GamesResponse = z.array(GameResponse);
 
+export const CurrentEventResponse = z.discriminatedUnion("active", [
+  z.object({
+    active: z.literal(false),
+    server_time: z.number(),
+  }),
+  z.object({
+    active: z.literal(true),
+    event: z.object({
+      id: z.string(),
+      name: z.string(),
+      starts_at: z.string(),
+      ends_at: z.string(),
+      totp_secret: z.string(),
+    }),
+    server_time: z.number(),
+  }),
+]);
+
 export type GameResponse = z.infer<typeof GameResponse>;
 export type GamesResponse = z.infer<typeof GamesResponse>;
+export type CurrentEventResponse = z.infer<typeof CurrentEventResponse>;

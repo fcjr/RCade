@@ -1,7 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 
 import type { Session } from "$lib/auth/user";
-import type { D1Database, R2Bucket } from "@cloudflare/workers-types";
+import type { D1Database, R2Bucket, RateLimit } from "@cloudflare/workers-types";
 
 import { type DefaultSession } from "@auth/sveltekit";
 import type { DefaultJWT } from "@auth/core/jwt";
@@ -39,6 +39,8 @@ declare global {
 				BUCKET_ACCESS_KEY: string,
 				BUCKET_ACCESS_KEY_SECRET: string,
 				GITHUB_DISPATCH_TOKEN: string,
+				CABINET_API_KEY: string,
+				EVENT_AUTH_RATE_LIMITER: RateLimit,
 			};
 			context: {
 				waitUntil(promise: Promise<any>): void;

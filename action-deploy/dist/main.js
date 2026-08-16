@@ -37366,7 +37366,7 @@ var GameVersionResponse = external_exports.object({
       ssh: external_exports.string(),
       https: external_exports.string()
     }),
-    owner_rc_id: external_exports.string(),
+    owner_rc_id: external_exports.string().nullable(),
     version: external_exports.object({
       displayName: external_exports.string().nullable().optional(),
       description: external_exports.string(),
@@ -37393,10 +37393,27 @@ var GameResponse = external_exports.object({
     ssh: external_exports.string(),
     https: external_exports.string()
   }),
-  owner_rc_id: external_exports.string(),
+  owner_rc_id: external_exports.string().nullable(),
   versions: external_exports.array(GameVersionResponse)
 });
 var GamesResponse = external_exports.array(GameResponse);
+var CurrentEventResponse = external_exports.discriminatedUnion("active", [
+  external_exports.object({
+    active: external_exports.literal(false),
+    server_time: external_exports.number()
+  }),
+  external_exports.object({
+    active: external_exports.literal(true),
+    event: external_exports.object({
+      id: external_exports.string(),
+      name: external_exports.string(),
+      starts_at: external_exports.string(),
+      ends_at: external_exports.string(),
+      totp_secret: external_exports.string()
+    }),
+    server_time: external_exports.number()
+  })
+]);
 var ManifestAuthor2 = object({
   display_name: string2(),
   recurse_id: number2().optional()

@@ -16,7 +16,7 @@ export const games = sqliteTable('games', {
     name: text('name').notNull(),
     github_author: text("github_author").notNull(),
     github_repo: text("github_repo").notNull(),
-    owner_rc_id: numeric("owner_rc_id").notNull(),
+    owner_rc_id: numeric("owner_rc_id"),
     admin_lock_reason: text("admin_lock_reason"),
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
 }, (t) => [
@@ -86,6 +86,31 @@ export const gameAuthors = sqliteTable('game_authors', {
 ]);
 
 
+/// Events
+
+export const events = sqliteTable('events', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    starts_at: integer('starts_at', { mode: 'timestamp' }).notNull(),
+    ends_at: integer('ends_at', { mode: 'timestamp' }).notNull(),
+    // 20 random bytes as lowercase hex; only ever sent to the cabinet.
+    totp_secret: text('totp_secret').notNull(),
+    created_at: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (t) => [
+    index("events_starts_at_ends_at_idx").on(t.starts_at, t.ends_at),
+]);
+
+export const eventAuthentications = sqliteTable('event_authentications', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    event_id: text('event_id').notNull().references(() => events.id, { onDelete: "cascade" }),
+    // Always stored lowercase; GitHub usernames are case-insensitive.
+    github_username: text('github_username').notNull(),
+    created_at: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (t) => [
+    unique().on(t.event_id, t.github_username),
+    index("event_authentications_github_username_idx").on(t.github_username),
+]);
+
 export const categoriesRelations = relations(categories, ({ many }) => ({
     gameVersionCategories: many(gameVersionCategories),
 }));
@@ -116,6 +141,17 @@ export const gameDependenciesRelations = relations(gameDependencies, ({ one }) =
     gameVersion: one(gameVersions, {
         fields: [gameDependencies.gameId, gameDependencies.gameVersion],
         references: [gameVersions.gameId, gameVersions.version],
+    }),
+}));
+
+export const eventsRelations = relations(events, ({ many }) => ({
+    authentications: many(eventAuthentications),
+}));
+
+export const eventAuthenticationsRelations = relations(eventAuthentications, ({ one }) => ({
+    event: one(events, {
+        fields: [eventAuthentications.event_id],
+        references: [events.id],
     }),
 }));
 

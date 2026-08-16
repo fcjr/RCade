@@ -28,6 +28,14 @@ migrations_dir = "drizzle/migrations"
 binding = "STORE"
 bucket_name = "rcade"
 
+# Rate limiting binding (open beta, hence "unsafe"). Limits POST /api/v1/events/auth
+# to 10 requests per 60s per client IP. namespace_id is an arbitrary account-unique id.
+[[unsafe.bindings]]
+name = "EVENT_AUTH_RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
+
 [observability.logs]
 enabled = true
 head_sampling_rate = 1
