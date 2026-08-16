@@ -1,7 +1,8 @@
 import * as z from "zod";
 import * as jose from "jose";
 import type { RecurseResponse } from "$lib/rc_oauth";
-import { RecurseAPI } from "$lib/recurse";
+import { RecurseAPI, RecurseAPIError } from "$lib/recurse";
+import { isEventAuthenticated } from "$lib/event";
 import { env } from "$env/dynamic/private"
 
 const GITHUB_OIDC_ISSUER = "https://token.actions.githubusercontent.com";
@@ -47,7 +48,7 @@ export class GithubOIDCValidator {
         }
     }
 
-    public async validate(jwt: string): Promise<GithubOIDCClaims & { recurser: RecurseResponse }> {
+    public async validate(jwt: string): Promise<GithubOIDCClaims & { recurser: RecurseResponse | null }> {
         let payload;
 
         if ("DEBUG_DISABLE_DEPLOYMENT_VALIDATION" in env && env.DEBUG_DISABLE_DEPLOYMENT_VALIDATION == "true") {
@@ -63,7 +64,30 @@ export class GithubOIDCValidator {
         }
 
         const claims = GithubOIDCClaims.parse(payload);
-        const recurser = await this.rcClient.getUserByGithubId(claims.repository_owner);
+
+        let recurser: RecurseResponse | null;
+        try {
+            recurser = await this.rcClient.getUserByGithubId(claims.repository_owner);
+        } catch (error) {
+            // Users registered for a currently-active event may deploy without a
+            // Recurse profile. Only the not-found case falls back; ambiguous or
+            // failed lookups stay fatal.
+            if (!(error instanceof RecurseAPIError) || error.code !== 'USER_NOT_FOUND') {
+                throw error;
+            }
+
+            if (!(await isEventAuthenticated(claims.repository_owner, new Date()))) {
+                throw new RecurseAPIError(
+                    `${error.message} If you're at an rcade event, run ` +
+                    `\`rcade register <your-github-username> <code>\` with the code shown ` +
+                    `on the cabinet, then re-run this deploy.`,
+                    'USER_NOT_FOUND',
+                    403,
+                );
+            }
+
+            recurser = null;
+        }
 
         return {
             ...claims,

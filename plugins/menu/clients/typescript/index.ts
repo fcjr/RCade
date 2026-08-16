@@ -18,6 +18,10 @@ let channel: Promise<PluginChannel> | null = null;
             if (event.data.type === "menu_requested") {
                 menuRequestHandler?.();
             }
+
+            if (event.data.type === "event_code" && event.data.nonce === undefined) {
+                eventCodeHandler?.(event.data.content);
+            }
         })
 
         channel.getPort().start();
@@ -112,4 +116,45 @@ export function onGameLoad(handler: (result: any) => void) {
 let menuRequestHandler: (() => void) | undefined = undefined;
 export function onMenuRequested(handler: () => void) {
     menuRequestHandler = handler;
+}
+
+export type EventCodeStatus = {
+    active: boolean;
+    name?: string;
+    code?: string;
+};
+
+let eventCodeHandler: ((status: EventCodeStatus) => void) | undefined = undefined;
+export function onEventCode(handler: (status: EventCodeStatus) => void) {
+    eventCodeHandler = handler;
+}
+
+export async function getEventCode(): Promise<EventCodeStatus> {
+    if (!channel) {
+        throw new Error("Plugin channel not initialized");
+    }
+
+    const cha = await channel;
+    const port = cha.getPort();
+
+    port.start();
+
+    return await new Promise(res => {
+        const nonce = crypto.randomUUID();
+
+        const handleMessage = (event: MessageEvent) => {
+            const { type, nonce: responseNonce, content } = event.data;
+
+            if (responseNonce !== nonce) {
+                return;
+            }
+
+            if (type == "event-code") {
+                port.removeEventListener("message", handleMessage);
+                res(content);
+            }
+        };
+        port.addEventListener("message", handleMessage);
+        port.postMessage({ type: "get-event-code", nonce, content: {} });
+    });
 }

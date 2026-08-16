@@ -67,14 +67,15 @@ export class Game {
         return new Game(v);
     }
 
-    public static async new(name: string, pushInfo: GithubOIDCClaims & { recurser: RecurseResponse }): Promise<Game> {
+    public static async new(name: string, pushInfo: GithubOIDCClaims & { recurser: RecurseResponse | null }): Promise<Game> {
         const result = await (await getDb()).insert(games).values({
             name,
 
             github_author: pushInfo.repository_owner,
             github_repo: pushInfo.repository,
 
-            owner_rc_id: pushInfo.recurser.id.toString(), // TODO
+            // null for event-authenticated deployers with no Recurse profile
+            owner_rc_id: pushInfo.recurser === null ? null : pushInfo.recurser.id.toString(),
         }).returning();
 
         return new Game({
@@ -295,7 +296,10 @@ export class Game {
                 );
             }
 
-            if (this.data.owner_rc_id !== remixTarget.game.owner_rc_id) {
+            // A null owner (event-authenticated deployer) never passes an
+            // ownership check — without this, null === null would let any two
+            // ownerless games remix each other's private versions.
+            if (this.data.owner_rc_id == null || remixTarget.game.owner_rc_id == null || this.data.owner_rc_id !== remixTarget.game.owner_rc_id) {
                 throw new Error(
                     `Cannot remix an private game owned by somebody else.`
                 );
@@ -356,6 +360,9 @@ export class Game {
             }
 
             if (version.visibility !== "public") {
+                // owner_rc_id may be null (event-authenticated deployer): a
+                // recurser's rc_id never equals null, so private versions of
+                // ownerless games are hidden from everyone.
                 if (auth.for === "public" || (version.visibility === "private" && auth.for === "recurser" && auth.rc_id !== this.data.owner_rc_id))
                     return undefined;
             }

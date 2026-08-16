@@ -1,5 +1,5 @@
 import { Game } from "./game/index.js";
-import { GamesResponse, GameResponse } from "./schema.js";
+import { CurrentEventResponse, GamesResponse, GameResponse } from "./schema.js";
 
 export class Client {
   public static new() {
@@ -39,5 +39,18 @@ export class Client {
       headers: this.headers,
     });
     return Game.fromApiResponse(await response.json());
+  }
+
+  public async getCurrentEvent(): Promise<CurrentEventResponse> {
+    const response = await fetch(`${this.baseUrl}/events/current`, {
+      headers: this.headers,
+    });
+    const body = await response.text();
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch current event: ${response.status} ${body}`);
+    }
+
+    return CurrentEventResponse.parse(JSON.parse(body));
   }
 }

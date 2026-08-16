@@ -2,12 +2,15 @@
     import BackgroundOverlay from "$lib/components/BackgroundOverlay.svelte";
     import { fly, slide } from "svelte/transition";
     import {
+        getEventCode,
         getGames,
         getLastGame,
+        onEventCode,
         onGameLoad,
         onGameQuit,
         onMenuRequested,
         playGame,
+        type EventCodeStatus,
     } from "@rcade/plugin-menu";
     import { quartOut } from "svelte/easing";
     import { tick, onMount } from "svelte";
@@ -180,6 +183,10 @@
     let games: Game[] = [];
     let loading = true;
 
+    // Rotating event code, minted by the cabinet and pushed over the plugin
+    // channel while an event is active.
+    let eventStatus: EventCodeStatus = { active: false };
+
     onMount(() => {
         // Register input handlers
         const unsubPress = registerPressHandler();
@@ -188,6 +195,14 @@
         // Subscribe to menu key to refresh games list
         onMenuRequested(() => {
             refreshGames();
+        });
+
+        // Event code: pull current state now, then follow rotation pushes
+        onEventCode((status) => {
+            eventStatus = status;
+        });
+        getEventCode().then((status) => {
+            eventStatus = status;
         });
 
         preloadMenuSound();
@@ -832,6 +847,14 @@
                         </div>
                     </div>
 
+                    {#if eventStatus.active}
+                        <div class="event-line">
+                            <span>{eventStatus.name} Event Code</span>
+                            <span class="event-line-dot">·</span>
+                            <span class="event-line-code">{eventStatus.code}</span>
+                        </div>
+                    {/if}
+
                 </div>
 
                 <div class="content-stage">
@@ -1332,6 +1355,26 @@
         justify-content: center;
         margin-top: -40px;
         margin-bottom: -40px;
+    }
+
+    .event-line {
+        margin-top: -4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        color: var(--color-primary);
+        font-size: 12px;
+        letter-spacing: 0.1em;
+    }
+
+    .event-line-dot {
+        opacity: 0.5;
+    }
+
+    .event-line-code {
+        font-weight: bold;
+        letter-spacing: 0.2em;
     }
 
     .pagination-scroll {
