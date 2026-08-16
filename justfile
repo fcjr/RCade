@@ -12,7 +12,7 @@ deploy-marquee ip="100.123.178.9":
 [doc('Deploy nuc (production cabinet)')]
 [group('deploy')]
 deploy-nuc ip="100.111.184.1":
-    nix --extra-experimental-features 'nix-command flakes' run nixpkgs#nixos-rebuild -- switch --flake .#rcade-nuc --target-host rcade@{{ ip }} --build-host rcade@{{ ip }} --sudo
+    nix --extra-experimental-features 'nix-command flakes' run nixpkgs#nixos-rebuild -- switch --flake .#rcade-nuc --target-host admin@{{ ip }} --build-host admin@{{ ip }} --sudo
 
 [doc('Build marquee SD card image (decrypts WiFi PSK from agenix)')]
 [group('build')]
