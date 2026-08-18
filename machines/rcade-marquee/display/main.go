@@ -30,6 +30,11 @@ const (
 	msgSetBrightness byte = 0x01
 )
 
+const (
+	keepaliveInterval = 10 * time.Second
+	keepaliveTimeout  = 10 * time.Second
+)
+
 type display struct {
 	inner rgbmatrix.Matrix
 	w, h  int
@@ -116,6 +121,32 @@ func (d *display) handleMessage(msg []byte, cw, ch int) error {
 	}
 }
 
+// A client that dies without closing its TCP connection (power cut, hard kill)
+// would otherwise hold the display until the kernel gives up on the socket,
+// leaving every later /take request stuck on 409. Ping it so a dead peer is
+// noticed within a few seconds and the display is released.
+func keepalive(ctx context.Context, c *websocket.Conn) {
+	t := time.NewTicker(keepaliveInterval)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
+		pctx, cancel := context.WithTimeout(ctx, keepaliveTimeout)
+		err := c.Ping(pctx)
+		cancel()
+		if err != nil {
+			if ctx.Err() == nil {
+				log.Printf("keepalive failed, dropping client: %v", err)
+			}
+			c.CloseNow()
+			return
+		}
+	}
+}
+
 func handleTake(d *display) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cw, err := strconv.Atoi(r.URL.Query().Get("w"))
@@ -143,13 +174,18 @@ func handleTake(d *display) http.HandlerFunc {
 			return
 		}
 		log.Printf("client connected (%dx%d)", cw, ch)
+
 		defer func() {
 			c.CloseNow()
 			d.release()
 			log.Printf("client disconnected (%dx%d)", cw, ch)
 		}()
 
-		ctx := r.Context()
+		// Registered after the cleanup defer so it is cancelled first on return.
+		ctx, stopKeepalive := context.WithCancel(r.Context())
+		defer stopKeepalive()
+		go keepalive(ctx, c)
+
 		for {
 			typ, data, err := c.Read(ctx)
 			if err != nil {
