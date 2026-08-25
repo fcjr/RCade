@@ -158,6 +158,9 @@ jobs:
     name: Build Linux
     needs: bump
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -177,13 +180,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Cabinet
-        run: pnpm run build:cabinet-linux
+        run: pnpm run build:cabinet-linux-${{ matrix.arch }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cabinet-linux
-          path: cabinet/release/rcade-cabinet-linux-*.AppImage
+          name: cabinet-linux-${{ matrix.arch }}
+          path: cabinet/release/rcade-cabinet-linux-${{ matrix.arch }}.AppImage
 
   release:
     name: Create Release
@@ -211,4 +214,5 @@ jobs:
             artifacts/cabinet-macos-x64/*
             artifacts/cabinet-macos-arm64/*
             artifacts/cabinet-windows/*
-            artifacts/cabinet-linux/*
+            artifacts/cabinet-linux-x64/*
+            artifacts/cabinet-linux-arm64/*

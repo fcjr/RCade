@@ -15,7 +15,8 @@
     "build:cabinet-mac-x64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac --x64",
     "build:cabinet-mac-arm64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac --arm64",
     "build:cabinet-win": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --win",
-    "build:cabinet-linux": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --linux"
+    "build:cabinet-linux-x64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --linux",
+    "build:cabinet-linux-arm64": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --linux --arm64"
   },
   "dependencies": {
     "@fireworks-js/svelte": "^2.10.8",
