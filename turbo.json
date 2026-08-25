@@ -26,7 +26,12 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", "release/**"]
     },
-    "build:cabinet-linux": {
+    "build:cabinet-linux-x64": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", "release/**"]
+    },
+    "build:cabinet-linux-arm64": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", "release/**"]
