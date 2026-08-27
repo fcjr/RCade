@@ -11,22 +11,35 @@ This game is built for [RCade](https://rcade.recurse.com), a custom arcade cabin
 - [Rust](https://rustup.rs/)
 - [Trunk](https://trunkrs.dev/) - `cargo install trunk`
 - wasm32 target - `rustup target add wasm32-unknown-unknown`
+- [just](https://just.systems/) - task runner
+- Node.js - provides `npx` for the RCade CLI
 
 ## Getting Started
 
-Start the development server:
+Start the development environment:
 
 ```bash
-trunk serve
+just dev
 ```
 
-This compiles the Rust code to WebAssembly and serves it with hot reloading.
+This runs two processes:
+
+- `trunk serve --port 8080` compiles the Rust code to WebAssembly and serves it with hot reloading.
+- `npx rcade@latest dev http://localhost:8080` launches the RCade cabinet and loads the game from the trunk server.
+
+Ctrl-c stops both processes. Closing the cabinet window also stops trunk.
+
+### Running in a plain browser tab
+
+`trunk serve` alone serves the game at http://localhost:8080 without the cabinet. Arcade input only works inside the cabinet, so use `just dev` to test controls.
 
 ## Building
 
 ```bash
-trunk build --release
+just build
 ```
+
+This runs `trunk build --release`.
 
 Output goes to `dist/` and is ready for deployment.
 
@@ -36,6 +49,7 @@ Output goes to `dist/` and is ready for deployment.
 ├── src/
 │   └── lib.rs        # Game entry point
 ├── index.html        # HTML entry
+├── justfile          # dev and build recipes
 └── Cargo.toml        # Rust dependencies
 ```
 
