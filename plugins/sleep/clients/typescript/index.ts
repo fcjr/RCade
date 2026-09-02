@@ -41,6 +41,12 @@ class Screensaver extends EventTarget {
         super();
     }
 
+    /**
+     * Updates the screensaver's settings for the lifetime of this game.
+     *
+     * Only the fields you pass change. The cabinet restores its defaults
+     * when the game exits.
+     */
     async updateScreensaver(config: ScreensaverConfig) {
         if (channel === undefined) await new Promise<void>(res => resolvers.push(res));
 

@@ -100,36 +100,43 @@
     else window.rcade.screensaverStopped();
   });
 
-  function normalizeTime(value: number | undefined): number | undefined {
-    if (value == undefined) return;
+  function normalizeTime(value: unknown): number | undefined {
+    // invalid values fall back to the default
+    if (typeof value !== "number" || isNaN(value)) return;
     // infinite times mean a disabled timer
     if (value === Infinity) return Infinity;
-    // NaN values are invalid, they are removed from the config downstream
-    if (isNaN(value)) return NaN;
 
-    // clamp the value
+    // clamp to what setTimeout accepts
     if (value >= 2 ** 31) return 2 ** 31 - 1;
     if (value < 1) return 1;
 
     return value;
   }
 
-  function screensaverConfigChanged(newConfig: ScreensaverConfig) {
-    newConfig.timeBeforeActive = normalizeTime(newConfig.timeBeforeActive);
-    if (newConfig.timeBeforeActive === undefined || isNaN(newConfig.timeBeforeActive ?? 0))
-      delete newConfig.timeBeforeActive;
+  // The sleep plugin sends the merged settings of every live plugin instance
+  // (the menu's and the running game's). Anything left unset falls back to
+  // the default, so a game's settings never outlive the game.
+  function screensaverConfigChanged(overrides: ScreensaverConfig) {
+    const newConfig: Required<ScreensaverConfig> = { ...DEFAULT_CONFIG };
 
-    newConfig.timeBeforeForcedExit = normalizeTime(
-      newConfig.timeBeforeForcedExit,
-    );
-    if (newConfig.timeBeforeForcedExit === undefined || isNaN(newConfig.timeBeforeForcedExit ?? 0))
-      delete newConfig.timeBeforeForcedExit;
+    if (typeof overrides.transparent === "boolean")
+      newConfig.transparent = overrides.transparent;
+    if (typeof overrides.visible === "boolean")
+      newConfig.visible = overrides.visible;
+
+    const timeBeforeActive = normalizeTime(overrides.timeBeforeActive);
+    if (timeBeforeActive !== undefined)
+      newConfig.timeBeforeActive = timeBeforeActive;
+
+    const timeBeforeForcedExit = normalizeTime(overrides.timeBeforeForcedExit);
+    if (timeBeforeForcedExit !== undefined)
+      newConfig.timeBeforeForcedExit = timeBeforeForcedExit;
 
     const needsTimerUpdate =
       newConfig.timeBeforeActive != config.timeBeforeActive ||
       newConfig.timeBeforeForcedExit != config.timeBeforeForcedExit;
 
-    config = Object.assign(config, newConfig);
+    config = newConfig;
 
     if (needsTimerUpdate) resetIdleTimer();
   }

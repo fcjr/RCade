@@ -68,6 +68,10 @@ impl Sleep {
         self.channel.get_port().post_message(&message).unwrap();
     }
 
+    /// Updates the screensaver's settings for the lifetime of this game.
+    ///
+    /// Only the fields you set change. The cabinet restores its defaults
+    /// when the game exits.
     pub fn update_screensaver_config(&self, config: ScreensaverConfig) {
         let message = js_sys::Object::new();
         Reflect::set(
