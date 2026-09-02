@@ -52,7 +52,7 @@
 
 let
   pname = "rcade-cabinet";
-  version = "0.4.0";
+  version = "0.4.2";
 
   runtimeLibs = [
     alsa-lib
@@ -135,7 +135,7 @@ let
           baseName == ".npmrc";
   };
 
-  pnpmModulesHash = "sha256-PyOYnZ+E1PgdSbiC00Ez5/UobfaEpctFnVCLP58kivM=";
+  pnpmModulesHash = "sha256-5jKGxV2NQJd8Rap0UmBX4CMtDB1GW5MCqjiWuhh27J8=";
 
   # FOD that fetches node_modules with network access and outputs a tarball.
   pnpmModules = stdenv.mkDerivation {
