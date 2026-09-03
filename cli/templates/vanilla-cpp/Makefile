@@ -1,5 +1,5 @@
 # Emscripten compiler
-EMCC = emcc
+EMCC = em++
 
 # Source files
 SRC = src/main.cpp sdk/cpp/src/canvas.cpp sdk/cpp/src/input.cpp

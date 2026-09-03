@@ -146,7 +146,7 @@ void Input::setupKeyboardFallback() {
 
         const fireEvent = (key, pressed) => {
             let player = 0;
-            let button = '';
+            let button = undefined;
             let type = 'button';
 
             // Player 1 controls: WASD for dpad, F/G for A/B
