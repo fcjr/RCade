@@ -4,7 +4,7 @@
     import { SCREENSAVER } from "@rcade/plugin-sleep";
     import { onMount } from "svelte";
 
-    let { events }: { events: EventEmitter } = $props();
+    let { events, progress = 0 }: { events: EventEmitter; progress?: number } = $props();
 
     // todo: get canvas size from sdk instead of hardcoding resolution
     const canvasWidth = 336;
@@ -13,7 +13,11 @@
     const TILE_WIDTH = 10;
 
     const GLIDE_DURATION_MS = 150;
-    const CAMERA_MOVE_STEP = 2.0;
+    const CAMERA_MOVE_STEP = 0.5;
+    const END_HUE_SHIFT = -12 / 360;
+    const BASE_COLOR = new THREE.Color(0xf9b615);
+    const GLOW_COLOR = new THREE.Color(0xfcd34d);
+    const SCREENSAVER_GLOW = new THREE.Color(0xfacc15);
 
     let targetCameraX = 0;
     let currentAnimationId: number | null = null;
@@ -67,8 +71,8 @@
             transparent: true,
             blending: THREE.AdditiveBlending,
             uniforms: {
-                uBaseColor: { value: new THREE.Color(0xf9b615) },
-                uGlowColor: { value: new THREE.Color(0xfcd34d) },
+                uBaseColor: { value: BASE_COLOR.clone() },
+                uGlowColor: { value: GLOW_COLOR.clone() },
                 uSize: { value: TILE_WIDTH },
                 uTime: { value: 0.0 },
                 uFadeDistance: { value: 150.0 },
@@ -158,11 +162,12 @@
 
             const elapsedTime = clock.getElapsedTime();
 
+            const shift = END_HUE_SHIFT * Math.min(1, Math.max(0, progress));
+            gridMaterial.uniforms.uBaseColor.value.copy(BASE_COLOR).offsetHSL(shift, 0, 0);
+            gridMaterial.uniforms.uGlowColor.value.copy(GLOW_COLOR).offsetHSL(shift, 0, 0);
             if (screensaverActive) {
                 gridMaterial.uniforms.uOpacity.value = 0.4;
-                gridMaterial.uniforms.uGlowColor.value = new THREE.Color(
-                    0xfacc15,
-                );
+                gridMaterial.uniforms.uGlowColor.value.copy(SCREENSAVER_GLOW);
                 currentCameraX += 0.002;
                 targetCameraX = currentCameraX;
             } else {
@@ -200,7 +205,17 @@
             currentAnimationId = requestAnimationFrame(glideCamera);
         };
 
+        const handleDrag = (games: number) => {
+            if (currentAnimationId) {
+                cancelAnimationFrame(currentAnimationId);
+                currentAnimationId = null;
+            }
+            targetCameraX += games * CAMERA_MOVE_STEP;
+            currentCameraX = targetCameraX;
+        };
+
         events.on("move", handleMove);
+        events.on("drag", handleDrag);
 
         return () => {
             window.removeEventListener("resize", onResize);
@@ -208,6 +223,7 @@
             if (currentAnimationId) cancelAnimationFrame(currentAnimationId);
 
             events.off("move", handleMove);
+            events.off("drag", handleDrag);
 
             gridGeometry.dispose();
             gridMaterial.dispose();

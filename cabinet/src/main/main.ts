@@ -12,6 +12,7 @@ import * as tar from 'tar';
 import type { GameInfo, LoadGameResult } from '../shared/types';
 import { parseCliArgs } from "./args.js";
 import { PluginManager } from '../plugins/index.js';
+import { holdForGame } from '@rcade/input-spinners/knob';
 import { QuitOptions } from '@rcade/sdk';
 import { setTimeout } from 'timers/promises';
 
@@ -545,10 +546,18 @@ app.whenReady().then(async () => {
       throw new Error("Cannot load remote game with local_unversioned specifier. how did this happen?")
     }
 
-    const pm = await PluginManager.loadInto(event.sender, game.dependencies, game.name == "menu");
+    const releaseSpinners = game.name == "menu" ? undefined : holdForGame();
+    let pm;
+    try {
+      pm = await PluginManager.loadInto(event.sender, game.dependencies, game.name == "menu");
+    } catch (error) {
+      void releaseSpinners?.();
+      throw error;
+    }
 
     abortController.signal.addEventListener("abort", () => {
       pm.destroy();
+      void releaseSpinners?.();
     })
 
     return { url };

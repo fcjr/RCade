@@ -8,7 +8,7 @@
     "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "dev:vite": "vite",
     "dev:electron": "pnpm run build:main && pnpm run build:preload && electron --trace-warnings .",
-    "build:main": "esbuild src/main/main.ts --outfile=dist/main/main.cjs --platform=node --format=cjs --bundle --external:electron --define:import.meta.url=import_meta_url --banner:js=\"var import_meta_url=require('url').pathToFileURL(__filename).href;\"",
+    "build:main": "esbuild src/main/main.ts --outfile=dist/main/main.cjs --platform=node --format=cjs --bundle --external:electron --external:serialport --define:import.meta.url=import_meta_url --banner:js=\"var import_meta_url=require('url').pathToFileURL(__filename).href;\"",
     "build:preload": "esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron",
     "build": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder",
     "build:cabinet-mac": "pnpm run build:main && pnpm run build:preload && vite build && electron-builder --mac",
@@ -32,6 +32,7 @@
     "@rcade/sleep": "workspace:*",
     "hono": "^4.12.21",
     "semver": "^7.7.3",
+    "serialport": "13.0.0",
     "tar": "^7.4.3",
     "zod": "^4.1.13"
   },
@@ -50,6 +51,7 @@
   },
   "build": {
     "npmRebuild": false,
+    "asarUnpack": ["**/@serialport/bindings-cpp/**/*.node"],
     "appId": "com.frankchiarulli.rcade.client",
     "productName": "rcade",
     "artifactName": "rcade-cabinet-${os}-${arch}.${ext}",

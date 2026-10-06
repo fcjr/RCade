@@ -314,9 +314,13 @@ export class PluginDetector {
             const matchedPackages: DetectedPackage[] = [];
 
             for (const library of manifest.libraries) {
+                // A plugin can have several manifests, one per version, each
+                // for its own range of client versions. A version that isn't
+                // plain semver (like a workspace link) matches any range.
                 const matchingPackage = packages.find(
                     pkg => pkg.language === library.language &&
-                        pkg.name === library.package.name
+                        pkg.name === library.package.name &&
+                        (!semver.valid(pkg.version) || semver.satisfies(pkg.version, library.package.versions))
                 );
                 if (matchingPackage) {
                     matchedPackages.push(matchingPackage);

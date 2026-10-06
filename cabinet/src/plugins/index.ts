@@ -5,14 +5,18 @@ import { PluginEnvironment, type Plugin } from "@rcade/sdk-plugin";
 
 import PluginInputClassic from "@rcade/input-classic";
 import PluginInputClassicManifest from "@rcade/input-classic/rcade.manifest.json";
-import PluginInputSpinners from "@rcade/input-spinners";
-import PluginInputSpinnersManifest from "@rcade/input-spinners/rcade.manifest.json";
+import PluginInputSpinnersV1 from "@rcade/input-spinners/v1";
+import PluginInputSpinnersV1Manifest from "@rcade/input-spinners/v1.manifest.json";
+import PluginInputSpinnersV2 from "@rcade/input-spinners/v2";
+import PluginInputSpinnersV2Manifest from "@rcade/input-spinners/v2.manifest.json";
 import PluginSleep from "@rcade/sleep";
 import PluginSleepManifest from "@rcade/sleep/rcade.manifest.json";
 import PluginMenu from "@rcade/plugin-menu-backend";
 import PluginMenuManifest from "@rcade/plugin-menu-backend/rcade.manifest.json";
 import PluginMarquee from "@rcade/marquee";
 import PluginMarqueeManifest from "@rcade/marquee/rcade.manifest.json";
+
+type PluginRef = { plugin: { new(): Plugin }, manifest: PluginManifest };
 
 export class PluginManager {
     public static async loadInto(wc: WebContents, preload: GameManifest["dependencies"], isMenu: boolean) {
@@ -48,9 +52,12 @@ export class PluginManager {
 
     private handler: any;
 
-    private ref(name: string): { plugin: { new(): Plugin }, manifest: PluginManifest } {
+    private ref(name: string, version: string): PluginRef {
         switch (name) {
-            case "@rcade/input-spinners": return { plugin: PluginInputSpinners, manifest: PluginInputSpinnersManifest as PluginManifest };
+            case "@rcade/input-spinners": return PluginManager.newest(version, [
+                { plugin: PluginInputSpinnersV1, manifest: PluginInputSpinnersV1Manifest as PluginManifest },
+                { plugin: PluginInputSpinnersV2, manifest: PluginInputSpinnersV2Manifest as PluginManifest },
+            ]);
             case "@rcade/input-classic": return { plugin: PluginInputClassic, manifest: PluginInputClassicManifest as PluginManifest };
             case "@rcade/marquee": return { plugin: PluginMarquee, manifest: PluginMarqueeManifest as PluginManifest };
             case "@rcade/sleep": return { plugin: PluginSleep, manifest: PluginSleepManifest as PluginManifest };
@@ -60,19 +67,29 @@ export class PluginManager {
         throw new Error(`Unknown plugin ${name}`);
     }
 
+    /** Of a plugin's versions, the newest that satisfies the requested range. */
+    private static newest(range: string, versions: PluginRef[]): PluginRef {
+        const matching = versions.filter(({ manifest }) => semver.satisfies(manifest.version!, range));
+        if (matching.length === 0) {
+            const has = versions.map(({ manifest }) => manifest.version).join(", ");
+            throw new Error(`Version not found. Has: ${has}, expected: ${range}`);
+        }
+        return matching.reduce((best, ref) => semver.gt(ref.manifest.version!, best.manifest.version!) ? ref : best);
+    }
+
     private loadedPlugins: { plugin: Plugin, name: string, version: string }[] = [];
 
     async load(name: string, version: string): Promise<{ plugin: Plugin, version: string }> {
-        for (let loaded of this.loadedPlugins) {
-            if (loaded.name == name && semver.satisfies(loaded.version, version)) {
-                return loaded
-            }
-        }
-
-        const { plugin, manifest } = this.ref(name);
+        const { plugin, manifest } = this.ref(name, version);
 
         if (!semver.satisfies(manifest.version!, version)) {
             throw new Error(`Version not found. Has: ${manifest.version}, expected: ${version}`);
+        }
+
+        for (let loaded of this.loadedPlugins) {
+            if (loaded.name == name && loaded.version === manifest.version) {
+                return loaded
+            }
         }
 
         const loaded = new plugin();

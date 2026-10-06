@@ -1,14 +1,21 @@
 [package]
 homepage = "https://rcade.recurse.com"
 name = "rcade-plugin-input-spinners"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
-description = "The Recurse RCade Spinners Input Plugin"
+description = "Input and haptics for the Recurse RCade T-Knob spinners"
 repository = "https://github.com/fcjr/RCade"
 
 [dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.151"
+
+# The plugin channel only exists in the browser. Elsewhere (tests, tools) the
+# curve maths works and the spinners stay still.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
 rcade-sdk = "0.2.0"
 wasm-bindgen = "0.2.106"
-web-sys = { version = "0.3.83", features = ["console"] }
+wasm-bindgen-futures = "0.4.56"
+web-sys = { version = "0.3.83", features = ["console", "MessageEvent", "MessagePort"] }

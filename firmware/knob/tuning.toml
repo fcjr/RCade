@@ -1,0 +1,68 @@
+# Every number the knob's feel depends on. Units are turns (not radians),
+# seconds and volts: torque is written as the voltage that makes it.
+#
+# Loaded at build time; `just flash` picks up edits.
+
+# --- The motor: an EM3215 gimbal motor, measured once on a T-Knob ---
+# (kick and coast fits, 2026-09-28; the same for every T-Knob).
+
+# Magnet pole pairs.
+pole_pairs = 7
+# Driver supply: USB 5 V through a diode. Assuming the full 5 V makes forces
+# slightly weaker than asked, never stronger. SVPWM reaches supply/√3 ≈ 2.9 V.
+supply = 5.0
+# How fast a volt spins up the bare knob, turns/s² per volt.
+accel = 637.5
+# Back-EMF, volts per turn/s.
+back_emf = 0.1611
+# Share of the back-EMF the drive adds back, so driving the motor doesn't brake
+# it. Its natural braking is the only damping with no delay: cancelling more
+# than about half makes stiff springs ring (measured 2026-10-02).
+emf_cancel = 0.35
+# Voltage the driver's dead time loses: the drag gap between driving and coasting.
+dead_time = 0.0496
+# The knob's own constant drag, volts.
+drag_coulomb = 0.0882
+# The knob's own speed-proportional drag, volts per turn/s.
+drag_viscous = 0.00243
+
+# --- The ends: what 1 means on each curve ---
+
+# The coupling ties the pretend flywheel to the real knob; its pull is the
+# motor's push. It's the stiffest spring a heavy flywheel makes the knob feel,
+# so it has to stay below what rings: 100 is settled with mass 1 on detents,
+# 160 rings (measured 2026-10-05). Volts per turn.
+coupling_stiffness = 100.0
+# Damping against the knob and flywheel moving apart, volts per turn/s.
+coupling_damping = 0.9
+# Flywheel mass at mass 1, in multiples of the bare knob. In between it's
+# exponential, since weight is felt in ratios: knob and flywheel together are
+# (1 + this)^mass bare knobs, so each quarter of mass multiplies the weight by
+# about 3.2.
+mass = 100.0
+# Spring at tension 1, volts per turn. Tension 0.5 is half as stiff.
+tension = 160.0
+# Damping at friction 1, volts per turn/s. Friction 0.5 is the knob's own feel.
+friction = 3.0
+# Share of the knob's own drag cancelled at friction 0: most, not all, so it
+# coasts far and still stops by itself. From 6 turns/s: under 1 s bare, about
+# 8 s with 25 bare knobs of flywheel (mass 0.71), well over 12 s with mass 1
+# (measured 2026-10-05).
+drag_cancel = 0.95
+
+# --- Rumble ---
+
+# Amplitude of a rumble at intensity 1, volts.
+rumble = 1.5
+# The rumble's buzz, Hz.
+rumble_hz = 150.0
+
+# --- Each knob's magnets, by its ID (`id` in hello) ---
+# Where the encoder's zero sits against the motor's magnets: set by how the
+# encoder magnet was glued, so it's per knob. A knob listed here starts
+# silently. One that isn't beeps and twitches at every boot to find it, and
+# reports it (`magnet` in hello): paste that here. If a knob is repaired or
+# its magnet moves, delete its line so it measures again.
+
+[magnets]
+"40-4c-ca-5c-3c-24" = { direction = -1, zero = 57441 }

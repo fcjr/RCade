@@ -28,6 +28,7 @@ allowBuilds:
   electron-winstaller: true
   esbuild: false
   node-hid: true
+  '@serialport/bindings-cpp': true
   sharp: true
   workerd: true
 overrides:

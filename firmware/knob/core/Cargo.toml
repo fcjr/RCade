@@ -1,0 +1,28 @@
+[package]
+name = "rcade-haptics-core"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+# Everything the knob computes, host-testable. Integer only: the ESP32-C6 has
+# no FPU, so the physics runs on `fixed` point numbers.
+[dependencies]
+crc = "3.3"
+dsp-process = "0.3.2"
+fixed = "1.29"
+foc = "0.3"
+heapless = { version = "0.8", features = ["serde"] }
+idsp = "0.23"
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
+# Replies are written with serde-json-core, which needs no allocator.
+serde-json-core = "0.6"
+# Commands are read with serde_json: the only no_std parser that can take
+# "a number or a curve". It allocates a little, in the USB task, never the tick.
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
+
+[build-dependencies]
+toml = "0.9"
+
+[dev-dependencies]
+serde_json = "1"

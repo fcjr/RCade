@@ -1,121 +1,73 @@
 # @rcade/plugin-input-spinners
 
-Input plugin for RCade's spinner controls (rotary encoders).
-
-## Installation
+Read RCade's T-Knob spinners and shape how they feel.
 
 ```bash
 npm install @rcade/plugin-input-spinners
 ```
 
-## Usage
+Add `{ "name": "@rcade/input-spinners", "version": "2.0.0" }` to your manifest's dependencies.
 
-Two patterns are available. Pick one, don't mix them.
-
-### Polling (recommended)
+## Reading
 
 ```javascript
-import { PLAYER_1, PLAYER_2 } from "@rcade/plugin-input-spinners";
+import { P1, P2 } from "@rcade/plugin-input-spinners";
 
-function gameLoop() {
-  // Returns accumulated movement since last read, then resets to 0
-  const stepDelta = PLAYER_1.SPINNER.consume_step_delta();
-  paddleX += stepDelta * speed;
+P1.subscribe(({ deltaAngle }) => paddleX += deltaAngle);
 
-  requestAnimationFrame(gameLoop);
-}
+const { angle, globalAngle } = P2.read();
 ```
 
-### Angle Tracking
+Degrees throughout. `angle` wraps at 360, `globalAngle` keeps counting. Events also carry `deltaAngle`, `deltaTime` (ms) and `velocity` (°/s).
+
+Angles are where the knob feels it is: detents click and walls stop exactly at them. `rawAngle` is where the hand is, which leads by a few degrees when pushing against a curve.
+
+`tare(90)` makes the current angle 90.
+
+## Feel
+
+Four curves over `globalAngle`:
+
+| | |
+|---|---|
+| `target` | where the knob is pulled, in degrees |
+| `tension` | how hard, 0–1 |
+| `mass` | 0 bare, 1 heavy flywheel |
+| `friction` | 0 free, 0.5 natural, 1 heavy |
 
 ```javascript
-import { PLAYER_1 } from "@rcade/plugin-input-spinners";
+import { P1, Curve, Curves } from "@rcade/plugin-input-spinners";
 
-function gameLoop() {
-  // Get cumulative angle in radians (automatically updated)
-  const angle = PLAYER_1.SPINNER.angle;
-  knob.rotation = angle;
-
-  requestAnimationFrame(gameLoop);
-}
-
-// Reset angle to 0 when needed
-PLAYER_1.SPINNER.reset();
+P1.setCurves(Curves.detents(24));
+P1.setCurves(Curves.mass(0.5).friction(0));
+P1.setCurves(Curves.wall("left").wall("right", { angle: 720 }));
+P1.setCurves(Curves.detents(12).tension(Curve.ramp(0, 1)));
 ```
 
-### Events
+Each property takes a number or a `Curve`:
+
+- `Curve.uniform(value)`
+- `Curve.steps(quantity, { angle })`: as a target, detents
+- `Curve.ramp(from, to, { angle, ease })`: `linear`, `in`, `out`, `inOut`
+- `Curve.compose(a, b, …)`: end to end
+- `Curve.points([{ x, y, in?, out? }, …])`: Bézier chain; two points at one x jump
+
+`angle` defaults to `[0, 360]`. A curve repeats past its span, and a repeating target pulls to the nearest repeat. Walls and uniform values hold forever.
+
+Builders are immutable. `valueAt(x)` and `targetAt(x)` give what the knob computes.
+
+## Rumble
 
 ```javascript
-import { on } from "@rcade/plugin-input-spinners";
-
-on("spin", ({ player, step_delta, step_resolution }) => {
-  console.log(`Player ${player} spun ${step_delta} steps`);
-});
+P1.rumble("success");
+P1.rumble([100, 50, 100]);
+P1.rumble(200, { intensity: 1 });
 ```
 
-## API
+Takes [web-haptics](https://haptics.lochie.me)' inputs and presets: `success`, `warning`, `error`, `light`, `medium`, `heavy`, `soft`, `rigid`, `selection`, `nudge`, `buzz`.
 
-### PLAYER_1 / PLAYER_2
+## Else
 
-```typescript
-{
-  SPINNER: {
-    consume_step_delta(): number;
-    step_resolution: number;
-    angle: number;
-    reset(): void;
-  }
-}
-```
+`reset()` returns to stock. `brake()` stops a spin. `connected` says whether the knob is there.
 
-- `consume_step_delta()`: Returns accumulated movement since last call, then resets to 0.
-- `step_resolution`: Encoder resolution (x steps per rotation).
-- `angle`: Cumulative angle in radians (automatically updated).
-- `reset()`: Resets the angle to 0.
-
-### STATUS
-
-```typescript
-{
-  connected: boolean
-}
-```
-
-### Events
-
-#### on(event, callback)
-
-Subscribe to spin events.
-
-```typescript
-const unsubscribe = on("spin", (data) => {
-  // data: { player: 1 | 2, step_delta: number, step_resolution: number }
-});
-
-// Later: unsubscribe()
-```
-
-#### off(event, callback)
-
-Unsubscribe from spin events.
-
-#### once(event, [filter], [callback])
-
-Listen for a single spin event. Supports filtering by player and both callback and Promise styles.
-
-```typescript
-// Promise style
-const data = await once("spin");
-
-// Promise with filter
-const p1Data = await once("spin", { player: 1 });
-
-// Callback style
-const cancel = once("spin", (data) => { /* ... */ });
-```
-
-## Development
-
-```bash
-pnpm install
-```
+Wire format: `firmware/knob/PROTOCOL.md`.

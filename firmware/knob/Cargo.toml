@@ -1,0 +1,33 @@
+[package]
+name = "input-haptics-controller"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "MIT"
+publish = false
+
+[dependencies]
+rcade-haptics-core = { path = "core" }
+esp-hal = { version = "=1.2.2", features = ["esp32c6", "unstable"] }
+esp-rtos = { version = "=0.4.0", features = ["esp32c6", "embassy"] }
+esp-bootloader-esp-idf = { version = "=0.6.0", features = ["esp32c6"] }
+esp-alloc = { version = "=0.11.0", features = ["esp32c6"] }
+embassy-executor = "0.10"
+embassy-time = "0.5"
+embassy-sync = "0.8"
+embedded-io-async = "0.7"
+heapless = { version = "0.8", features = ["serde"] }
+serde-json-core = "0.6"
+static_cell = "2"
+# Prints the panic message over USB before the watchdog restarts the knob.
+esp-println = { version = "0.18", default-features = false, features = ["esp32c6", "jtag-serial"] }
+critical-section = "1"
+
+[profile.release]
+opt-level = 2
+lto = "fat"
+codegen-units = 1
+debug = 2
+
+[profile.dev]
+opt-level = 1

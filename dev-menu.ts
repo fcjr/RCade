@@ -29,10 +29,14 @@ function prefixOutput(prefix: string, color: string) {
 async function main() {
     console.log("Starting menu development environment...\n");
 
+    // pnpm is a .cmd shim on Windows, which spawn can only run through a shell
+    const shell = process.platform === "win32";
+
     // Start menu dev server
     const menuProc = spawn("pnpm", ["run", "dev", "--port", "8811"], {
         cwd: menuDir,
         stdio: ["inherit", "pipe", "pipe"],
+        shell,
     });
 
     // Start cabinet with menu override
@@ -40,9 +44,10 @@ async function main() {
         cwd: cabinetDir,
         env: {
             ...process.env,
-            RCADE_CABINET_ARGS: `--menu "${menuManifest}" --force-screensaver --scale 4 --dev --override menu@LOCAL=http://localhost:8811`,
+            RCADE_CABINET_ARGS: `--menu "${menuManifest}" --force-screensaver --scale 1 --dev --override menu@LOCAL=http://localhost:8811`,
         },
         stdio: ["inherit", "pipe", "pipe"],
+        shell,
     });
 
     // Handle menu output

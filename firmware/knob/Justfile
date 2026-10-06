@@ -1,0 +1,14 @@
+set shell := ["bash", "-cu"]
+
+build:
+    cargo build --release
+
+# PORT must explicitly identify this knob.
+flash port:
+    espflash flash --port {{port}} --chip esp32c6 target/riscv32imac-unknown-none-elf/release/input-haptics-controller
+
+check:
+    cargo check --target riscv32imac-unknown-none-elf
+
+core-test:
+    cd ../.. && cargo test -p rcade-haptics-core

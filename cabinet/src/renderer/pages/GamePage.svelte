@@ -2,8 +2,13 @@
   import { onMount, onDestroy } from "svelte";
   import type { GameInfo } from "../../shared/types";
   import { navigateToMenu } from "../router.svelte";
-  import { QuitOptionsSchema, type QuitOptions } from "@rcade/sdk";
+  import type { QuitOptions } from "@rcade/sdk";
   import z from "zod";
+
+  const QuitOptionsSchema = z.discriminatedUnion("type", [
+    z.object({ type: z.literal("return-to-menu") }),
+    z.object({ type: z.literal("error"), reason: z.string().optional() }),
+  ]);
   interface Props {
     game: GameInfo;
   }

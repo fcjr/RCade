@@ -230,7 +230,7 @@ stdenv.mkDerivation {
 
     cd cabinet
 
-    node_modules/.bin/esbuild src/main/main.ts --bundle --outfile=dist/main/main.cjs --platform=node --format=cjs --define:import.meta.url=import_meta_url --banner:js="var import_meta_url=require('url').pathToFileURL(__filename).href;" --external:electron --external:node-hid
+    node_modules/.bin/esbuild src/main/main.ts --bundle --outfile=dist/main/main.cjs --platform=node --format=cjs --define:import.meta.url=import_meta_url --banner:js="var import_meta_url=require('url').pathToFileURL(__filename).href;" --external:electron --external:node-hid --external:serialport
     node_modules/.bin/esbuild src/main/preload.ts --bundle --outdir=dist/main --platform=node --format=cjs --external:electron
     node_modules/.bin/vite build
 
@@ -255,6 +255,20 @@ stdenv.mkDerivation {
     cp -rL node_modules/.pnpm/node-hid@*/node_modules/pkg-prebuilds $out/lib/rcade-cabinet/node_modules/
     # Remove musl and non-x64 prebuilds to avoid autoPatchelfHook failures
     find $out/lib/rcade-cabinet/node_modules/node-hid/prebuilds -type d \( -name '*musl*' -o -name '*arm*' \) -exec rm -rf {} + 2>/dev/null || true
+    # serialport, for the T-Knobs. bindings-cpp keeps its own (older) parsers
+    # nested, as pnpm resolves them.
+    serial=$(echo node_modules/.pnpm/serialport@*/node_modules)
+    cp -rL $serial/. $out/lib/rcade-cabinet/node_modules/
+    cp -rL "$(dirname "$(readlink -f $serial/debug)")/ms" $out/lib/rcade-cabinet/node_modules/
+    native=$(dirname "$(dirname "$(readlink -f $serial/@serialport/bindings-cpp)")")
+    bindings=$out/lib/rcade-cabinet/node_modules/@serialport/bindings-cpp
+    mkdir -p $bindings/node_modules/@serialport
+    cp -rL $native/node-gyp-build $bindings/node_modules/
+    cp -rL $native/@serialport/{bindings-interface,parser-readline} $bindings/node_modules/@serialport/
+    mkdir -p $bindings/node_modules/@serialport/parser-readline/node_modules/@serialport
+    cp -rL "$(dirname "$(readlink -f $native/@serialport/parser-readline)")/parser-delimiter" $bindings/node_modules/@serialport/parser-readline/node_modules/@serialport/
+    find $bindings/prebuilds -mindepth 1 -maxdepth 1 -type d ! -name 'linux-x64' -exec rm -rf {} +
+    find $bindings/prebuilds -name '*musl*' -delete
 
     cat > $out/bin/rcade-cabinet <<'LAUNCHER'
 #!/usr/bin/env bash

@@ -2,28 +2,23 @@
     "$schema": "../../web/static/manifest.schema.json",
     "kind": "plugin",
     "name": "@rcade/input-spinners",
-    "description": "Support for dual arcade spinners.",
+    "description": "T-Knob spinners: input, haptic curves and rumble, for P1 and P2.",
     "visibility": "public",
-    "version": "1.0.0",
-    "authors": [
-        {
-            "display_name": "Frank Chiarulli Jr.",
-            "recurse_id": 6859
-        }
-    ],
+    "version": "2.0.0",
+    "authors": [{ "display_name": "RCade contributors" }],
     "libraries": [
         {
             "language": "javascript",
             "package": {
                 "name": "@rcade/plugin-input-spinners",
-                "versions": "0.x.x"
+                "versions": "0.3.x"
             }
         },
         {
             "language": "rust",
             "package": {
                 "name": "rcade-plugin-input-spinners",
-                "versions": "0.x.x"
+                "versions": "0.2.x"
             }
         }
     ]

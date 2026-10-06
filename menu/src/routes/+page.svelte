@@ -16,10 +16,7 @@
     import { tick, onMount } from "svelte";
     import { Game } from "@rcade/api";
     import { on as onInput } from "@rcade/plugin-input-classic";
-    import {
-        PLAYER_1 as SPINNERS_P1,
-        PLAYER_2 as SPINNERS_P2,
-    } from "@rcade/plugin-input-spinners";
+    import { Curve, Curves, P1, P2 } from "@rcade/plugin-input-spinners";
     import { SCREENSAVER } from "@rcade/plugin-sleep";
     import EventEmitter from "events";
     import { Fireworks, type FireworksOptions } from "@fireworks-js/svelte";
@@ -63,80 +60,134 @@
     SCREENSAVER.addEventListener("started", () => {
         viewportState = "neutral";
         screensaverActive = true;
+        // Motor off while nobody's here.
+        if (!gameHasKnobs()) P1.reset().catch(() => {});
     });
 
     SCREENSAVER.addEventListener("stopped", () => {
         screensaverActive = false;
+        resetKnob();
     });
 
-    const DELTA_EPSILON = 10; // Spinner delta per step
-    const SPINNER_IDLE_MS = 500; // Drop partial steps after this long idle
+    const DEGREES_PER_GAME = 30;
+    // Walls are sent once within this many games: further than anyone turns
+    // while new curves are in flight.
+    const WALL_REACH = 20;
+    const knobFeel = { mass: 0, tension: 0.08, friction: 0.1 };
+    const LETTER_TENSION = 0.22;
 
-    // Turns raw spinner deltas into discrete steps, discarding partial
-    // rotation once the spinner has been still for SPINNER_IDLE_MS.
-    function spinnerStepper(onStep: (step: 1 | -1) => void) {
-        let accumulated = 0;
-        let idleTimer: ReturnType<typeof setTimeout> | null = null;
-
-        return (delta: number) => {
-            if (delta === 0) return;
-            accumulated += delta;
-
-            if (idleTimer) clearTimeout(idleTimer);
-            idleTimer = setTimeout(() => {
-                accumulated = 0;
-            }, SPINNER_IDLE_MS);
-
-            while (Math.abs(accumulated) >= DELTA_EPSILON) {
-                const step = accumulated > 0 ? 1 : -1;
-                accumulated -= step * DELTA_EPSILON;
-                onStep(step);
-            }
-        };
+    function wallsAt(page: number, count: number) {
+        const last = Math.max(0, count - 1);
+        return { left: page <= WALL_REACH, right: last - page <= WALL_REACH, last };
     }
 
-    // Player 1 spinner steps through games (or versions in the drawer)
-    const stepGame = spinnerStepper((step) => {
-        if (viewportState === "neutral") {
-            const newPage = Math.max(
-                0,
-                Math.min(totalPages - 1, activePage + step),
-            );
-            if (newPage !== activePage) {
-                setPage(newPage);
-                moveEvents.emit("move", step < 0);
-            }
-        } else if (viewportState === "show-bottom" && currentGame) {
-            activeVersionIndex = Math.max(
-                0,
-                Math.min(
-                    currentGame.versions().length - 1,
-                    activeVersionIndex + step,
-                ),
-            );
-            triggerScroll(
-                versionsContainer,
-                activeVersionIndex,
-                false,
-                updateVersionMasks,
-            );
+    // The hill into each letter is harder to climb, from either side.
+    function letterTension(starts: number[]): Curve {
+        const base = knobFeel.tension;
+        const spans: [number, number][] = [];
+        for (const start of starts) {
+            const from = (start - 1) * DEGREES_PER_GAME;
+            const previous = spans.at(-1);
+            if (previous && previous[1] === from) previous[1] = from + DEGREES_PER_GAME;
+            else spans.push([from, from + DEGREES_PER_GAME]);
+        }
+        if (spans.length === 0) return Curve.uniform(base);
+        return Curve.points([
+            { x: -Infinity, y: base },
+            ...spans.flatMap(([from, to]) => [
+                { x: from, y: base },
+                { x: from, y: LETTER_TENSION },
+                { x: to, y: LETTER_TENSION },
+                { x: to, y: base },
+            ]),
+            { x: Infinity, y: base },
+        ]);
+    }
+
+    // Both walls near means a short list: every game fits on the wire.
+    function menuCurves({ left, right, last }: ReturnType<typeof wallsAt>, starts: number[]): Curves {
+        const games = last + 1;
+        const detents = left && right
+            ? Curve.steps(games, { angle: [0, games * DEGREES_PER_GAME] })
+            : Curve.steps(1, { angle: [0, DEGREES_PER_GAME] });
+        let curves = Curves.target(detents)
+            .tension(letterTension(starts))
+            .mass(knobFeel.mass)
+            .friction(knobFeel.friction);
+        if (left) curves = curves.wall("left", { angle: 0 });
+        if (right) curves = curves.wall("right", { angle: last * DEGREES_PER_GAME });
+        return curves;
+    }
+
+    let knobPage = -1;
+    let knobWalls = "";
+
+    function sendCurves() {
+        if (knobsIdle()) return;
+        const walls = wallsAt(activePage, totalPages);
+        // Undefined until its reactive statement first runs.
+        const starts = (letterGroups ?? []).map((group) => group.start).filter((start) => start > 0);
+        const key = JSON.stringify({ walls, starts });
+        if (key === knobWalls) return;
+        knobWalls = key;
+        P1.setCurves(menuCurves(walls, starts)).catch(() => {
+            knobWalls = "";
+        });
+    }
+
+    function placeKnob() {
+        if (knobsIdle()) return;
+        knobPage = activePage;
+        sendCurves();
+        P1.tare(activePage * DEGREES_PER_GAME).catch(() => {});
+    }
+
+    $: if (activePage !== knobPage) placeKnob();
+    $: totalPages, letterGroups, sendCurves();
+
+    P1.subscribe((event) => {
+        if (knobsIdle()) return;
+        moveEvents.emit("drag", event.deltaAngle / DEGREES_PER_GAME);
+        if (viewportState !== "neutral" || totalPages === 0) return;
+        const page = Math.max(0, Math.min(totalPages - 1, Math.round(event.globalAngle / DEGREES_PER_GAME)));
+        if (page !== activePage) {
+            knobPage = page;
+            setPage(page);
+            sendCurves();
+            play_menu_move();
         }
     });
 
-    // Player 2 spinner jumps between first-letter groups
-    const stepLetter = spinnerStepper((step) => {
-        if (viewportState === "neutral") jumpLetter(step);
-    });
-
-    function frameLoop() {
-        if (!gameActive) {
-            stepGame(SPINNERS_P1.SPINNER.consume_step_delta());
-            stepLetter(SPINNERS_P2.SPINNER.consume_step_delta());
-        }
-
-        requestAnimationFrame(frameLoop);
+    function resetKnob() {
+        knobWalls = "";
+        placeKnob();
     }
-    requestAnimationFrame(frameLoop);
+
+    let knobConnected = false;
+    function watchKnob() {
+        if (P1.connected && !knobConnected) resetKnob();
+        knobConnected = P1.connected;
+        requestAnimationFrame(watchKnob);
+    }
+    requestAnimationFrame(watchKnob);
+
+    // P2 jumps letter groups: 10 of the old spinner's 64 steps per turn.
+    const DEGREES_PER_LETTER = (10 * 360) / 64;
+    const LETTER_IDLE_MS = 500;
+    let letterTurned = 0;
+    let letterIdle: ReturnType<typeof setTimeout> | undefined;
+
+    P2.subscribe((event) => {
+        if (knobsIdle() || viewportState !== "neutral") return;
+        letterTurned += event.deltaAngle;
+        clearTimeout(letterIdle);
+        letterIdle = setTimeout(() => (letterTurned = 0), LETTER_IDLE_MS);
+        while (Math.abs(letterTurned) >= DEGREES_PER_LETTER) {
+            const step = Math.sign(letterTurned);
+            letterTurned -= step * DEGREES_PER_LETTER;
+            jumpLetter(step);
+        }
+    });
 
     let games: Game[] = [];
     let loading = true;
@@ -394,6 +445,14 @@
     }
 
     let gameLoading = false;
+
+    function gameHasKnobs() {
+        return gameActive || gameLoading;
+    }
+
+    function knobsIdle() {
+        return gameHasKnobs() || screensaverActive;
+    }
     let gameError: string | undefined = undefined;
 
     function startGame(game: any, version: string) {
@@ -406,6 +465,7 @@
         console.error(quitOptions);
         gameActive = false;
         SCREENSAVER.updateScreensaver({ transparent: true });
+        resetKnob();
     });
 
     onGameLoad((result) => {
@@ -633,7 +693,10 @@
         style:--tilt-y="{tiltY}deg"
     >
         <div class="bg-layer">
-            <BackgroundOverlay events={moveEvents} />
+            <BackgroundOverlay
+                events={moveEvents}
+                progress={totalPages > 1 ? activePage / (totalPages - 1) : 0}
+            />
         </div>
 
         <div class="ui-layer" class:screensaver={screensaverActive}>
@@ -1152,7 +1215,8 @@
         display: flex;
         align-items: center;
         box-sizing: border-box;
-        overflow: hidden;
+        overflow-x: clip;
+        overflow-y: visible;
         border: 1px solid rgba(255, 255, 255, 0.35);
         background: rgba(0, 0, 0, 0.4);
         cursor: pointer;
@@ -1210,10 +1274,16 @@
     }
 
     .dot-window {
+        /* room for the active dot's glow inside the mask */
+        --pad: 8px;
         --fade-l: 0px;
         --fade-r: 0px;
         flex-shrink: 0;
-        overflow: hidden;
+        overflow-x: clip;
+        overflow-y: visible;
+        box-sizing: content-box;
+        padding: var(--pad);
+        margin: calc(-1 * var(--pad));
         mask-image: linear-gradient(
             to right,
             transparent 0px,
@@ -1231,11 +1301,11 @@
     }
 
     .dot-window.fade-left {
-        --fade-l: 39px;
+        --fade-l: calc(var(--pad) + 39px);
     }
 
     .dot-window.fade-right {
-        --fade-r: 39px;
+        --fade-r: calc(var(--pad) + 39px);
     }
 
     .dot-track {

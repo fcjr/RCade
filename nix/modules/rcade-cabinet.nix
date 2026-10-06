@@ -228,6 +228,8 @@ in
       SUBSYSTEM=="input", MODE="0660", GROUP="input"
       SUBSYSTEM=="usb", MODE="0660", GROUP="input"
       SUBSYSTEM=="hidraw", MODE="0660", GROUP="input"
+      # T-Knob native USB serial; firmware identity is checked by the plugin.
+      SUBSYSTEM=="tty", ATTRS{idVendor}=="303a", ATTRS{idProduct}=="1001", MODE="0660", GROUP="input"
     '';
 
     # =========================================================================
