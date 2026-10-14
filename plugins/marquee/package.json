@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "@rcade/sdk-plugin": "workspace:*",
-    "ws": "^8.18.0"
+    "ws": "^8.21.0"
   }
 }
