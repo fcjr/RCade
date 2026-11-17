@@ -160,7 +160,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [x64, arm64]
+        include:
+          - arch: x64
+            arch_tag: x86_64
+          - arch: arm64
+            arch_tag: arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -186,7 +190,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cabinet-linux-${{ matrix.arch }}
-          path: cabinet/release/rcade-cabinet-linux-${{ matrix.arch }}.AppImage
+          path: cabinet/release/rcade-cabinet-linux-${{ matrix.arch_tag }}.AppImage
 
   release:
     name: Create Release
